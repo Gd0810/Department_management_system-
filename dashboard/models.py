@@ -7,7 +7,7 @@ from decimal import Decimal
 class Department(models.Model):
 
     name = models.CharField(max_length=150)
-    image = models.ImageField(upload_to="departments/", blank=True, null=True)
+    image = models.ImageField(upload_to="media/", blank=True, null=True)
 
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)  # will store hashed password
