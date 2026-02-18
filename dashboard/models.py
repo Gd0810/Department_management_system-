@@ -78,3 +78,28 @@ class Project(models.Model):
     def __str__(self):
         return f"{self.title} ({self.category})"
     
+class ProjectMember(models.Model):
+
+    CONTRIBUTION = (
+        ('gold','Gold'),
+        ('silver','Silver'),
+        ('copper','Copper'),
+    )
+
+    WEIGHT = {
+        "gold": 3,
+        "silver": 2,
+        "copper": 1
+    }
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="members")
+    worker = models.ForeignKey(Worker, on_delete=models.CASCADE, related_name="project_memberships")
+
+    contribution = models.CharField(max_length=10, choices=CONTRIBUTION)
+    payment = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    class Meta:
+        unique_together = ('project', 'worker')
+
+    def __str__(self):
+        return f"{self.worker.name} - {self.project.title}"
