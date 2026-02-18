@@ -18,3 +18,7 @@ class WorkerAdmin(admin.ModelAdmin):
     list_display = ("name", "worker_type", "department", "posting")
     list_filter = ("worker_type", "department")
     search_fields = ("name",)
+
+class ProjectMemberInline(admin.TabularInline):
+    model = ProjectMember
+    extra = 1
