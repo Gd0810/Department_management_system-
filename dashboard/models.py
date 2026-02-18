@@ -103,3 +103,21 @@ class ProjectMember(models.Model):
 
     def __str__(self):
         return f"{self.worker.name} - {self.project.title}"
+
+
+def distribute_project_payment(project):
+
+    if not project.amount:
+        return
+
+    members = project.members.all()
+    total_weight = sum(ProjectMember.WEIGHT[m.contribution] for m in members)
+
+    if total_weight == 0:
+        return
+
+    for m in members:
+        weight = ProjectMember.WEIGHT[m.contribution]
+        share = (Decimal(weight) / Decimal(total_weight)) * project.amount
+        m.payment = round(share, 2)
+        m.save()
