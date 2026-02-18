@@ -50,7 +50,7 @@ def dashboard(request):
         "project_count": dept.projects.count(),
     }
 
-    return render(request, "dashboard.html", context)
+    return render(request, "index.html", context)
 
 
 # =========================

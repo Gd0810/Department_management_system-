@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+</head>
+<body style="font-family:Arial;background:#f7f7f7;">
+
+<div style="width:800px;margin:50px auto;background:white;padding:30px;border-radius:10px;">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h2>{{ department.name }} Dashboard</h2>
+        <a href="{% url 'logout' %}">Logout</a>
+    </div>
+
+    <hr>
+
+    {% if department.image %}
+        <img src="{{ department.image.url }}" width="120">
+    {% endif %}
+
+    <h3>Department Details</h3>
+    <p><b>Email:</b> {{ department.email }}</p>
+
+    <hr>
+
+    <h3>Statistics</h3>
+    <p><b>Total Workers:</b> {{ worker_count }}</p>
+    <p><b>Total Projects:</b> {{ project_count }}</p>
+
+</div>
+
+</body>
+</html>

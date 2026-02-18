@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Department Login</title>
+</head>
+<body style="font-family:Arial; background:#f2f2f2;">
+
+<div style="width:350px;margin:120px auto;padding:30px;background:white;border-radius:8px;">
+    <h2 style="text-align:center;">Department Login</h2>
+
+    {% if error %}
+        <p style="color:red;text-align:center;">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <label>Email</label>
+        <input type="email" name="email" required style="width:100%;padding:10px;margin:10px 0;">
+
+        <label>Password</label>
+        <input type="password" name="password" required style="width:100%;padding:10px;margin:10px 0;">
+
+        <button type="submit" style="width:100%;padding:10px;background:#2563eb;color:white;border:none;">
+            Login
+        </button>
+    </form>
+</div>
+
+</body>
+</html>
