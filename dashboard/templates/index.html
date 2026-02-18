@@ -5,7 +5,7 @@
 </head>
 <body style="font-family:Arial;background:#f7f7f7;">
 
-<div style="width:800px;margin:50px auto;background:white;padding:30px;border-radius:10px;">
+<div style="width:1000px;margin:40px auto;background:white;padding:30px;border-radius:10px;">
 
     <div style="display:flex;justify-content:space-between;align-items:center;">
         <h2>{{ department.name }} Dashboard</h2>
@@ -14,18 +14,94 @@
 
     <hr>
 
-    {% if department.image %}
-        <img src="{{ department.image.url }}" width="120">
-    {% endif %}
+    <!-- Department -->
+    <div style="display:flex;gap:30px;align-items:center;">
+        {% if department.image %}
+            <img src="{{ department.image.url }}" width="120">
+        {% endif %}
 
-    <h3>Department Details</h3>
-    <p><b>Email:</b> {{ department.email }}</p>
+        <div>
+            <h3>Department Details</h3>
+            <p><b>Email:</b> {{ department.email }}</p>
+            <p><b>Total Workers:</b> {{ worker_count }}</p>
+            <p><b>Total Projects:</b> {{ project_count }}</p>
+        </div>
+    </div>
 
-    <hr>
+    <hr><hr>
 
-    <h3>Statistics</h3>
-    <p><b>Total Workers:</b> {{ worker_count }}</p>
-    <p><b>Total Projects:</b> {{ project_count }}</p>
+    <!-- Workers Section -->
+    <h2>Workers</h2>
+
+    <table border="1" cellpadding="10" cellspacing="0" width="100%">
+        <tr style="background:#eee;">
+            <th>Name</th>
+            <th>Type</th>
+            <th>Department Role</th>
+            <th>Posting</th>
+            <th>Date Joined</th>
+        </tr>
+
+        {% for w in workers %}
+        <tr>
+            <td>
+                {% if w.image %}
+                    <img src="{{ w.image.url }}" width="40" style="vertical-align:middle;border-radius:50%;">
+                {% endif %}
+                {{ w.name }}
+            </td>
+            <td>{{ w.get_worker_type_display }}</td>
+            <td>{{ w.department_role }}</td>
+            <td>{{ w.posting }}</td>
+            <td>{{ w.date_of_join }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" align="center">No workers added</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <hr><hr>
+
+    <!-- Projects Section -->
+    <h2>Projects</h2>
+
+    {% for p in projects %}
+        <div style="border:1px solid #ddd;padding:15px;margin-bottom:20px;border-radius:8px;">
+
+            <h3>{{ p.title }}</h3>
+
+            <p>
+                <b>Category:</b> {{ p.get_category_display }} |
+                <b>Status:</b> {{ p.get_status_display }} |
+                <b>Type:</b> {{ p.get_work_type_display }} |
+                <b>Start:</b> {{ p.start_date }}
+            </p>
+
+            {% if p.amount %}
+                <p><b>Total Amount:</b> ₹{{ p.amount }}</p>
+            {% endif %}
+
+            <b>Members:</b>
+            <ul>
+                {% for m in p.members.all %}
+                    <li>
+                        {{ m.worker.name }}
+                        ({{ m.get_contribution_display }})
+                        {% if p.amount %}
+                            - ₹{{ m.payment }}
+                        {% endif %}
+                    </li>
+                {% empty %}
+                    <li>No members assigned</li>
+                {% endfor %}
+            </ul>
+
+        </div>
+    {% empty %}
+        <p>No projects created</p>
+    {% endfor %}
 
 </div>
 

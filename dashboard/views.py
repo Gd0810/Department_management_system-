@@ -44,13 +44,19 @@ def dashboard(request):
 
     dept = Department.objects.get(id=dept_id)
 
+    workers = dept.workers.all().order_by("worker_type", "name")
+    projects = dept.projects.prefetch_related("members__worker").all().order_by("-start_date")
+
     context = {
         "department": dept,
-        "worker_count": dept.workers.count(),
-        "project_count": dept.projects.count(),
+        "worker_count": workers.count(),
+        "project_count": projects.count(),
+        "workers": workers,
+        "projects": projects,
     }
 
     return render(request, "index.html", context)
+
 
 
 # =========================
