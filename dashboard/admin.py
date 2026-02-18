@@ -12,3 +12,9 @@ class DepartmentAdmin(admin.ModelAdmin):
         if not change or "password" in form.changed_data:
             obj.password = make_password(obj.password)
         super().save_model(request, obj, form, change)
+
+@admin.register(Worker)
+class WorkerAdmin(admin.ModelAdmin):
+    list_display = ("name", "worker_type", "department", "posting")
+    list_filter = ("worker_type", "department")
+    search_fields = ("name",)
