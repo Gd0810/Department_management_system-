@@ -41,7 +41,6 @@ def login_page(request):
 def dashboard(request):
 
     dept_id = request.session.get("department_id")
-
     if not dept_id:
         return redirect("login")
 
@@ -50,15 +49,34 @@ def dashboard(request):
     workers = dept.workers.all().order_by("worker_type", "name")
     projects = dept.projects.prefetch_related("members__worker").all().order_by("-start_date")
 
+    project_data = []
+
+    for project in projects:
+        payments = calculate_project_payments(project)
+
+        member_list = []
+        for m in project.members.all():
+            member_list.append({
+                "name": m.worker.name,
+                "role": m.get_contribution_display(),
+                "payment": payments.get(m.id) if project.amount else None
+            })
+
+        project_data.append({
+            "project": project,
+            "members": member_list
+        })
+
     context = {
         "department": dept,
         "worker_count": workers.count(),
         "project_count": projects.count(),
         "workers": workers,
-        "projects": projects,
+        "projects": project_data,
     }
 
-    return render(request, "index.html", context)
+    return render(request, "dashboard.html", context)
+
 
 
 
