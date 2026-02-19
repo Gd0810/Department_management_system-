@@ -67,6 +67,7 @@ class Project(models.Model):
     status = models.CharField(max_length=20, choices=PROJECT_STATUS)
 
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    github_link = models.URLField(blank=True, null=True)
 
     def clean(self):
         if self.category == 'company' and self.amount:
