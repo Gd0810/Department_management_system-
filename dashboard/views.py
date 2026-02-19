@@ -75,7 +75,7 @@ def dashboard(request):
         "projects": project_data,
     }
 
-    return render(request, "dashboard.html", context)
+    return render(request, "index.html", context)
 
 
 

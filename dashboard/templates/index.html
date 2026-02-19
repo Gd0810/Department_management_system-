@@ -68,40 +68,35 @@
     <h2>Projects</h2>
 
     {% for p in projects %}
-        <div style="border:1px solid #ddd;padding:15px;margin-bottom:20px;border-radius:8px;">
+    <div style="border:1px solid #ddd;padding:15px;margin-bottom:20px;border-radius:8px;">
 
-            <h3>{{ p.title }}</h3>
+        <h3>{{ p.project.title }}</h3>
 
-            <p>
-                <b>Category:</b> {{ p.get_category_display }} |
-                <b>Status:</b> {{ p.get_status_display }} |
-                <b>Type:</b> {{ p.get_work_type_display }} |
-                <b>Start:</b> {{ p.start_date }}
-            </p>
+        <p>
+            <b>Category:</b> {{ p.project.get_category_display }} |
+            <b>Status:</b> {{ p.project.get_status_display }} |
+            <b>Type:</b> {{ p.project.get_work_type_display }} |
+            <b>Start:</b> {{ p.project.start_date }}
+        </p>
 
-            {% if p.amount %}
-                <p><b>Total Amount:</b> ₹{{ p.amount }}</p>
-            {% endif %}
+        {% if p.project.amount %}
+            <p><b>Total Amount:</b> ₹{{ p.project.amount }}</p>
+        {% endif %}
 
-            <b>Members:</b>
-            <ul>
-                {% for m in p.members.all %}
-                    <li>
-                        {{ m.worker.name }}
-                        ({{ m.get_contribution_display }})
-                        {% if p.amount %}
-                            - ₹{{ m.payment }}
-                        {% endif %}
-                    </li>
-                {% empty %}
-                    <li>No members assigned</li>
-                {% endfor %}
-            </ul>
+        <b>Members:</b>
+        <ul>
+            {% for m in p.members %}
+                <li>
+                    {{ m.name }} ({{ m.role }})
+                    {% if m.payment %}
+                        - ₹{{ m.payment|floatformat:2 }}
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
 
-        </div>
-    {% empty %}
-        <p>No projects created</p>
-    {% endfor %}
+    </div>
+{% endfor %}
 
 </div>
 
