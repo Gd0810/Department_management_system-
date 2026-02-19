@@ -73,6 +73,7 @@ def dashboard(request):
         "project_count": projects.count(),
         "workers": workers,
         "projects": project_data,
+        
     }
 
     return render(request, "index.html", context)

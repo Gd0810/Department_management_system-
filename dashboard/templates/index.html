@@ -95,6 +95,10 @@
             {% endfor %}
         </ul>
 
+        {% if p.project.github_link %}
+            <p><a href="{{ p.project.github_link }}" target="_blank">GitHub Repository</a></p>
+        {% endif %}
+
     </div>
 {% endfor %}
 
