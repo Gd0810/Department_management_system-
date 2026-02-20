@@ -3,10 +3,8 @@ from .import views
 from django.views.generic import TemplateView
 
 urlpatterns = [
-    path('', views.login_page, name="login"),
-    path('login/', views.login_page, name="login"),
-    
-    path('', views.base, name="base"),
+    path('', views.login_page, name="login"),          # ONLY login
+    path('dashboard/', views.base, name="base"),       # dashboard layout
 
     path('index/', views.index, name="index"),
     path('team/', views.team, name="team"),

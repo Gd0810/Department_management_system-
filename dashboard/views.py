@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from .models import Department
 from django.contrib.auth.hashers import check_password
+from django.views.decorators.http import require_http_methods
 from collections import defaultdict
 from decimal import Decimal
 
@@ -9,28 +10,39 @@ from decimal import Decimal
 # =========================
 # LOGIN PAGE
 # =========================
+
+
+
+@require_http_methods(["GET", "POST"])
 def login_page(request):
 
+    # Already logged in → go dashboard
     if request.session.get("department_id"):
-        return redirect("dashboard")
+        return redirect("base")
 
     error = None
 
     if request.method == "POST":
-        email = request.POST.get("email")
-        password = request.POST.get("password")
+        email = request.POST.get("email", "").strip().lower()
+        password = request.POST.get("password", "").strip()
 
-        try:
-            dept = Department.objects.get(email=email)
+        # basic validation
+        if not email or not password:
+            error = "Please enter email and password"
+        else:
+            dept = Department.objects.filter(email=email).first()
 
-            if check_password(password, dept.password):
-                request.session["department_id"] = dept.id
-                return redirect("dashboard")
-            else:
+            if not dept:
+                error = "Department not found"
+            elif not check_password(password, dept.password):
                 error = "Invalid password"
+            else:
+                # create secure session
+                request.session.flush()  # remove old session
+                request.session["department_id"] = dept.id
+                request.session.set_expiry(60 * 60 * 8)  # 8 hours login
 
-        except Department.DoesNotExist:
-            error = "Department not found"
+                return redirect("base")
 
     return render(request, "login.html", {"error": error})
 
@@ -48,10 +60,14 @@ def get_department(request):
 
 
 def base(request):
-    return render(request, "base.html")
+     if not request.session.get("department_id"):
+        return redirect("login")
+     return render(request, "base.html")
 
 
 def index(request):
+    if not request.session.get("department_id"):
+        return redirect("login")
     dept = get_department(request)
 
     context = {
@@ -63,6 +79,8 @@ def index(request):
 
 
 def team(request):
+    if not request.session.get("department_id"):
+        return redirect("login")
     dept = get_department(request)
     workers = dept.workers.all()
 
@@ -70,6 +88,8 @@ def team(request):
 
 
 def client(request):
+    if not request.session.get("department_id"):
+        return redirect("login")
     dept = get_department(request)
     projects = dept.projects.filter(category="client")
 
@@ -77,6 +97,8 @@ def client(request):
 
 
 def company(request):
+    if not request.session.get("department_id"):
+        return redirect("login")
     dept = get_department(request)
     projects = dept.projects.filter(category="company")
 
@@ -84,6 +106,8 @@ def company(request):
 
 
 def academics(request):
+    if not request.session.get("department_id"):
+        return redirect("login")
     dept = get_department(request)
     projects = dept.projects.filter(category="academy")
 
@@ -91,6 +115,8 @@ def academics(request):
 
 
 def internship(request):
+    if not request.session.get("department_id"):
+        return redirect("login")
     dept = get_department(request)
     projects = dept.projects.filter(category="internship")
 
@@ -98,10 +124,14 @@ def internship(request):
 
 
 def add_team(request):
+    if not request.session.get("department_id"):
+        return redirect("login")
     return render(request, "partials/add_team.html")
 
 
 def add_project(request):
+    if not request.session.get("department_id"):
+        return redirect("login")
     return render(request, "partials/add_project.html")
 
 
