@@ -38,45 +38,71 @@ def login_page(request):
 # =========================
 # DASHBOARD
 # =========================
-def dashboard(request):
+from django.shortcuts import render
+from .models import Department, Worker, Project
 
+
+def get_department(request):
     dept_id = request.session.get("department_id")
-    if not dept_id:
-        return redirect("login")
+    return Department.objects.get(id=dept_id)
 
-    dept = Department.objects.get(id=dept_id)
 
-    workers = dept.workers.all().order_by("worker_type", "name")
-    projects = dept.projects.prefetch_related("members__worker").all().order_by("-start_date")
+def base(request):
+    return render(request, "base.html")
 
-    project_data = []
 
-    for project in projects:
-        payments = calculate_project_payments(project)
-
-        member_list = []
-        for m in project.members.all():
-            member_list.append({
-                "name": m.worker.name,
-                "role": m.get_contribution_display(),
-                "payment": payments.get(m.id) if project.amount else None
-            })
-
-        project_data.append({
-            "project": project,
-            "members": member_list
-        })
+def index(request):
+    dept = get_department(request)
 
     context = {
         "department": dept,
-        "worker_count": workers.count(),
-        "project_count": projects.count(),
-        "workers": workers,
-        "projects": project_data,
-        
+        "workers": dept.workers.count(),
+        "projects": dept.projects.count(),
     }
+    return render(request, "partials/index.html", context)
 
-    return render(request, "index.html", context)
+
+def team(request):
+    dept = get_department(request)
+    workers = dept.workers.all()
+
+    return render(request, "partials/team.html", {"workers": workers})
+
+
+def client(request):
+    dept = get_department(request)
+    projects = dept.projects.filter(category="client")
+
+    return render(request, "partials/client.html", {"projects": projects})
+
+
+def company(request):
+    dept = get_department(request)
+    projects = dept.projects.filter(category="company")
+
+    return render(request, "partials/company.html", {"projects": projects})
+
+
+def academics(request):
+    dept = get_department(request)
+    projects = dept.projects.filter(category="academy")
+
+    return render(request, "partials/academics.html", {"projects": projects})
+
+
+def internship(request):
+    dept = get_department(request)
+    projects = dept.projects.filter(category="internship")
+
+    return render(request, "partials/internship.html", {"projects": projects})
+
+
+def add_team(request):
+    return render(request, "partials/add_team.html")
+
+
+def add_project(request):
+    return render(request, "partials/add_project.html")
 
 
 
