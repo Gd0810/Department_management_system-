@@ -1,108 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Dashboard</title>
-</head>
-<body style="font-family:Arial;background:#f7f7f7;">
+<h2>Dashboard Overview</h2>
 
-<div style="width:1000px;margin:40px auto;background:white;padding:30px;border-radius:10px;">
-
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h2>{{ department.name }} Dashboard</h2>
-        <a href="{% url 'logout' %}">Logout</a>
-    </div>
-
-    <hr>
-
-    <!-- Department -->
-    <div style="display:flex;gap:30px;align-items:center;">
-        {% if department.image %}
-            <img src="{{ department.image.url }}" width="120">
-        {% endif %}
-
-        <div>
-            <h3>Department Details</h3>
-            <p><b>Email:</b> {{ department.email }}</p>
-            <p><b>Total Workers:</b> {{ worker_count }}</p>
-            <p><b>Total Projects:</b> {{ project_count }}</p>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card p-3">
+            <h4>Total Workers</h4>
+            <h2>{{ workers }}</h2>
         </div>
     </div>
 
-    <hr><hr>
-
-    <!-- Workers Section -->
-    <h2>Workers</h2>
-
-    <table border="1" cellpadding="10" cellspacing="0" width="100%">
-        <tr style="background:#eee;">
-            <th>Name</th>
-            <th>Type</th>
-            <th>Department Role</th>
-            <th>Posting</th>
-            <th>Date Joined</th>
-        </tr>
-
-        {% for w in workers %}
-        <tr>
-            <td>
-                {% if w.image %}
-                    <img src="{{ w.image.url }}" width="40" style="vertical-align:middle;border-radius:50%;">
-                {% endif %}
-                {{ w.name }}
-            </td>
-            <td>{{ w.get_worker_type_display }}</td>
-            <td>{{ w.department_role }}</td>
-            <td>{{ w.posting }}</td>
-            <td>{{ w.date_of_join }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="5" align="center">No workers added</td>
-        </tr>
-        {% endfor %}
-    </table>
-
-    <hr><hr>
-
-    <!-- Projects Section -->
-    <h2>Projects</h2>
-
-    {% for p in projects %}
-    <div style="border:1px solid #ddd;padding:15px;margin-bottom:20px;border-radius:8px;">
-
-        <h3>{{ p.project.title }}</h3>
-
-        <p>
-            <b>Category:</b> {{ p.project.get_category_display }} |
-            <b>Status:</b> {{ p.project.get_status_display }} |
-            <b>Type:</b> {{ p.project.get_work_type_display }} |
-            <b>Start:</b> {{ p.project.start_date }}
-        </p>
-
-        {% if p.project.amount %}
-            <p><b>Total Amount:</b> ₹{{ p.project.amount }}</p>
-        {% endif %}
-
-        <b>Members:</b>
-        <ul>
-            {% for m in p.members %}
-                <li>
-                    {{ m.name }} ({{ m.role }})
-                    {% if m.payment %}
-                        - ₹{{ m.payment|floatformat:2 }}
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
-
-        {% if p.project.github_link %}
-            <p><a href="{{ p.project.github_link }}" target="_blank">GitHub Repository</a></p>
-        {% endif %}
-
+    <div class="col-md-4">
+        <div class="card p-3">
+            <h4>Total Projects</h4>
+            <h2>{{ projects }}</h2>
+        </div>
     </div>
-{% endfor %}
-
 </div>
-
-</body>
-</html>

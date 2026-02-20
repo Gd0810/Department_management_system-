@@ -1,0 +1,17 @@
+<h2>Team Members</h2>
+
+<table class="table">
+<tr>
+    <th>Name</th>
+    <th>Type</th>
+    <th>Posting</th>
+</tr>
+
+{% for w in workers %}
+<tr>
+    <td>{{ w.name }}</td>
+    <td>{{ w.get_worker_type_display }}</td>
+    <td>{{ w.posting }}</td>
+</tr>
+{% endfor %}
+</table>

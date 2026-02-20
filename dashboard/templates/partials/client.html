@@ -1,0 +1,11 @@
+<h2>Client Projects</h2>
+
+{% for p in projects %}
+<div class="card p-3 mb-3">
+    <h4>{{ p.title }}</h4>
+    <p>Status: {{ p.get_status_display }}</p>
+    <p>Amount: ₹{{ p.amount }}</p>
+</div>
+{% empty %}
+<p>No projects</p>
+{% endfor %}
