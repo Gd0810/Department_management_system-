@@ -33,6 +33,8 @@
       
       <!-- RTL Css -->
       <link rel="stylesheet" href="{% static 'assets/css/rtl.min.css' %}">
+      
+      <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 
       <!-- Iconify for icons -->
     <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
@@ -172,7 +174,18 @@
                 <!-- Sidebar Menu End -->        </div>
         </div>
         <div class="sidebar-footer"></div>
-    </aside>    <main class="main-content">
+    </aside>  
+
+    <main class="main-content">
+
+    <div class="container-fluid pt-4" id="content"
+         hx-get="{% url 'index' %}"
+         hx-trigger="load"
+         hx-target="#content"
+         hx-swap="innerHTML">
+    </div>
+
+</main>
      
 
     <!-- Library Bundle Script -->
