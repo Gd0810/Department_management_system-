@@ -58,12 +58,11 @@ body {
   border-bottom: 1px solid var(--color-border-hr);
 }
 .sidebar-header .header-logo {
-  width: 46px;
+  width: auto;
   height: 46px;
   display: block;
   object-fit: contain;
-  border-radius: 50%;
-  transition: opacity 0.4s ease;
+  /* transition: opacity 0.1s ease; */
 }
 .sidebar.collapsed .header-logo {
   opacity: 0;
