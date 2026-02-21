@@ -6,6 +6,7 @@ from collections import defaultdict
 from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from django.contrib import messages
 
 
 
@@ -157,11 +158,11 @@ def add_team(request):
         valid_worker_types = {choice[0] for choice in Worker.WORKER_TYPE}
 
         if not all([worker_type, name, date_of_join, posting, department_role]):
-            context["error"] = "Please fill all required fields."
+            messages.error(request, "Please fill all required fields.")
             return render(request, "partials/add_team.html", context)
 
         if worker_type not in valid_worker_types:
-            context["error"] = "Invalid worker type selected."
+            messages.error(request, "Invalid worker type selected.")
             return render(request, "partials/add_team.html", context)
 
         try:
@@ -177,10 +178,10 @@ def add_team(request):
             )
             worker.full_clean()
             worker.save()
-            context["success"] = "Team member added successfully."
+            messages.success(request, "Team member added successfully.")
             context["form_data"] = {}
         except (ValidationError, IntegrityError):
-            context["error"] = "Unable to add team member. Check details and try again."
+            messages.error(request, "Unable to add team member. Check details and try again.")
 
     return render(request, "partials/add_team.html", context)
 

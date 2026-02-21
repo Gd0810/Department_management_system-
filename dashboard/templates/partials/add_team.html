@@ -1,3 +1,5 @@
+{% include "tost.html" %}
+
 <section class="mx-auto w-full max-w-6xl px-3 py-4 sm:px-4 lg:px-6">
   <div class="theme-panel overflow-hidden rounded-2xl border shadow-sm transition-colors">
     <div class="theme-panel-soft border-b px-4 py-5 sm:px-6">
@@ -15,17 +17,6 @@
     </div>
 
     <div class="px-4 py-5 sm:px-6">
-      {% if success %}
-        <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-          {{ success }}
-        </div>
-      {% endif %}
-      {% if error %}
-        <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
-          {{ error }}
-        </div>
-      {% endif %}
-
       <form
         method="post"
         enctype="multipart/form-data"
