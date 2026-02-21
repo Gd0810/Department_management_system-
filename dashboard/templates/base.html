@@ -112,6 +112,13 @@
         </div>
         <!-- Sidebar Footer -->
         <div class="sidebar-footer">
+          <div class="department-profile">
+            <div class="department-avatar">{{ department_initials }}</div>
+            <div class="department-meta">
+              <p class="department-name">{{ department.name }}</p>
+            </div>
+          </div>
+
           <button class="theme-toggle">
             <div class="theme-label">
               <span class="theme-icon material-symbols-rounded">dark_mode</span>
@@ -121,6 +128,11 @@
               <div class="theme-toggle-indicator"></div>
             </div>
           </button>
+
+          <a href="{% url 'logout' %}" class="logout-btn">
+            <span class="material-symbols-rounded">logout</span>
+            <span class="logout-text">Logout</span>
+          </a>
         </div>
       </aside>
       <!-- Site main content -->

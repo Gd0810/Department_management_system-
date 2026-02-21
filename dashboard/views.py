@@ -64,7 +64,13 @@ def get_department(request):
 def base(request):
      if not request.session.get("department_id"):
         return redirect("login")
-     return render(request, "base.html")
+     dept = get_department(request)
+     initials = "".join([part[0] for part in dept.name.split()[:2]]).upper() if dept.name else "D"
+     context = {
+         "department": dept,
+         "department_initials": initials,
+     }
+     return render(request, "base.html", context)
 
 
 def index(request):

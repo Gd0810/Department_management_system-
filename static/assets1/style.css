@@ -188,7 +188,43 @@ body {
 .sidebar .sidebar-footer {
   padding: 20px 18px;
   white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   border-top: 1px solid var(--color-border-hr);
+}
+.sidebar-footer .department-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 4px 2px;
+}
+.department-profile .department-avatar {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #fff;
+  background: var(--color-hover-primary);
+}
+.department-profile .department-meta {
+  min-width: 0;
+  transition: opacity 0.3s ease, width 0.3s ease;
+}
+.department-meta .department-name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .sidebar-footer .theme-toggle {
   width: 100%;
@@ -246,6 +282,43 @@ body.dark-theme .theme-toggle-track {
 }
 body.dark-theme .theme-toggle-indicator {
   transform: translateX(24px);
+}
+.sidebar-footer .logout-btn {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 15px;
+  text-decoration: none;
+  color: var(--color-text-primary);
+  background: var(--color-bg-secondary);
+  transition: 0.3s ease;
+}
+.sidebar-footer .logout-btn:hover {
+  color: #fff;
+  background: var(--color-hover-primary);
+}
+.logout-btn .logout-text {
+  transition: opacity 0.3s ease, width 0.3s ease;
+}
+.sidebar.collapsed .department-profile {
+  justify-content: center;
+}
+.sidebar.collapsed .department-meta {
+  opacity: 0;
+  width: 0;
+  pointer-events: none;
+}
+.sidebar.collapsed .logout-btn {
+  justify-content: center;
+  padding: 0;
+}
+.sidebar.collapsed .logout-text {
+  opacity: 0;
+  width: 0;
+  pointer-events: none;
 }
 .site-nav {
   top: 0;

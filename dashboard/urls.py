@@ -14,5 +14,6 @@ urlpatterns = [
     path('internship/', views.internship, name="internship"),
     path('add-team/', views.add_team, name="add_team"),
     path('add-project/', views.add_project, name="add_project"),
+    path('logout/', views.logout_view, name="logout"),
     path('test/', TemplateView.as_view(template_name='test.html'), name="test"),
  ]
