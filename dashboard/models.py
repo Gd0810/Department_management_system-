@@ -27,6 +27,7 @@ class Worker(models.Model):
 
     worker_type = models.CharField(max_length=10, choices=WORKER_TYPE)
     name = models.CharField(max_length=150)
+    email = models.EmailField(unique=True, blank=True, null=True)
     date_of_join = models.DateField()
     image = models.ImageField(upload_to='workers/', blank=True, null=True)
     posting = models.CharField(max_length=150)

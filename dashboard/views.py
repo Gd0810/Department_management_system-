@@ -4,6 +4,8 @@ from django.contrib.auth.hashers import check_password
 from django.views.decorators.http import require_http_methods
 from collections import defaultdict
 from decimal import Decimal
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 
 
 
@@ -126,7 +128,46 @@ def internship(request):
 def add_team(request):
     if not request.session.get("department_id"):
         return redirect("login")
-    return render(request, "partials/add_team.html")
+    dept = get_department(request)
+    context = {}
+
+    if request.method == "POST":
+        worker_type = request.POST.get("worker_type", "").strip()
+        name = request.POST.get("name", "").strip()
+        email = request.POST.get("email", "").strip().lower()
+        date_of_join = request.POST.get("date_of_join", "").strip()
+        posting = request.POST.get("posting", "").strip()
+        department_role = request.POST.get("department_role", "").strip()
+        image = request.FILES.get("image")
+
+        valid_worker_types = {choice[0] for choice in Worker.WORKER_TYPE}
+
+        if not all([worker_type, name, date_of_join, posting, department_role]):
+            context["error"] = "Please fill all required fields."
+            return render(request, "partials/add_team.html", context)
+
+        if worker_type not in valid_worker_types:
+            context["error"] = "Invalid worker type selected."
+            return render(request, "partials/add_team.html", context)
+
+        try:
+            worker = Worker(
+                department=dept,
+                worker_type=worker_type,
+                name=name,
+                email=email or None,
+                date_of_join=date_of_join,
+                posting=posting,
+                department_role=department_role,
+                image=image,
+            )
+            worker.full_clean()
+            worker.save()
+            context["success"] = "Team member added successfully."
+        except (ValidationError, IntegrityError):
+            context["error"] = "Unable to add team member. Check details and try again."
+
+    return render(request, "partials/add_team.html", context)
 
 
 def add_project(request):
