@@ -17,11 +17,13 @@ const savedTheme = localStorage.getItem("theme");
 const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 const shouldUseDarkTheme = savedTheme === "dark" || (!savedTheme && systemPrefersDark);
 document.body.classList.toggle("dark-theme", shouldUseDarkTheme);
+document.documentElement.classList.toggle("dark", shouldUseDarkTheme);
 updateThemeIcon();
 // Toggle between themes on theme button click
 if (themeToggleBtn) {
   themeToggleBtn.addEventListener("click", () => {
     const isDark = document.body.classList.toggle("dark-theme");
+    document.documentElement.classList.toggle("dark", isDark);
     localStorage.setItem("theme", isDark ? "dark" : "light");
     updateThemeIcon();
   });

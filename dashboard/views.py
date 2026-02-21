@@ -135,7 +135,7 @@ def add_team(request):
     if not request.session.get("department_id"):
         return redirect("login")
     dept = get_department(request)
-    context = {}
+    context = {"form_data": {}}
 
     if request.method == "POST":
         worker_type = request.POST.get("worker_type", "").strip()
@@ -145,6 +145,14 @@ def add_team(request):
         posting = request.POST.get("posting", "").strip()
         department_role = request.POST.get("department_role", "").strip()
         image = request.FILES.get("image")
+        context["form_data"] = {
+            "worker_type": worker_type,
+            "name": name,
+            "email": email,
+            "date_of_join": date_of_join,
+            "posting": posting,
+            "department_role": department_role,
+        }
 
         valid_worker_types = {choice[0] for choice in Worker.WORKER_TYPE}
 
@@ -170,6 +178,7 @@ def add_team(request):
             worker.full_clean()
             worker.save()
             context["success"] = "Team member added successfully."
+            context["form_data"] = {}
         except (ValidationError, IntegrityError):
             context["error"] = "Unable to add team member. Check details and try again."
 

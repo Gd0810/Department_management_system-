@@ -18,6 +18,16 @@
   --color-hover-secondary: #e2e2fb;
   --color-shadow: rgba(0, 0, 0, 0.05);
   --color-header-title: #0f172a;
+  --primary-light: #6366f1;
+  --primary-dark: #4f46e5;
+  --panel-bg: #ffffff;
+  --panel-soft-bg: #f8fafc;
+  --panel-border: #e2e8f0;
+  --panel-text: #0f172a;
+  --panel-muted: #475569;
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --input-text: #0f172a;
 }
 body.dark-theme {
   /* Dark theme colors */
@@ -30,6 +40,16 @@ body.dark-theme {
   --color-hover-secondary: #48566a;
   --color-shadow: rgba(0, 0, 0, 0.3);
   --color-header-title: #E2E8F0;
+  --primary-light: #818cf8;
+  --primary-dark: #6366f1;
+  --panel-bg: #0b1730;
+  --panel-soft-bg: #1e2c45;
+  --panel-border: #334155;
+  --panel-text: #f8fafc;
+  --panel-muted: #cbd5e1;
+  --input-bg: #1e2c45;
+  --input-border: #475569;
+  --input-text: #f8fafc;
 }
 body {
   min-height: 100vh;
@@ -350,6 +370,50 @@ body.dark-theme .theme-toggle-indicator {
   background-color: var(--color-bg-sidebar);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
+
+/* Global form/theme utility classes */
+.theme-panel {
+  background: var(--panel-bg);
+  border-color: var(--panel-border);
+  color: var(--panel-text);
+}
+.theme-panel-soft {
+  background: var(--panel-soft-bg);
+  border-color: var(--panel-border);
+}
+.theme-text {
+  color: var(--panel-text);
+}
+.theme-muted {
+  color: var(--panel-muted);
+}
+.theme-input {
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--input-text);
+}
+.theme-input::placeholder {
+  color: var(--panel-muted);
+}
+.theme-input:focus {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-light) 30%, transparent);
+}
+.theme-btn-primary {
+  background: linear-gradient(90deg, var(--primary-light), var(--primary-dark));
+  color: #fff;
+}
+.theme-btn-primary:hover {
+  filter: brightness(1.05);
+}
+.theme-btn-secondary {
+  background: var(--panel-soft-bg);
+  border-color: var(--panel-border);
+  color: var(--panel-text);
+}
+.theme-btn-secondary:hover {
+  filter: brightness(0.98);
+}
 /* Responsive media query code for small screens */
 @media (max-width: 768px) {
   body::before {
@@ -371,6 +435,11 @@ body.dark-theme .theme-toggle-indicator {
   }
   .site-nav {
     display: block;
+    z-index: 30;
+  }
+  .container .main-content {
+    padding: 0.75rem;
+    padding-top: calc(0.75rem + 72px);
   }
   .sidebar {
     position: fixed;
