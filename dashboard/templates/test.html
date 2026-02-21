@@ -9,6 +9,7 @@
     <!-- Iconify for icons -->
     <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     <!-- Linking Google fonts for icons -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
   </head>
@@ -36,7 +37,7 @@
           <!-- Sidebar Menu -->
           <ul class="menu-list">
             <li class="menu-item">
-              <a href="#" 
+              <a href="#"
               hx-get="{% url 'index' %}"
                 hx-target="#content"
                 hx-swap="innerHTML"class="menu-link active">
@@ -45,7 +46,7 @@
               </a>
             </li>
             <li class="menu-item">
-              <a href="#" 
+              <a href="#"
               hx-get="{% url 'team' %}"
                         hx-target="#content"
                         hx-swap="innerHTML" class="menu-link active">
@@ -54,39 +55,57 @@
               </a>
             </li>
             <li class="menu-item">
-              <a href="#" class="menu-link">
-                <span class="material-symbols-rounded">insert_chart</span>
-                <span class="menu-label">Analytics</span>
+              <a href="#"
+              hx-get="{% url 'client' %}"
+                            hx-target="#content"
+                            hx-swap="innerHTML" class="menu-link">
+                <iconify-icon icon="fa6-solid:user-tie" width="20" height="20"></iconify-icon>
+                <span class="menu-label">Client Projects</span>
               </a>
             </li>
             <li class="menu-item">
-              <a href="#" class="menu-link">
-                <span class="material-symbols-rounded">notifications</span>
-                <span class="menu-label">Notifications</span>
+              <a href="#"
+              hx-get="{% url 'company' %}"
+                            hx-target="#content"
+                            hx-swap="innerHTML" class="menu-link">
+                <iconify-icon icon="mdi:company" width="24" height="24"></iconify-icon>
+                <span class="menu-label">Company Projects</span>
               </a>
             </li>
             <li class="menu-item">
-              <a href="#" class="menu-link">
-                <span class="material-symbols-rounded">star</span>
-                <span class="menu-label">Favourites</span>
+              <a href="#"
+              hx-get="{% url 'academics' %}"
+                            hx-target="#content"
+                            hx-swap="innerHTML" class="menu-link">
+                <iconify-icon icon="mdi:teach-poll" width="24" height="24"></iconify-icon>
+                <span class="menu-label">Academics</span>
               </a>
             </li>
             <li class="menu-item">
-              <a href="#" class="menu-link">
-                <span class="material-symbols-rounded">storefront</span>
-                <span class="menu-label">Products</span>
+              <a href="#"
+              hx-get="{% url 'internship' %}"
+                            hx-target="#content"
+                            hx-swap="innerHTML" class="menu-link">
+                <iconify-icon icon="streamline-sharp:share-code-solid" width="24" height="24"></iconify-icon>
+                <span class="menu-label">Internships</span>
               </a>
             </li>
             <li class="menu-item">
-              <a href="#" class="menu-link">
-                <span class="material-symbols-rounded">group</span>
-                <span class="menu-label">Customers</span>
+              <a href="#"
+              hx-get="{% url 'add_team' %}"
+                            hx-target="#content"
+                            hx-swap="innerHTML" class="menu-link">
+                <iconify-icon icon="fluent:people-team-add-24-filled" width="24" height="24"></iconify-icon>
+                <span class="menu-label">Add Team</span>
               </a>
             </li>
             <li class="menu-item">
-              <a href="#" class="menu-link">
-                <span class="material-symbols-rounded">settings</span>
-                <span class="menu-label">Settings</span>
+              <a href="#"
+              hx-get="{% url 'add_project' %}"
+                            hx-target="#content"
+                            hx-swap="innerHTML" class="menu-link">
+               <iconify-icon icon="tdesign:grid-add-filled" width="24" height="24"></iconify-icon>
+                <span class="menu-label">Add Projects</span>
               </a>
             </li>
           </ul>
@@ -105,10 +124,16 @@
         </div>
       </aside>
       <!-- Site main content -->
-      <div class="main-content">
-        <h1 class="page-title">Dashboard Overview</h1>
-        <p class="card">Welcome to your dashboard! Use the menu to navigate, toggle the sidebar, or switch between light and dark themes to personalize your experience.</p>
-      </div>
+       <main class="main-content">
+
+    <div class="container-fluid pt-4" id="content"
+         hx-get="{% url 'index' %}"
+         hx-trigger="load"
+         hx-target="#content"
+         hx-swap="innerHTML">
+    </div>
+
+</main>
     </div>
      <script src="{% static "assets1/main.js" %}"></script>
   </body>

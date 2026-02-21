@@ -2,10 +2,11 @@
 const sidebar = document.querySelector(".sidebar");
 const searchForm = document.querySelector(".search-form");
 const themeToggleBtn = document.querySelector(".theme-toggle");
-const themeIcon = themeToggleBtn.querySelector(".theme-icon");
+const themeIcon = themeToggleBtn ? themeToggleBtn.querySelector(".theme-icon") : null;
 const menuLinks = document.querySelectorAll(".menu-link");
 // Updates the theme icon based on current theme and sidebar state
 const updateThemeIcon = () => {
+  if (!themeIcon || !sidebar) return;
   const isDark = document.body.classList.contains("dark-theme");
   themeIcon.textContent = sidebar.classList.contains("collapsed") ? (isDark ? "light_mode" : "dark_mode") : "dark_mode";
 };
@@ -16,11 +17,13 @@ const shouldUseDarkTheme = savedTheme === "dark" || (!savedTheme && systemPrefer
 document.body.classList.toggle("dark-theme", shouldUseDarkTheme);
 updateThemeIcon();
 // Toggle between themes on theme button click
-themeToggleBtn.addEventListener("click", () => {
-  const isDark = document.body.classList.toggle("dark-theme");
-  localStorage.setItem("theme", isDark ? "dark" : "light");
-  updateThemeIcon();
-});
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener("click", () => {
+    const isDark = document.body.classList.toggle("dark-theme");
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+    updateThemeIcon();
+  });
+}
 // Toggle sidebar collapsed state on buttons click
 sidebarToggleBtns.forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -29,11 +32,14 @@ sidebarToggleBtns.forEach((btn) => {
   });
 });
 // Expand the sidebar when the search form is clicked
-searchForm.addEventListener("click", () => {
-  if (sidebar.classList.contains("collapsed")) {
-    sidebar.classList.remove("collapsed");
-    searchForm.querySelector("input").focus();
-  }
-});
+if (searchForm && sidebar) {
+  searchForm.addEventListener("click", () => {
+    if (sidebar.classList.contains("collapsed")) {
+      sidebar.classList.remove("collapsed");
+      const input = searchForm.querySelector("input");
+      if (input) input.focus();
+    }
+  });
+}
 // Expand sidebar by default on large screens
-if (window.innerWidth > 768) sidebar.classList.remove("collapsed");
+if (window.innerWidth > 768 && sidebar) sidebar.classList.remove("collapsed");

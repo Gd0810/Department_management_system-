@@ -1,206 +1,130 @@
-
 {% load static %}
-
-<!doctype html>
-<html lang="en" dir="ltr">
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-      <title>Hope UI | Responsive Bootstrap 5 Admin Dashboard Template</title>
-      
-      <!-- Favicon -->
-
-      <link rel="shortcut icon" href="{% static 'assets/images/favicon.ico' %}">
-      
-      <!-- Library / Plugin Css Build -->
-      <link rel="stylesheet" href="{% static 'assets/css/core/libs.min.css' %}">
-      
-      <!-- Aos Animation Css -->
-      <link rel="stylesheet" href="{% static 'assets/vendor/aos/dist/aos.css' %}">
-      
-      <!-- Hope Ui Design System Css -->
-      <link rel="stylesheet" href="{% static 'assets/css/hope-ui.min.css' %}">
-      
-      
-      <!-- Custom Css -->
-      <link rel="stylesheet" href="{% static 'assets/css/custom.min.css' %}">
-      
-      <!-- Dark Css -->
-      <link rel="stylesheet" href="{% static 'assets/css/dark.min.css' %}">
-      
-      <!-- Customizer Css -->
-      <link rel="stylesheet" href="{% static 'assets/css/customizer.min.css' %}">
-      
-      <!-- RTL Css -->
-      <link rel="stylesheet" href="{% static 'assets/css/rtl.min.css' %}">
-      
-      <script src="https://unpkg.com/htmx.org@1.9.12"></script>
-
-      <!-- Iconify for icons -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff Management System</title>
+    <link rel="stylesheet" href="{% static "assets1/style.css" %}" />
+    <!-- Iconify for icons -->
     <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
-      
-      
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <!-- Linking Google fonts for icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
   </head>
-  <body class="  ">
-    <!-- loader Start -->
-    <div id="loading">
-      <div class="loader simple-loader">
-          <div class="loader-body">
-          </div>
-      </div>    </div>
-    <!-- loader END -->
-    
-    <aside class="sidebar sidebar-default sidebar-white sidebar-base navs-rounded-all ">
-        <div class="sidebar-header d-flex align-items-center justify-content-start">
-            <a href="#" class="navbar-brand">
-                
-                <!--Logo start-->
-                <div class="logo-main">
-                    <div class="logo-normal">
-                        <svg class=" icon-30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="-0.757324" y="19.2427" width="28" height="4" rx="2" transform="rotate(-45 -0.757324 19.2427)" fill="currentColor"/>
-                            <rect x="7.72803" y="27.728" width="28" height="4" rx="2" transform="rotate(-45 7.72803 27.728)" fill="currentColor"/>
-                            <rect x="10.5366" y="16.3945" width="16" height="4" rx="2" transform="rotate(45 10.5366 16.3945)" fill="currentColor"/>
-                            <rect x="10.5562" y="-0.556152" width="28" height="4" rx="2" transform="rotate(45 10.5562 -0.556152)" fill="currentColor"/>
-                        </svg>
-                    </div>
-                    <div class="logo-mini">
-                        <svg class=" icon-30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="-0.757324" y="19.2427" width="28" height="4" rx="2" transform="rotate(-45 -0.757324 19.2427)" fill="currentColor"/>
-                            <rect x="7.72803" y="27.728" width="28" height="4" rx="2" transform="rotate(-45 7.72803 27.728)" fill="currentColor"/>
-                            <rect x="10.5366" y="16.3945" width="16" height="4" rx="2" transform="rotate(45 10.5366 16.3945)" fill="currentColor"/>
-                            <rect x="10.5562" y="-0.556152" width="28" height="4" rx="2" transform="rotate(45 10.5562 -0.556152)" fill="currentColor"/>
-                        </svg>
-                    </div>
-                </div>
-                <!--logo End-->
-                
-                
-                
-                
-                <h4 class="logo-title">Hope UI</h4>
-            </a>
-            <div class="sidebar-toggle" data-toggle="sidebar" data-active="true">
-                <i class="icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4.25 12.2744L19.25 12.2744" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                        <path d="M10.2998 18.2988L4.2498 12.2748L10.2998 6.24976" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                    </svg>
-                </i>
-            </div>
+ 
+  <body>
+    <!-- Navbar -->
+    <nav class="site-nav">
+      <button class="sidebar-toggle">
+        <span class="material-symbols-rounded">menu</span>
+      </button>
+    </nav>
+    <div class="container">
+      <!-- Sidebar -->
+      <aside class="sidebar collapsed">
+        <!-- Sidebar header -->
+        <div class="sidebar-header">
+          <img src="logo.png" alt="CodingNepal" class="header-logo" />
+          <button class="sidebar-toggle">
+            <span class="material-symbols-rounded">chevron_left</span>
+          </button>
         </div>
-        <div class="sidebar-body pt-0 data-scrollbar">
-            <div class="sidebar-list">
-                <!-- Sidebar Menu Start -->
-                <ul class="navbar-nav iq-main-menu" id="sidebar-menu">
-                    <li class="nav-item static-item">
-                        <a class="nav-link static-item disabled" href="#" tabindex="-1">
-                            <span class="default-icon">HOME</span>
-                            <span class="mini-icon">-</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" 
-                            hx-get="{% url 'index' %}"
-                            hx-target="#content"
-                            hx-swap="innerHTML">
-                            <i class="icon">
-                                <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-20">
-                                    <path opacity="0.4" d="M16.0756 2H19.4616C20.8639 2 22.0001 3.14585 22.0001 4.55996V7.97452C22.0001 9.38864 20.8639 10.5345 19.4616 10.5345H16.0756C14.6734 10.5345 13.5371 9.38864 13.5371 7.97452V4.55996C13.5371 3.14585 14.6734 2 16.0756 2Z" fill="currentColor"></path>
-                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M4.53852 2H7.92449C9.32676 2 10.463 3.14585 10.463 4.55996V7.97452C10.463 9.38864 9.32676 10.5345 7.92449 10.5345H4.53852C3.13626 10.5345 2 9.38864 2 7.97452V4.55996C2 3.14585 3.13626 2 4.53852 2ZM4.53852 13.4655H7.92449C9.32676 13.4655 10.463 14.6114 10.463 16.0255V19.44C10.463 20.8532 9.32676 22 7.92449 22H4.53852C3.13626 22 2 20.8532 2 19.44V16.0255C2 14.6114 3.13626 13.4655 4.53852 13.4655ZM19.4615 13.4655H16.0755C14.6732 13.4655 13.537 14.6114 13.537 16.0255V19.44C13.537 20.8532 14.6732 22 16.0755 22H19.4615C20.8637 22 22 20.8532 22 19.44V16.0255C22 14.6114 20.8637 13.4655 19.4615 13.4655Z" fill="currentColor"></path>
-                                </svg>
-                            </i>
-                            <span class="item-name">Dashboard</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                    <a class="nav-link"
-                        hx-get="{% url 'team' %}"
+        <div class="sidebar-content">
+         
+          
+          <!-- Sidebar Menu -->
+          <ul class="menu-list">
+            <li class="menu-item">
+              <a href="#"
+              hx-get="{% url 'index' %}"
+                hx-target="#content"
+                hx-swap="innerHTML"class="menu-link active">
+                <span class="material-symbols-rounded">dashboard</span>
+                <span class="menu-label">Dashboard</span>
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="#"
+              hx-get="{% url 'team' %}"
                         hx-target="#content"
-                        hx-swap="innerHTML">
-                        <iconify-icon icon="fluent:people-team-28-filled"></iconify-icon>
-                        <span class="item-name">Team</span>
-                        </a>
-                    </li>
-
-                    <li class="nav-item static-item">
-                        <a class="nav-link static-item disabled" href="#" tabindex="-1">
-                            <span class="default-icon">PROJECTS</span>
-                            <span class="mini-icon">-</span>
-                        </a>
-                    </li>
-                     
-                    <li class="nav-item">
-                        <a class="nav-link" 
-                            hx-get="{% url 'client' %}"
+                        hx-swap="innerHTML" class="menu-link">
+                <iconify-icon icon="fluent:people-team-28-filled" width="24" height="24"></iconify-icon>
+                <span class="menu-label">Team</span>
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="#"
+              hx-get="{% url 'client' %}"
                             hx-target="#content"
-                            hx-swap="innerHTML">
-                            <iconify-icon icon="fa6-solid:user-tie" width="19" height="19"></iconify-icon>
-                            <span class="item-name">Client Projects</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" 
-                            hx-get="{% url 'company' %}"
+                            hx-swap="innerHTML" class="menu-link">
+                <iconify-icon icon="fa6-solid:user-tie" width="20" height="20"></iconify-icon>
+                <span class="menu-label">Client Projects</span>
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="#"
+              hx-get="{% url 'company' %}"
                             hx-target="#content"
-                            hx-swap="innerHTML">
-                            <iconify-icon icon="mdi:company" width="22" height="22"></iconify-icon>
-                            <span class="item-name">Company Projects</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" 
-                            hx-get="{% url 'academics' %}"
+                            hx-swap="innerHTML" class="menu-link">
+                <iconify-icon icon="mdi:company" width="24" height="24"></iconify-icon>
+                <span class="menu-label">Company Projects</span>
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="#"
+              hx-get="{% url 'academics' %}"
                             hx-target="#content"
-                            hx-swap="innerHTML">
-                            <iconify-icon icon="mdi:teach-poll" width="22" height="22"></iconify-icon>
-                            <span class="item-name">Academics</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" 
-                            hx-get="{% url 'internship' %}"
+                            hx-swap="innerHTML" class="menu-link">
+                <iconify-icon icon="mdi:teach-poll" width="24" height="24"></iconify-icon>
+                <span class="menu-label">Academics</span>
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="#"
+              hx-get="{% url 'internship' %}"
                             hx-target="#content"
-                            hx-swap="innerHTML">
-                            <iconify-icon icon="streamline-sharp:share-code-solid" width="22" height="22"></iconify-icon>
-                            <span class="item-name">Internships</span>
-                        </a>
-                    </li>
-                    <li class="nav-item static-item">
-                        <a class="nav-link static-item disabled" href="#" tabindex="-1">
-                            <span class="default-icon">ADD</span>
-                            <span class="mini-icon">-</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" 
-                            hx-get="{% url 'add_team' %}"
+                            hx-swap="innerHTML" class="menu-link">
+                <iconify-icon icon="streamline-sharp:share-code-solid" width="24" height="24"></iconify-icon>
+                <span class="menu-label">Internships</span>
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="#"
+              hx-get="{% url 'add_team' %}"
                             hx-target="#content"
-                            hx-swap="innerHTML">
-                            <iconify-icon icon="fluent:people-team-add-24-filled" width="22" height="22"></iconify-icon>
-                            <span class="item-name">Add Team</span>
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" 
-                            hx-get="{% url 'add_project' %}"
+                            hx-swap="innerHTML" class="menu-link">
+                <iconify-icon icon="fluent:people-team-add-24-filled" width="24" height="24"></iconify-icon>
+                <span class="menu-label">Add Team</span>
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="#"
+              hx-get="{% url 'add_project' %}"
                             hx-target="#content"
-                            hx-swap="innerHTML">
-                           <iconify-icon icon="tdesign:grid-add-filled" width="20" height="20"></iconify-icon>
-                            <span class="item-name">Add Projects</span>
-                        </a>
-                    </li>
-                   
-                    
-                </ul>
-                <!-- Sidebar Menu End -->        </div>
+                            hx-swap="innerHTML" class="menu-link">
+               <iconify-icon icon="tdesign:grid-add-filled" width="24" height="24"></iconify-icon>
+                <span class="menu-label">Add Projects</span>
+              </a>
+            </li>
+          </ul>
         </div>
-        <div class="sidebar-footer"></div>
-    </aside>  
-
-    <main class="main-content">
+        <!-- Sidebar Footer -->
+        <div class="sidebar-footer">
+          <button class="theme-toggle">
+            <div class="theme-label">
+              <span class="theme-icon material-symbols-rounded">dark_mode</span>
+              <span class="theme-text">Dark Mode</span>
+            </div>
+            <div class="theme-toggle-track">
+              <div class="theme-toggle-indicator"></div>
+            </div>
+          </button>
+        </div>
+      </aside>
+      <!-- Site main content -->
+       <main class="main-content">
 
     <div class="container-fluid pt-4" id="content"
          hx-get="{% url 'index' %}"
@@ -210,40 +134,7 @@
     </div>
 
 </main>
-     
-
-    <!-- Library Bundle Script -->
-    <script src="{% static 'assets/js/core/libs.min.js' %}"></script>
-    
-    <!-- External Library Bundle Script -->
-    <script src="{% static 'assets/js/core/external.min.js' %}"></script>
-    
-    <!-- Widgetchart Script -->
-    <script src="{% static 'assets/js/charts/widgetcharts.js' %}"></script>
-    
-    <!-- mapchart Script -->
-    <script src="{% static 'assets/js/charts/vectore-chart.js' %}"></script>
-    <script src="{% static 'assets/js/charts/dashboard.js' %}"></script>
-    <script src="{% static 'assets/js/charts/apexcharts.js' %}" ></script>
-    
-    <!-- fslightbox Script -->
-    <script src="{% static 'assets/js/plugins/fslightbox.js' %}"></script>
-    
-    <!-- Settings Script -->
-    <script src="{% static 'assets/js/plugins/setting.js' %}"></script>
-    
-    <!-- Slider-tab Script -->
-    <script src="{% static 'assets/js/plugins/slider-tabs.js' %}"></script>
-    
-    <!-- Form Wizard Script -->
-    <script src="{% static 'assets/js/plugins/form-wizard.js' %}"></script>
-    
-    <!-- AOS Animation Plugin-->
-    <script src="{% static 'assets/vendor/aos/dist/aos.js' %}"></script>
-    
-    <!-- App Script -->
-    <script src="{% static 'assets/js/hope-ui.js' %}" defer></script>
-    
-    
+    </div>
+     <script src="{% static "assets1/main.js" %}"></script>
   </body>
 </html>
