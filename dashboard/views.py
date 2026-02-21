@@ -54,7 +54,7 @@ def login_page(request):
 # DASHBOARD
 # =========================
 from django.shortcuts import render
-from .models import Department, Worker, Project
+from .models import Department, Worker, Project, ProjectMember
 
 
 def get_department(request):
@@ -254,6 +254,70 @@ def add_project(request):
             messages.error(request, "Unable to add project. Check details and try again.")
 
     return render(request, "partials/add_project.html", context)
+
+
+def assign_project(request):
+    if not request.session.get("department_id"):
+        return redirect("login")
+    dept = get_department(request)
+    projects = dept.projects.all().order_by("-id")
+    workers = dept.workers.all().order_by("name")
+
+    context = {
+        "form_data": {},
+        "projects": projects,
+        "workers": workers,
+    }
+
+    if request.method == "POST":
+        project_id = request.POST.get("project", "").strip()
+        worker_id = request.POST.get("worker", "").strip()
+        contribution = request.POST.get("contribution", "gold").strip() or "gold"
+
+        context["form_data"] = {
+            "project": project_id,
+            "worker": worker_id,
+            "contribution": contribution,
+        }
+
+        if not project_id or not worker_id:
+            messages.error(request, "Please select project and worker.")
+            return render(request, "partials/assign_project.html", context)
+
+        valid_contributions = {choice[0] for choice in ProjectMember.CONTRIBUTION}
+        if contribution not in valid_contributions:
+            messages.error(request, "Invalid contribution selected.")
+            return render(request, "partials/assign_project.html", context)
+
+        project = projects.filter(id=project_id).first()
+        worker = workers.filter(id=worker_id).first()
+
+        if not project or not worker:
+            messages.error(request, "Invalid project or worker selection.")
+            return render(request, "partials/assign_project.html", context)
+
+        if ProjectMember.objects.filter(project=project, worker=worker).exists():
+            messages.error(request, "This worker is already assigned to this project.")
+            return render(request, "partials/assign_project.html", context)
+
+        if project.work_type == "solo" and project.members.exists():
+            messages.error(request, "Solo project allows only one worker assignment.")
+            return render(request, "partials/assign_project.html", context)
+
+        try:
+            assignment = ProjectMember(
+                project=project,
+                worker=worker,
+                contribution=contribution,
+            )
+            assignment.full_clean()
+            assignment.save()
+            messages.success(request, "Worker assigned to project successfully.")
+            context["form_data"] = {}
+        except (ValidationError, IntegrityError):
+            messages.error(request, "Unable to assign project member. Check details and try again.")
+
+    return render(request, "partials/assign_project.html", context)
 
 
 

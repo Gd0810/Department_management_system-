@@ -114,6 +114,15 @@
                 <span class="menu-label">Add Projects</span>
               </a>
             </li>
+            <li class="menu-item">
+              <a href="#"
+              hx-get="{% url 'assign_project' %}"
+                            hx-target="#content"
+                            hx-swap="innerHTML" class="menu-link">
+              <iconify-icon icon="material-symbols:add-chart-sharp" width="24" height="24"></iconify-icon>
+                <span class="menu-label">Assign Project</span>
+              </a>
+            </li>
           </ul>
         </div>
         <!-- Sidebar Footer -->

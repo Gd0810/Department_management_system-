@@ -71,7 +71,7 @@ class Project(models.Model):
     github_link = models.URLField(blank=True, null=True)
 
     def clean(self):
-        
+
         if self.category != 'company' and not self.amount:
             raise ValidationError("This project type requires amount")
 
@@ -89,7 +89,7 @@ class ProjectMember(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="members")
     worker = models.ForeignKey(Worker, on_delete=models.CASCADE, related_name="project_memberships")
 
-    contribution = models.CharField(max_length=10, choices=CONTRIBUTION)
+    contribution = models.CharField(max_length=10,default='gold', choices=CONTRIBUTION)
 
     class Meta:
         unique_together = ('project', 'worker')
