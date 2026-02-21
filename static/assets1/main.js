@@ -3,12 +3,14 @@ const sidebar = document.querySelector(".sidebar");
 const searchForm = document.querySelector(".search-form");
 const themeToggleBtn = document.querySelector(".theme-toggle");
 const themeIcon = themeToggleBtn ? themeToggleBtn.querySelector(".theme-icon") : null;
+const themeText = themeToggleBtn ? themeToggleBtn.querySelector(".theme-text") : null;
 const menuLinks = document.querySelectorAll(".menu-link");
 // Updates the theme icon based on current theme and sidebar state
 const updateThemeIcon = () => {
-  if (!themeIcon || !sidebar) return;
+  if (!themeIcon) return;
   const isDark = document.body.classList.contains("dark-theme");
-  themeIcon.textContent = sidebar.classList.contains("collapsed") ? (isDark ? "light_mode" : "dark_mode") : "dark_mode";
+  themeIcon.textContent = isDark ? "light_mode" : "dark_mode";
+  if (themeText) themeText.textContent = isDark ? "Light Mode" : "Dark Mode";
 };
 // Apply dark theme if saved or system prefers, then update icon
 const savedTheme = localStorage.getItem("theme");
@@ -24,6 +26,23 @@ if (themeToggleBtn) {
     updateThemeIcon();
   });
 }
+
+const setActiveMenuLink = (activeLink) => {
+  if (!activeLink) return;
+  menuLinks.forEach((link) => link.classList.remove("active"));
+  activeLink.classList.add("active");
+};
+
+menuLinks.forEach((link) => {
+  link.addEventListener("click", () => setActiveMenuLink(link));
+});
+
+document.body.addEventListener("htmx:beforeRequest", (event) => {
+  const trigger = event.detail && event.detail.elt;
+  if (trigger && trigger.classList && trigger.classList.contains("menu-link")) {
+    setActiveMenuLink(trigger);
+  }
+});
 // Toggle sidebar collapsed state on buttons click
 sidebarToggleBtns.forEach((btn) => {
   btn.addEventListener("click", () => {
