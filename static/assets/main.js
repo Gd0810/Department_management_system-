@@ -5,6 +5,7 @@ const themeToggleBtn = document.querySelector(".theme-toggle");
 const themeIcon = themeToggleBtn ? themeToggleBtn.querySelector(".theme-icon") : null;
 const themeText = themeToggleBtn ? themeToggleBtn.querySelector(".theme-text") : null;
 const menuLinks = document.querySelectorAll(".menu-link");
+const isMobileView = () => window.innerWidth <= 768;
 // Updates the theme icon based on current theme and sidebar state
 const updateThemeIcon = () => {
   if (!themeIcon) return;
@@ -36,7 +37,13 @@ const setActiveMenuLink = (activeLink) => {
 };
 
 menuLinks.forEach((link) => {
-  link.addEventListener("click", () => setActiveMenuLink(link));
+  link.addEventListener("click", () => {
+    setActiveMenuLink(link);
+    if (isMobileView() && sidebar && !sidebar.classList.contains("collapsed")) {
+      sidebar.classList.add("collapsed");
+      updateThemeIcon();
+    }
+  });
 });
 
 document.body.addEventListener("htmx:beforeRequest", (event) => {

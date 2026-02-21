@@ -189,7 +189,71 @@ def add_team(request):
 def add_project(request):
     if not request.session.get("department_id"):
         return redirect("login")
-    return render(request, "partials/add_project.html")
+    dept = get_department(request)
+    context = {"form_data": {}}
+
+    if request.method == "POST":
+        title = request.POST.get("title", "").strip()
+        category = request.POST.get("category", "").strip()
+        work_type = request.POST.get("work_type", "").strip()
+        start_date = request.POST.get("start_date", "").strip()
+        status = request.POST.get("status", "").strip()
+        amount = request.POST.get("amount", "").strip()
+        github_link = request.POST.get("github_link", "").strip()
+
+        context["form_data"] = {
+            "title": title,
+            "category": category,
+            "work_type": work_type,
+            "start_date": start_date,
+            "status": status,
+            "amount": amount,
+            "github_link": github_link,
+        }
+
+        valid_categories = {choice[0] for choice in Project.PROJECT_CATEGORY}
+        valid_work_types = {choice[0] for choice in Project.WORK_TYPE}
+        valid_statuses = {choice[0] for choice in Project.PROJECT_STATUS}
+
+        if not all([title, category, work_type, start_date, status]):
+            messages.error(request, "Please fill all required fields.")
+            return render(request, "partials/add_project.html", context)
+
+        if category not in valid_categories:
+            messages.error(request, "Invalid project category selected.")
+            return render(request, "partials/add_project.html", context)
+
+        if work_type not in valid_work_types:
+            messages.error(request, "Invalid work type selected.")
+            return render(request, "partials/add_project.html", context)
+
+        if status not in valid_statuses:
+            messages.error(request, "Invalid status selected.")
+            return render(request, "partials/add_project.html", context)
+
+        if category != "company" and not amount:
+            messages.error(request, "This project type requires amount")
+            return render(request, "partials/add_project.html", context)
+
+        try:
+            project = Project(
+                department=dept,
+                title=title,
+                category=category,
+                work_type=work_type,
+                start_date=start_date,
+                status=status,
+                amount=amount or None,
+                github_link=github_link or None,
+            )
+            project.full_clean()
+            project.save()
+            messages.success(request, "Project added successfully.")
+            context["form_data"] = {}
+        except (ValidationError, IntegrityError):
+            messages.error(request, "Unable to add project. Check details and try again.")
+
+    return render(request, "partials/add_project.html", context)
 
 
 

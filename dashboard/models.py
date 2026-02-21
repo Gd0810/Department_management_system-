@@ -71,9 +71,7 @@ class Project(models.Model):
     github_link = models.URLField(blank=True, null=True)
 
     def clean(self):
-        if self.category == 'company' and self.amount:
-            raise ValidationError("Company projects cannot have amount")
-
+        
         if self.category != 'company' and not self.amount:
             raise ValidationError("This project type requires amount")
 
