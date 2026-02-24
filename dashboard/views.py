@@ -425,7 +425,7 @@ def logout_view(request):
 def calculate_project_payments(project):
 
     if not project.amount:
-        return []
+        return {}
 
     members = list(project.members.select_related("worker"))
 
