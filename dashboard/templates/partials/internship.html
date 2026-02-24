@@ -266,7 +266,7 @@
         values: topMemberProjectValues,
       },
       income: {
-        label: "Income Earned",
+        label: "Income Earned (Rs)",
         labels: topMemberIncomeLabels,
         values: topMemberIncomeValues,
       },
@@ -278,7 +278,7 @@
     let activeMode = "projects";
 
     function currencyTick(value) {
-      return "Rs. " + Number(value).toLocaleString("en-IN");
+      return Number(value).toLocaleString("en-IN");
     }
 
     function drawCharts() {
@@ -311,7 +311,7 @@
             },
             {
               type: "line",
-              label: "Total Income",
+              label: "Total Income (Rs)",
               data: monthlyIncome,
               yAxisID: "income",
               borderColor: colors.primaryDark,
@@ -353,7 +353,7 @@
                 callback: currencyTick,
               },
               grid: { drawOnChartArea: false },
-              title: { display: true, text: "Income", color: colors.muted },
+              title: { display: true, text: "Income (Rs)", color: colors.muted },
             },
           },
         },
@@ -365,7 +365,7 @@
           labels: topProjects.labels,
           datasets: [
             {
-              label: "Total Income",
+              label: "Total Income (Rs)",
               data: topProjects.income,
               backgroundColor: [
                 colors.primary + "cc",
