@@ -4,8 +4,11 @@ from django.contrib.auth.hashers import check_password
 from django.views.decorators.http import require_http_methods
 from collections import defaultdict
 from decimal import Decimal
+from datetime import date
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from django.db.models import Count, Sum, Value, DecimalField
+from django.db.models.functions import Coalesce, TruncMonth
 from django.contrib import messages
 
 
@@ -127,9 +130,99 @@ def internship(request):
     if not request.session.get("department_id"):
         return redirect("login")
     dept = get_department(request)
-    projects = dept.projects.filter(category="internship")
+    projects = (
+        dept.projects.filter(category="internship")
+        .prefetch_related("members__worker")
+        .order_by("-start_date", "-id")
+    )
 
-    return render(request, "partials/internship.html", {"projects": projects})
+    today = date.today()
+    month_keys = []
+    year, month = today.year, today.month
+    for _ in range(12):
+        month_keys.append((year, month))
+        month -= 1
+        if month == 0:
+            month = 12
+            year -= 1
+    month_keys.reverse()
+
+    monthly_labels = [date(y, m, 1).strftime("%b %Y") for y, m in month_keys]
+    monthly_income = [0.0] * len(month_keys)
+    monthly_project_count = [0] * len(month_keys)
+
+    monthly_rows = (
+        projects.annotate(month_bucket=TruncMonth("start_date"))
+        .values("month_bucket")
+        .annotate(
+            total_income=Coalesce(
+                Sum("amount"),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            ),
+            total_projects=Count("id"),
+        )
+        .order_by("month_bucket")
+    )
+    monthly_lookup = {
+        (row["month_bucket"].year, row["month_bucket"].month): row for row in monthly_rows
+    }
+    for idx, key in enumerate(month_keys):
+        row = monthly_lookup.get(key)
+        if row:
+            monthly_income[idx] = float(row["total_income"] or 0)
+            monthly_project_count[idx] = int(row["total_projects"] or 0)
+
+    top_projects_qs = (
+        projects.annotate(
+            income_value=Coalesce(
+                "amount",
+                Value(Decimal("0.00")),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )
+        )
+        .order_by("-income_value", "title")
+        .values("title", "income_value")[:5]
+    )
+    top_project_labels = [row["title"] for row in top_projects_qs]
+    top_project_income = [float(row["income_value"] or 0) for row in top_projects_qs]
+
+    top_members_count_qs = (
+        ProjectMember.objects.filter(project__department=dept, project__category="internship")
+        .values("worker_id", "worker__name")
+        .annotate(project_count=Count("project_id", distinct=True))
+        .order_by("-project_count", "worker__name")[:5]
+    )
+    top_member_project_labels = [row["worker__name"] for row in top_members_count_qs]
+    top_member_project_values = [int(row["project_count"]) for row in top_members_count_qs]
+
+    member_income_map = defaultdict(Decimal)
+    for project in projects:
+        payments = calculate_project_payments(project)
+        for member in project.members.all():
+            member_income_map[member.worker.name] += payments.get(member.id, Decimal("0.00"))
+
+    top_member_income_pairs = sorted(
+        member_income_map.items(),
+        key=lambda entry: entry[1],
+        reverse=True,
+    )[:5]
+    top_member_income_labels = [item[0] for item in top_member_income_pairs]
+    top_member_income_values = [float(item[1]) for item in top_member_income_pairs]
+
+    context = {
+        "projects": projects,
+        "monthly_labels": monthly_labels,
+        "monthly_income": monthly_income,
+        "monthly_project_count": monthly_project_count,
+        "top_project_labels": top_project_labels,
+        "top_project_income": top_project_income,
+        "top_member_project_labels": top_member_project_labels,
+        "top_member_project_values": top_member_project_values,
+        "top_member_income_labels": top_member_income_labels,
+        "top_member_income_values": top_member_income_values,
+    }
+    return render(request, "partials/internship.html", context)
 
 
 def add_team(request):
