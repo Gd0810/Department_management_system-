@@ -354,9 +354,18 @@ body.dark-theme .theme-toggle-indicator {
 .container {
   display: flex;
 }
+
+/* Override Tailwind's .container max-width so layout can use full viewport */
+.container {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 auto !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
 .container .main-content {
   flex: 1;
-  padding: 30px;
+  /* padding: 30px; */
   color: var(--color-text-primary);
 }
 .main-content .page-title {
@@ -455,3 +464,19 @@ body.dark-theme .theme-toggle-indicator {
     width: 270px;
   }}
 
+/* Ensure main content area and inner containers use full available width */
+.container .main-content #content,
+.container .main-content .container-fluid {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Make cards and forms inside main content stretch full width */
+.main-content .card,
+.main-content form,
+.main-content .theme-panel {
+  width: 100%;
+  max-width: none;
+}
