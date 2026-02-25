@@ -135,6 +135,41 @@ def internship(request):
         .prefetch_related("members__worker")
         .order_by("-start_date", "-id")
     )
+    all_projects = dept.projects.all()
+
+    internship_income_total = (
+        projects.aggregate(
+            total=Coalesce(
+                Sum("amount"),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )
+        )["total"]
+        or Decimal("0.00")
+    )
+    overall_income_total = (
+        all_projects.aggregate(
+            total=Coalesce(
+                Sum("amount"),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )
+        )["total"]
+        or Decimal("0.00")
+    )
+    internship_project_total = projects.count()
+    overall_project_total = all_projects.count()
+
+    income_percentage = (
+        float((internship_income_total / overall_income_total) * Decimal("100"))
+        if overall_income_total > 0
+        else 0.0
+    )
+    project_percentage = (
+        (internship_project_total / overall_project_total) * 100.0
+        if overall_project_total > 0
+        else 0.0
+    )
 
     today = date.today()
     month_keys = []
@@ -212,6 +247,10 @@ def internship(request):
 
     context = {
         "projects": projects,
+        "internship_income_total": float(internship_income_total),
+        "internship_project_total": internship_project_total,
+        "income_percentage": round(income_percentage, 2),
+        "project_percentage": round(project_percentage, 2),
         "monthly_labels": monthly_labels,
         "monthly_income": monthly_income,
         "monthly_project_count": monthly_project_count,
