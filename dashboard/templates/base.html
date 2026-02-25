@@ -152,6 +152,14 @@
       </aside>
       <!-- Site main content -->
        <main class="main-content">
+    <div id="global-content-skeleton" class="global-skeleton hidden" aria-hidden="true">
+      <div class="global-skeleton-inner">
+        <div class="gs-box gs-head"></div>
+        <div class="gs-box gs-row"></div>
+        <div class="gs-box gs-row"></div>
+        <div class="gs-box gs-chart"></div>
+      </div>
+    </div>
 
     <div class="container-fluid pt-4" id="content"
          hx-get="{% url 'index' %}"
@@ -162,6 +170,57 @@
 
 </main>
     </div>
+    <style>
+      .global-skeleton {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 92px 20px 20px 110px;
+        background: color-mix(in srgb, var(--color-bg-primary) 72%, transparent);
+      }
+      .global-skeleton.hidden { display: none; }
+      .global-skeleton-inner { width: min(1200px, 100%); display: grid; gap: 12px; }
+      .gs-box {
+        border-radius: 12px;
+        background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%);
+        background-size: 200% 100%;
+        animation: gs-shimmer 1.1s linear infinite;
+      }
+      body.dark-theme .gs-box {
+        background: linear-gradient(90deg, #223049 25%, #2f3f5b 50%, #223049 75%);
+        background-size: 200% 100%;
+      }
+      .gs-head { height: 32px; width: 34%; }
+      .gs-row { height: 52px; }
+      .gs-chart { height: 260px; }
+      @keyframes gs-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+      @media (max-width: 768px) {
+        .global-skeleton { padding: 90px 12px 12px 12px; }
+      }
+    </style>
+    <script>
+      (function () {
+        const sk = document.getElementById("global-content-skeleton");
+        if (!sk) return;
+
+        function showForContentRequest(evt) {
+          const target = evt.detail && evt.detail.target;
+          if (target && target.id === "content") sk.classList.remove("hidden");
+        }
+        function hideForContentSwap(evt) {
+          const target = evt.detail && evt.detail.target;
+          if (target && target.id === "content") sk.classList.add("hidden");
+        }
+
+        document.body.addEventListener("htmx:beforeRequest", showForContentRequest);
+        document.body.addEventListener("htmx:afterSwap", hideForContentSwap);
+        document.body.addEventListener("htmx:responseError", hideForContentSwap);
+        document.body.addEventListener("htmx:sendError", hideForContentSwap);
+      })();
+    </script>
      <script src="{% static "assets/main.js" %}"></script>
   </body>
 </html>
