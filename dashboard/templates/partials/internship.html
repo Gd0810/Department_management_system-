@@ -208,17 +208,39 @@
   (function () {
     const root = document.body;
 
-    function loadChartJs() {
-      if (window.Chart) return Promise.resolve();
-      if (window.__internshipChartLoader) return window.__internshipChartLoader;
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const existing = document.querySelector(`script[src="${src}"]`);
+        if (existing) {
+          if (existing.dataset.loaded === "true") resolve();
+          else existing.addEventListener("load", () => resolve(), { once: true });
+          return;
+        }
 
-      window.__internshipChartLoader = new Promise((resolve, reject) => {
         const script = document.createElement("script");
-        script.src = "https://cdn.jsdelivr.net/npm/chart.js";
-        script.onload = resolve;
+        script.src = src;
+        script.onload = () => {
+          script.dataset.loaded = "true";
+          resolve();
+        };
         script.onerror = reject;
         document.head.appendChild(script);
       });
+    }
+
+    function loadChartJs() {
+      if (window.Chart && window.Chart.registry?.plugins?.get("zoom")) return Promise.resolve();
+      if (window.__internshipChartLoader) return window.__internshipChartLoader;
+
+      window.__internshipChartLoader = loadScript("https://cdn.jsdelivr.net/npm/chart.js")
+        .then(() => loadScript("https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"))
+        .then(() => loadScript("https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"))
+        .then(() => {
+          const plugin = window.ChartZoom || window["chartjs-plugin-zoom"];
+          if (plugin && !window.Chart.registry?.plugins?.get("zoom")) {
+            window.Chart.register(plugin);
+          }
+        });
 
       return window.__internshipChartLoader;
     }
@@ -326,12 +348,51 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          interaction: {
+            mode: "index",
+            intersect: false,
+          },
+          hover: {
+            mode: "nearest",
+            intersect: false,
+          },
           plugins: {
             legend: {
               labels: {
                 color: colors.text,
                 boxWidth: 14,
                 usePointStyle: true,
+              },
+            },
+            tooltip: {
+              enabled: true,
+              mode: "index",
+              intersect: false,
+              callbacks: {
+                label: function (ctx) {
+                  const yValue = ctx.parsed.y ?? 0;
+                  if (ctx.dataset.yAxisID === "income") {
+                    return `${ctx.dataset.label}: Rs ${currencyTick(yValue)}`;
+                  }
+                  return `${ctx.dataset.label}: ${yValue}`;
+                },
+              },
+            },
+            zoom: {
+              pan: {
+                enabled: true,
+                mode: "xy",
+                modifierKey: "shift",
+              },
+              zoom: {
+                wheel: { enabled: true },
+                pinch: { enabled: true },
+                drag: {
+                  enabled: true,
+                  borderColor: colors.primaryDark,
+                  backgroundColor: colors.primary + "22",
+                },
+                mode: "xy",
               },
             },
           },
@@ -384,8 +445,42 @@
           indexAxis: "y",
           responsive: true,
           maintainAspectRatio: false,
+          interaction: {
+            mode: "nearest",
+            intersect: false,
+          },
+          hover: {
+            mode: "nearest",
+            intersect: false,
+          },
           plugins: {
             legend: { display: false },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: function (ctx) {
+                  const yValue = ctx.parsed.x ?? 0;
+                  return `Rs ${currencyTick(yValue)}`;
+                },
+              },
+            },
+            zoom: {
+              pan: {
+                enabled: true,
+                mode: "xy",
+                modifierKey: "shift",
+              },
+              zoom: {
+                wheel: { enabled: true },
+                pinch: { enabled: true },
+                drag: {
+                  enabled: true,
+                  borderColor: colors.primaryDark,
+                  backgroundColor: colors.primary + "22",
+                },
+                mode: "xy",
+              },
+            },
           },
           scales: {
             x: {
@@ -420,11 +515,46 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          interaction: {
+            mode: "nearest",
+            intersect: false,
+          },
+          hover: {
+            mode: "nearest",
+            intersect: false,
+          },
           plugins: {
             legend: {
               labels: {
                 color: colors.text,
                 boxWidth: 12,
+              },
+            },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: function (ctx) {
+                  const yValue = ctx.parsed.y ?? 0;
+                  if (activeMode === "income") return `Rs ${currencyTick(yValue)}`;
+                  return `${yValue} Projects`;
+                },
+              },
+            },
+            zoom: {
+              pan: {
+                enabled: true,
+                mode: "xy",
+                modifierKey: "shift",
+              },
+              zoom: {
+                wheel: { enabled: true },
+                pinch: { enabled: true },
+                drag: {
+                  enabled: true,
+                  borderColor: colors.primaryDark,
+                  backgroundColor: colors.primary + "22",
+                },
+                mode: "xy",
               },
             },
           },
