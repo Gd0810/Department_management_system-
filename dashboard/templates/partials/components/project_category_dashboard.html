@@ -39,6 +39,25 @@
   .sk-card { height: 132px; }
   .sk-chart { height: 336px; }
   .sk-row { height: 42px; margin-bottom: 6px; }
+  .table-skel-line {
+    height: 12px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%);
+    background-size: 200% 100%;
+    animation: sk-shimmer 1.2s infinite linear;
+  }
+  .table-skel-pill {
+    height: 24px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%);
+    background-size: 200% 100%;
+    animation: sk-shimmer 1.2s infinite linear;
+  }
+  body.dark-theme .table-skel-line,
+  body.dark-theme .table-skel-pill {
+    background: linear-gradient(90deg, #223049 25%, #2f3f5b 50%, #223049 75%);
+    background-size: 200% 100%;
+  }
   @keyframes sk-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
   .category-toggle-shell { border-color: var(--panel-border); background: var(--panel-soft-bg); }
   .category-toggle-btn { border: 0; border-radius: 0.65rem; padding: 0.4rem 0.75rem; font-size: 0.78rem; font-weight: 600; color: var(--panel-muted); background: transparent; transition: all 0.2s ease; }

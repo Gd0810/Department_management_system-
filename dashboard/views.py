@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
 from .models import Department
 from django.contrib.auth.hashers import check_password
 from django.views.decorators.http import require_http_methods
@@ -263,6 +264,52 @@ def _render_project_category_dashboard(request, category_key, template_name):
     dept = get_department(request)
     context = _build_project_category_dashboard_context(dept, category_key)
     return render(request, template_name, context)
+
+
+def category_projects_api(request, category_key):
+    if not request.session.get("department_id"):
+        return JsonResponse({"detail": "Unauthorized"}, status=401)
+
+    valid_categories = {choice[0] for choice in Project.PROJECT_CATEGORY}
+    if category_key not in valid_categories:
+        return JsonResponse({"detail": "Invalid category"}, status=400)
+
+    try:
+        offset = max(int(request.GET.get("offset", 0)), 0)
+    except (TypeError, ValueError):
+        offset = 0
+    try:
+        limit = int(request.GET.get("limit", 7))
+    except (TypeError, ValueError):
+        limit = 7
+    limit = max(1, min(limit, 25))
+
+    dept = get_department(request)
+    queryset = dept.projects.filter(category=category_key).order_by("-start_date", "-id")
+    total_count = queryset.count()
+    rows = list(queryset[offset:offset + limit])
+
+    payload = []
+    for project in rows:
+        payload.append(
+            {
+                "id": project.id,
+                "title": project.title,
+                "status": project.status,
+                "status_display": project.get_status_display(),
+                "start_date": project.start_date.strftime("%Y-%m-%d"),
+            }
+        )
+
+    next_offset = offset + len(rows)
+    has_more = next_offset < total_count
+    return JsonResponse(
+        {
+            "projects": payload,
+            "next_offset": next_offset,
+            "has_more": has_more,
+        }
+    )
 
 
 def add_team(request):

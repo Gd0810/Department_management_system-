@@ -11,7 +11,7 @@
   <div class="pc-real">
     <div class="theme-panel rounded-2xl border p-4 sm:p-5">
       <h3 class="theme-text mb-4 text-base font-semibold">{{ category_label }} Project Listing</h3>
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto" id="projectListingScroll-{{ category_key }}" style="max-height: 430px;">
         <table class="w-full min-w-[680px] border-separate border-spacing-0 text-sm">
           <thead>
             <tr>
@@ -21,32 +21,120 @@
               <th class="theme-table-head rounded-tr-xl px-4 py-3 text-left">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            {% for project in projects %}
-            <tr>
-              <td class="theme-table-cell px-4 py-3">{{ project.title }}</td>
-              <td class="theme-table-cell px-4 py-3">
-                <span class="status-chip {% if project.status == 'finished' %}status-chip-open{% elif project.status == 'on_hold' %}status-chip-pause{% elif project.status == 'canceled' %}status-chip-stop{% else %}status-chip-live{% endif %}">
-                  {{ project.get_status_display }}
-                </span>
-              </td>
-              <td class="theme-table-cell px-4 py-3">{{ project.start_date|date:"Y-m-d" }}</td>
-              <td class="theme-table-cell px-4 py-3">
-                <div class="flex flex-wrap gap-2">
-                  <button type="button" class="action-btn">View</button>
-                  <button type="button" class="action-btn">Update</button>
-                  <button type="button" class="action-btn danger">Delete</button>
-                </div>
-              </td>
-            </tr>
-            {% empty %}
+          <tbody id="projectListingBody-{{ category_key }}"></tbody>
+          <tbody id="projectListingLoader-{{ category_key }}" class="hidden"></tbody>
+          <tbody id="projectListingEmpty-{{ category_key }}" class="hidden">
             <tr>
               <td class="theme-table-cell px-4 py-4 text-center theme-muted" colspan="4">No {{ category_label|lower }} projects available.</td>
             </tr>
-            {% endfor %}
           </tbody>
         </table>
       </div>
     </div>
   </div>
 </div>
+
+<template id="projectRowSkeletonTemplate-{{ category_key }}">
+  <tr class="project-row-skeleton">
+    <td class="theme-table-cell px-4 py-3"><div class="table-skel-line w-4/5"></div></td>
+    <td class="theme-table-cell px-4 py-3"><div class="table-skel-pill w-2/3"></div></td>
+    <td class="theme-table-cell px-4 py-3"><div class="table-skel-line w-1/2"></div></td>
+    <td class="theme-table-cell px-4 py-3"><div class="table-skel-line w-3/4"></div></td>
+  </tr>
+</template>
+
+<script>
+  (function () {
+    const categoryKey = "{{ category_key }}";
+    const scrollWrap = document.getElementById(`projectListingScroll-${categoryKey}`);
+    const body = document.getElementById(`projectListingBody-${categoryKey}`);
+    const loaderBody = document.getElementById(`projectListingLoader-${categoryKey}`);
+    const emptyBody = document.getElementById(`projectListingEmpty-${categoryKey}`);
+    const skelTemplate = document.getElementById(`projectRowSkeletonTemplate-${categoryKey}`);
+    if (!scrollWrap || !body || !loaderBody || !emptyBody || !skelTemplate) return;
+
+    const apiUrl = "{% url 'category_projects_api' '__category__' %}".replace("__category__", categoryKey);
+    const pageSize = 7;
+    let offset = 0;
+    let hasMore = true;
+    let isLoading = false;
+
+    function statusClass(status) {
+      if (status === "finished") return "status-chip-open";
+      if (status === "on_hold") return "status-chip-pause";
+      if (status === "canceled") return "status-chip-stop";
+      return "status-chip-live";
+    }
+
+    function rowMarkup(project) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="theme-table-cell px-4 py-3">${project.title}</td>
+        <td class="theme-table-cell px-4 py-3">
+          <span class="status-chip ${statusClass(project.status)}">${project.status_display}</span>
+        </td>
+        <td class="theme-table-cell px-4 py-3">${project.start_date}</td>
+        <td class="theme-table-cell px-4 py-3">
+          <div class="flex flex-wrap gap-2">
+            <button type="button" class="action-btn">View</button>
+            <button type="button" class="action-btn">Update</button>
+            <button type="button" class="action-btn danger">Delete</button>
+          </div>
+        </td>
+      `;
+      return tr;
+    }
+
+    function showSkeletonRows(count) {
+      loaderBody.classList.remove("hidden");
+      loaderBody.innerHTML = "";
+      for (let i = 0; i < count; i += 1) {
+        loaderBody.appendChild(skelTemplate.content.firstElementChild.cloneNode(true));
+      }
+    }
+
+    function hideSkeletonRows() {
+      loaderBody.classList.add("hidden");
+      loaderBody.innerHTML = "";
+    }
+
+    async function loadNextPage() {
+      if (isLoading || !hasMore) return;
+      isLoading = true;
+      showSkeletonRows(3);
+
+      try {
+        const response = await fetch(`${apiUrl}?offset=${offset}&limit=${pageSize}`, {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+        });
+        if (!response.ok) throw new Error("Request failed");
+        const data = await response.json();
+
+        hideSkeletonRows();
+        const rows = Array.isArray(data.projects) ? data.projects : [];
+        if (!rows.length && offset === 0) {
+          emptyBody.classList.remove("hidden");
+        } else {
+          emptyBody.classList.add("hidden");
+        }
+
+        rows.forEach((project) => body.appendChild(rowMarkup(project)));
+        offset = Number(data.next_offset || (offset + rows.length));
+        hasMore = Boolean(data.has_more);
+      } catch (error) {
+        hideSkeletonRows();
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    function onScroll() {
+      const threshold = 120;
+      const nearBottom = scrollWrap.scrollTop + scrollWrap.clientHeight >= scrollWrap.scrollHeight - threshold;
+      if (nearBottom) loadNextPage();
+    }
+
+    scrollWrap.addEventListener("scroll", onScroll);
+    loadNextPage();
+  })();
+</script>
