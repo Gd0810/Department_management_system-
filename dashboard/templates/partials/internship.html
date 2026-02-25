@@ -7,37 +7,71 @@
 
     <div class="p-4 sm:p-6">
       <div class="grid grid-cols-1 gap-6">
+          <!-- ── KPI Cards ─────────────────────────────────────── -->
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div class="kpi-card rounded-2xl border p-4">
-            <p class="kpi-label">Overall Income From Internship</p>
-            <p class="kpi-value">Rs {{ internship_income_total|floatformat:2 }}</p>
+
+          <!-- Card 1: Overall Income -->
+          <div class="kpi-card kpi-income rounded-2xl overflow-hidden">
+            <div class="kpi-fill-bg"></div>
+            <div class="kpi-inner p-5">
+              <div class="kpi-icon-wrap kpi-icon-income">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-currency-rupee" viewBox="0 0 16 16">
+  <path d="M4 3.06h2.726c1.22 0 2.12.575 2.325 1.724H4v1.051h5.051C8.855 7.001 8 7.558 6.788 7.558H4v1.317L8.437 14h2.11L6.095 8.884h.855c2.316-.018 3.465-1.476 3.688-3.049H12V4.784h-1.345c-.08-.778-.357-1.335-.793-1.732H12V2H4z"/>
+</svg>
+              </div>
+              <p class="kpi-label mt-3">Overall Income From Internship</p>
+              <p class="kpi-value">Rs {{ internship_income_total|floatformat:2 }}</p>
+            </div>
           </div>
 
-          <div class="kpi-card rounded-2xl border p-4">
-            <div class="mb-2 flex items-center justify-between">
-              <p class="kpi-label mb-0">Internship Income Share</p>
-              <span class="kpi-percent">{{ income_percentage|floatformat:2 }}%</span>
+          <!-- Card 2: Income Share -->
+          <div class="kpi-card kpi-income-share rounded-2xl overflow-hidden">
+            <div class="kpi-fill-bg" style="width: {{ income_percentage|floatformat:2 }}%"></div>
+            <div class="kpi-inner p-5">
+              <div class="kpi-icon-wrap kpi-icon-income-share">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              </div>
+              <div class="flex items-start justify-between mt-3 gap-2">
+                <p class="kpi-label">Internship Income Share</p>
+                <span class="kpi-badge kpi-badge-cyan">{{ income_percentage|floatformat:2 }}%</span>
+              </div>
+              <p class="kpi-value">{{ income_percentage|floatformat:1 }}<span class="kpi-unit">%</span></p>
+              <div class="kpi-bar-track mt-2">
+                <div class="kpi-bar-fill kpi-bar-cyan" style="width: {{ income_percentage|floatformat:2 }}%"></div>
+              </div>
+              <p class="kpi-footnote mt-2">Compared to overall project category income</p>
             </div>
-            <div class="kpi-progress-track">
-              <div class="kpi-progress-fill" style="width: {{ income_percentage|floatformat:2 }}%;"></div>
-            </div>
-            <p class="kpi-footnote">Compared to overall project category income</p>
           </div>
 
-          <div class="kpi-card rounded-2xl border p-4">
-            <p class="kpi-label">Overall Internship Project Count</p>
-            <p class="kpi-value">{{ internship_project_total }}</p>
+          <!-- Card 3: Project Count -->
+          <div class="kpi-card kpi-count rounded-2xl overflow-hidden">
+            <div class="kpi-fill-bg"></div>
+            <div class="kpi-inner p-5">
+              <div class="kpi-icon-wrap kpi-icon-count">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </div>
+              <p class="kpi-label mt-3">Overall Internship Project Count</p>
+              <p class="kpi-value">{{ internship_project_total }}</p>
+            </div>
           </div>
 
-          <div class="kpi-card rounded-2xl border p-4">
-            <div class="mb-2 flex items-center justify-between">
-              <p class="kpi-label mb-0">Internship Project Count Share</p>
-              <span class="kpi-percent">{{ project_percentage|floatformat:2 }}%</span>
+          <!-- Card 4: Project Count Share -->
+          <div class="kpi-card kpi-count-share rounded-2xl overflow-hidden">
+            <div class="kpi-fill-bg" style="width: {{ project_percentage|floatformat:2 }}%"></div>
+            <div class="kpi-inner p-5">
+              <div class="kpi-icon-wrap kpi-icon-count-share">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <div class="flex items-start justify-between mt-3 gap-2">
+                <p class="kpi-label">Internship Project Count Share</p>
+                <span class="kpi-badge kpi-badge-green">{{ project_percentage|floatformat:2 }}%</span>
+              </div>
+              <p class="kpi-value">{{ project_percentage|floatformat:1 }}<span class="kpi-unit">%</span></p>
+              <div class="kpi-bar-track mt-2">
+                <div class="kpi-bar-fill kpi-bar-green" style="width: {{ project_percentage|floatformat:2 }}%"></div>
+              </div>
+              <p class="kpi-footnote mt-2">Compared to overall project category count</p>
             </div>
-            <div class="kpi-progress-track">
-              <div class="kpi-progress-fill count" style="width: {{ project_percentage|floatformat:2 }}%;"></div>
-            </div>
-            <p class="kpi-footnote">Compared to overall project category count</p>
           </div>
         </div>
 
@@ -237,54 +271,130 @@
     color: #ef4444;
   }
 
-  .kpi-card {
-    background: linear-gradient(145deg, color-mix(in srgb, var(--panel-soft-bg) 80%, transparent), var(--panel-bg));
-    border-color: var(--panel-border);
-  }
+ /* ═══════════════════════════════════════════════
+   KPI CARDS
+═══════════════════════════════════════════════ */
+.kpi-card {
+  border: 1px solid var(--panel-border);
+  position: relative;
+  min-height: 136px;
+}
 
-  .kpi-label {
-    color: var(--panel-muted);
-    font-size: 0.78rem;
-    font-weight: 600;
-    margin-bottom: 0.35rem;
-  }
+/* Full-width tinted fill — acts as the "how much %" visual */
+.kpi-fill-bg {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 100%;           /* overridden inline for percent cards */
+  height: 100%;
+  pointer-events: none;
+  transition: width 1.1s cubic-bezier(.4,0,.2,1);
+  border-radius: inherit;
+}
 
-  .kpi-value {
-    color: var(--panel-text);
-    font-size: 1.25rem;
-    font-weight: 700;
-    line-height: 1.2;
-  }
+.kpi-inner { position: relative; z-index: 1; }
 
-  .kpi-percent {
-    color: var(--panel-text);
-    font-size: 0.78rem;
-    font-weight: 700;
-  }
+/* Income card — full tint, blue gradient */
+.kpi-income { border-left: 4px solid #2563eb; }
+.kpi-income .kpi-fill-bg {
+  background: linear-gradient(105deg,#2563eb22,#06b6d410);
+}
 
-  .kpi-progress-track {
-    width: 100%;
-    height: 0.62rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--panel-border) 45%, transparent);
-    overflow: hidden;
-  }
+/* Income share card — cyan tint sized to % */
+.kpi-income-share { border-left: 4px solid #06b6d4; }
+.kpi-income-share .kpi-fill-bg {
+  background: linear-gradient(105deg,#06b6d430,#0ea5e915);
+}
 
-  .kpi-progress-fill {
-    height: 100%;
-    border-radius: 999px;
-    background: linear-gradient(90deg, #06b6d4, #2563eb);
-  }
+/* Count card — full tint, green gradient */
+.kpi-count { border-left: 4px solid #16a34a; }
+.kpi-count .kpi-fill-bg {
+  background: linear-gradient(105deg,#16a34a22,#22c55e10);
+}
 
-  .kpi-progress-fill.count {
-    background: linear-gradient(90deg, #22c55e, #16a34a);
-  }
+/* Count share card — green tint sized to % */
+.kpi-count-share { border-left: 4px solid #22c55e; }
+.kpi-count-share .kpi-fill-bg {
+  background: linear-gradient(105deg,#22c55e30,#86efac15);
+}
 
-  .kpi-footnote {
-    margin-top: 0.5rem;
-    color: var(--panel-muted);
-    font-size: 0.72rem;
-  }
+/* Icon */
+.kpi-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 10px;
+}
+.kpi-icon-income       { background: rgba(37,99,235,.13); color:#2563eb; }
+.kpi-icon-income-share { background: rgba(6,182,212,.13); color:#06b6d4; }
+.kpi-icon-count        { background: rgba(22,163,74,.13); color:#16a34a; }
+.kpi-icon-count-share  { background: rgba(34,197,94,.13); color:#22c55e; }
+
+body.dark-theme .kpi-icon-income       { background:rgba(37,99,235,.28); color:#60a5fa; }
+body.dark-theme .kpi-icon-income-share { background:rgba(6,182,212,.28); color:#22d3ee; }
+body.dark-theme .kpi-icon-count        { background:rgba(22,163,74,.28); color:#4ade80; }
+body.dark-theme .kpi-icon-count-share  { background:rgba(34,197,94,.28); color:#86efac; }
+
+/* Typography */
+.kpi-label {
+  color: var(--panel-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+}
+.kpi-value {
+  color: var(--panel-text);
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.15;
+  margin-top: 0.2rem;
+  letter-spacing: -0.025em;
+}
+.kpi-unit {
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.55;
+  margin-left: 2px;
+}
+
+/* Badge */
+.kpi-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.12rem 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.kpi-badge-cyan  { background:rgba(6,182,212,.14); color:#0891b2; }
+.kpi-badge-green { background:rgba(34,197,94,.14); color:#16a34a; }
+body.dark-theme .kpi-badge-cyan  { background:rgba(6,182,212,.28); color:#22d3ee; }
+body.dark-theme .kpi-badge-green { background:rgba(34,197,94,.28); color:#4ade80; }
+
+/* In-card progress bar */
+.kpi-bar-track {
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb,var(--panel-border) 55%,transparent);
+  overflow: hidden;
+}
+.kpi-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 1.3s cubic-bezier(.4,0,.2,1);
+}
+.kpi-bar-cyan  { background: linear-gradient(90deg,#06b6d4,#2563eb); }
+.kpi-bar-green { background: linear-gradient(90deg,#22c55e,#16a34a); }
+
+.kpi-footnote {
+  color: var(--panel-muted);
+  font-size: 0.69rem;
+  line-height: 1.4;
+}
 </style>
 
 <script>

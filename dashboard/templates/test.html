@@ -1,140 +1,556 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Staff Management System</title>
-    <link rel="stylesheet" href="{% static "assets1/style.css" %}" />
-    <!-- Iconify for icons -->
-    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
-    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
-    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
-    <!-- Linking Google fonts for icons -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
-  </head>
- 
-  <body>
-    <!-- Navbar -->
-    <nav class="site-nav">
-      <button class="sidebar-toggle">
-        <span class="material-symbols-rounded">menu</span>
-      </button>
-    </nav>
-    <div class="container">
-      <!-- Sidebar -->
-      <aside class="sidebar collapsed">
-        <!-- Sidebar header -->
-        <div class="sidebar-header">
-          <img src="logo.png" alt="CodingNepal" class="header-logo" />
-          <button class="sidebar-toggle">
-            <span class="material-symbols-rounded">chevron_left</span>
-          </button>
-        </div>
-        <div class="sidebar-content">
-         
-          
-          <!-- Sidebar Menu -->
-          <ul class="menu-list">
-            <li class="menu-item">
-              <a href="#"
-              hx-get="{% url 'index' %}"
-                hx-target="#content"
-                hx-swap="innerHTML"class="menu-link active">
-                <span class="material-symbols-rounded">dashboard</span>
-                <span class="menu-label">Dashboard</span>
-              </a>
-            </li>
-            <li class="menu-item">
-              <a href="#"
-              hx-get="{% url 'team' %}"
-                        hx-target="#content"
-                        hx-swap="innerHTML" class="menu-link active">
-                <iconify-icon icon="fluent:people-team-28-filled" width="24" height="24"></iconify-icon>
-                <span class="menu-label">Team</span>
-              </a>
-            </li>
-            <li class="menu-item">
-              <a href="#"
-              hx-get="{% url 'client' %}"
-                            hx-target="#content"
-                            hx-swap="innerHTML" class="menu-link">
-                <iconify-icon icon="fa6-solid:user-tie" width="20" height="20"></iconify-icon>
-                <span class="menu-label">Client Projects</span>
-              </a>
-            </li>
-            <li class="menu-item">
-              <a href="#"
-              hx-get="{% url 'company' %}"
-                            hx-target="#content"
-                            hx-swap="innerHTML" class="menu-link">
-                <iconify-icon icon="mdi:company" width="24" height="24"></iconify-icon>
-                <span class="menu-label">Company Projects</span>
-              </a>
-            </li>
-            <li class="menu-item">
-              <a href="#"
-              hx-get="{% url 'academics' %}"
-                            hx-target="#content"
-                            hx-swap="innerHTML" class="menu-link">
-                <iconify-icon icon="mdi:teach-poll" width="24" height="24"></iconify-icon>
-                <span class="menu-label">Academics</span>
-              </a>
-            </li>
-            <li class="menu-item">
-              <a href="#"
-              hx-get="{% url 'internship' %}"
-                            hx-target="#content"
-                            hx-swap="innerHTML" class="menu-link">
-                <iconify-icon icon="streamline-sharp:share-code-solid" width="24" height="24"></iconify-icon>
-                <span class="menu-label">Internships</span>
-              </a>
-            </li>
-            <li class="menu-item">
-              <a href="#"
-              hx-get="{% url 'add_team' %}"
-                            hx-target="#content"
-                            hx-swap="innerHTML" class="menu-link">
-                <iconify-icon icon="fluent:people-team-add-24-filled" width="24" height="24"></iconify-icon>
-                <span class="menu-label">Add Team</span>
-              </a>
-            </li>
-            <li class="menu-item">
-              <a href="#"
-              hx-get="{% url 'add_project' %}"
-                            hx-target="#content"
-                            hx-swap="innerHTML" class="menu-link">
-               <iconify-icon icon="tdesign:grid-add-filled" width="24" height="24"></iconify-icon>
-                <span class="menu-label">Add Projects</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-        <!-- Sidebar Footer -->
-        <div class="sidebar-footer">
-          <button class="theme-toggle">
-            <div class="theme-label">
-              <span class="theme-icon material-symbols-rounded">dark_mode</span>
-              <span class="theme-text">Dark Mode</span>
-            </div>
-            <div class="theme-toggle-track">
-              <div class="theme-toggle-indicator"></div>
-            </div>
-          </button>
-        </div>
-      </aside>
-      <!-- Site main content -->
-       <main class="main-content">
-
-    <div class="container-fluid pt-4" id="content"
-         hx-get="{% url 'index' %}"
-         hx-trigger="load"
-         hx-target="#content"
-         hx-swap="innerHTML">
+<div class="w-full space-y-6 p-4 sm:p-6">
+  <div class="theme-panel overflow-hidden rounded-2xl border shadow-sm transition-colors">
+    <div class="theme-panel-soft border-b px-4 py-5 sm:px-6">
+      <h2 class="theme-text text-xl font-semibold tracking-tight">Internship Analytics Dashboard</h2>
+      <p class="theme-muted text-sm">Income, project output, and team performance overview.</p>
     </div>
 
-</main>
+    <div class="p-4 sm:p-6">
+      <div class="grid grid-cols-1 gap-6">
+
+        <!-- ── KPI Cards ─────────────────────────────────────── -->
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+
+          <!-- Card 1: Overall Income -->
+          <div class="kpi-card kpi-income rounded-2xl overflow-hidden">
+            <div class="kpi-fill-bg"></div>
+            <div class="kpi-inner p-5">
+              <div class="kpi-icon-wrap kpi-icon-income">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <p class="kpi-label mt-3">Overall Income From Internship</p>
+              <p class="kpi-value">Rs {{ internship_income_total|floatformat:2 }}</p>
+            </div>
+          </div>
+
+          <!-- Card 2: Income Share -->
+          <div class="kpi-card kpi-income-share rounded-2xl overflow-hidden">
+            <div class="kpi-fill-bg" style="width: {{ income_percentage|floatformat:2 }}%"></div>
+            <div class="kpi-inner p-5">
+              <div class="kpi-icon-wrap kpi-icon-income-share">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              </div>
+              <div class="flex items-start justify-between mt-3 gap-2">
+                <p class="kpi-label">Internship Income Share</p>
+                <span class="kpi-badge kpi-badge-cyan">{{ income_percentage|floatformat:2 }}%</span>
+              </div>
+              <p class="kpi-value">{{ income_percentage|floatformat:1 }}<span class="kpi-unit">%</span></p>
+              <div class="kpi-bar-track mt-2">
+                <div class="kpi-bar-fill kpi-bar-cyan" style="width: {{ income_percentage|floatformat:2 }}%"></div>
+              </div>
+              <p class="kpi-footnote mt-2">Compared to overall project category income</p>
+            </div>
+          </div>
+
+          <!-- Card 3: Project Count -->
+          <div class="kpi-card kpi-count rounded-2xl overflow-hidden">
+            <div class="kpi-fill-bg"></div>
+            <div class="kpi-inner p-5">
+              <div class="kpi-icon-wrap kpi-icon-count">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </div>
+              <p class="kpi-label mt-3">Overall Internship Project Count</p>
+              <p class="kpi-value">{{ internship_project_total }}</p>
+            </div>
+          </div>
+
+          <!-- Card 4: Project Count Share -->
+          <div class="kpi-card kpi-count-share rounded-2xl overflow-hidden">
+            <div class="kpi-fill-bg" style="width: {{ project_percentage|floatformat:2 }}%"></div>
+            <div class="kpi-inner p-5">
+              <div class="kpi-icon-wrap kpi-icon-count-share">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <div class="flex items-start justify-between mt-3 gap-2">
+                <p class="kpi-label">Internship Project Count Share</p>
+                <span class="kpi-badge kpi-badge-green">{{ project_percentage|floatformat:2 }}%</span>
+              </div>
+              <p class="kpi-value">{{ project_percentage|floatformat:1 }}<span class="kpi-unit">%</span></p>
+              <div class="kpi-bar-track mt-2">
+                <div class="kpi-bar-fill kpi-bar-green" style="width: {{ project_percentage|floatformat:2 }}%"></div>
+              </div>
+              <p class="kpi-footnote mt-2">Compared to overall project category count</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Combo Chart ──────────────────────────────────── -->
+        <div class="theme-panel rounded-2xl border p-4 sm:p-5">
+          <div class="mb-1 flex items-center justify-between flex-wrap gap-2">
+            <h3 class="theme-text text-base font-semibold">Internship Income vs Internship Project Count</h3>
+            <span class="int-hint">Scroll to zoom · Drag to pan · Hover for details</span>
+          </div>
+          <div id="internshipIncomeProjectsChart" class="int-plotly-chart"></div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+          <!-- ── Top 5 Projects ────────────────────────────── -->
+          <div class="theme-panel rounded-2xl border p-4 sm:p-5">
+            <div class="mb-1 flex items-center justify-between flex-wrap gap-2">
+              <h3 class="theme-text text-base font-semibold">Top 5 Internship Projects (Income Wise)</h3>
+              <span class="int-hint">Hover for values</span>
+            </div>
+            <div id="topInternshipProjectsChart" class="int-plotly-chart"></div>
+          </div>
+
+          <!-- ── Top 5 Members ─────────────────────────────── -->
+          <div class="theme-panel rounded-2xl border p-4 sm:p-5">
+            <div class="mb-3 flex items-center justify-between gap-3 flex-wrap">
+              <h3 class="theme-text text-base font-semibold">Top 5 Team Members (Internship Performance)</h3>
+              <div class="inline-flex rounded-xl border p-1 internship-toggle-shell">
+                <button type="button" class="internship-toggle-btn is-active" data-mode="projects">Project Count</button>
+                <button type="button" class="internship-toggle-btn" data-mode="income">Income Earned</button>
+              </div>
+            </div>
+            <div id="topInternshipMembersChart" class="int-plotly-chart"></div>
+          </div>
+        </div>
+
+        <!-- ── Project Table ────────────────────────────────── -->
+        <div class="theme-panel rounded-2xl border p-4 sm:p-5">
+          <div class="mb-4 flex items-center justify-between">
+            <h3 class="theme-text text-base font-semibold">Internship Project Listing</h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[680px] border-separate border-spacing-0 text-sm">
+              <thead>
+                <tr>
+                  <th class="theme-table-head rounded-tl-xl px-4 py-3 text-left">Project Title</th>
+                  <th class="theme-table-head px-4 py-3 text-left">Status</th>
+                  <th class="theme-table-head px-4 py-3 text-left">Start Date</th>
+                  <th class="theme-table-head rounded-tr-xl px-4 py-3 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for project in projects %}
+                <tr>
+                  <td class="theme-table-cell px-4 py-3">{{ project.title }}</td>
+                  <td class="theme-table-cell px-4 py-3">
+                    <span class="status-chip {% if project.status == 'finished' %}status-chip-open{% elif project.status == 'on_hold' %}status-chip-pause{% elif project.status == 'canceled' %}status-chip-stop{% else %}status-chip-live{% endif %}">
+                      {{ project.get_status_display }}
+                    </span>
+                  </td>
+                  <td class="theme-table-cell px-4 py-3">{{ project.start_date|date:"Y-m-d" }}</td>
+                  <td class="theme-table-cell px-4 py-3">
+                    <div class="flex flex-wrap gap-2">
+                      <button type="button" class="action-btn">View</button>
+                      <button type="button" class="action-btn">Update</button>
+                      <button type="button" class="action-btn danger">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td class="theme-table-cell rounded-bl-xl rounded-br-xl px-4 py-4 text-center theme-muted" colspan="4">
+                    No internship projects available.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
     </div>
-     <script src="{% static "assets1/main.js" %}"></script>
-  </body>
-</html>
+  </div>
+</div>
+
+{{ monthly_labels|json_script:"internship-monthly-labels" }}
+{{ monthly_income|json_script:"internship-monthly-income" }}
+{{ monthly_project_count|json_script:"internship-monthly-project-count" }}
+{{ top_project_labels|json_script:"internship-top-project-labels" }}
+{{ top_project_income|json_script:"internship-top-project-income" }}
+{{ top_member_project_labels|json_script:"internship-top-member-project-labels" }}
+{{ top_member_project_values|json_script:"internship-top-member-project-values" }}
+{{ top_member_income_labels|json_script:"internship-top-member-income-labels" }}
+{{ top_member_income_values|json_script:"internship-top-member-income-values" }}
+
+<style>
+/* ═══════════════════════════════════════════════
+   KPI CARDS
+═══════════════════════════════════════════════ */
+.kpi-card {
+  border: 1px solid var(--panel-border);
+  position: relative;
+  min-height: 136px;
+}
+
+/* Full-width tinted fill — acts as the "how much %" visual */
+.kpi-fill-bg {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 100%;           /* overridden inline for percent cards */
+  height: 100%;
+  pointer-events: none;
+  transition: width 1.1s cubic-bezier(.4,0,.2,1);
+  border-radius: inherit;
+}
+
+.kpi-inner { position: relative; z-index: 1; }
+
+/* Income card — full tint, blue gradient */
+.kpi-income { border-left: 4px solid #2563eb; }
+.kpi-income .kpi-fill-bg {
+  background: linear-gradient(105deg,#2563eb22,#06b6d410);
+}
+
+/* Income share card — cyan tint sized to % */
+.kpi-income-share { border-left: 4px solid #06b6d4; }
+.kpi-income-share .kpi-fill-bg {
+  background: linear-gradient(105deg,#06b6d430,#0ea5e915);
+}
+
+/* Count card — full tint, green gradient */
+.kpi-count { border-left: 4px solid #16a34a; }
+.kpi-count .kpi-fill-bg {
+  background: linear-gradient(105deg,#16a34a22,#22c55e10);
+}
+
+/* Count share card — green tint sized to % */
+.kpi-count-share { border-left: 4px solid #22c55e; }
+.kpi-count-share .kpi-fill-bg {
+  background: linear-gradient(105deg,#22c55e30,#86efac15);
+}
+
+/* Icon */
+.kpi-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 10px;
+}
+.kpi-icon-income       { background: rgba(37,99,235,.13); color:#2563eb; }
+.kpi-icon-income-share { background: rgba(6,182,212,.13); color:#06b6d4; }
+.kpi-icon-count        { background: rgba(22,163,74,.13); color:#16a34a; }
+.kpi-icon-count-share  { background: rgba(34,197,94,.13); color:#22c55e; }
+
+body.dark-theme .kpi-icon-income       { background:rgba(37,99,235,.28); color:#60a5fa; }
+body.dark-theme .kpi-icon-income-share { background:rgba(6,182,212,.28); color:#22d3ee; }
+body.dark-theme .kpi-icon-count        { background:rgba(22,163,74,.28); color:#4ade80; }
+body.dark-theme .kpi-icon-count-share  { background:rgba(34,197,94,.28); color:#86efac; }
+
+/* Typography */
+.kpi-label {
+  color: var(--panel-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+}
+.kpi-value {
+  color: var(--panel-text);
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.15;
+  margin-top: 0.2rem;
+  letter-spacing: -0.025em;
+}
+.kpi-unit {
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.55;
+  margin-left: 2px;
+}
+
+/* Badge */
+.kpi-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.12rem 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.kpi-badge-cyan  { background:rgba(6,182,212,.14); color:#0891b2; }
+.kpi-badge-green { background:rgba(34,197,94,.14); color:#16a34a; }
+body.dark-theme .kpi-badge-cyan  { background:rgba(6,182,212,.28); color:#22d3ee; }
+body.dark-theme .kpi-badge-green { background:rgba(34,197,94,.28); color:#4ade80; }
+
+/* In-card progress bar */
+.kpi-bar-track {
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb,var(--panel-border) 55%,transparent);
+  overflow: hidden;
+}
+.kpi-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 1.3s cubic-bezier(.4,0,.2,1);
+}
+.kpi-bar-cyan  { background: linear-gradient(90deg,#06b6d4,#2563eb); }
+.kpi-bar-green { background: linear-gradient(90deg,#22c55e,#16a34a); }
+
+.kpi-footnote {
+  color: var(--panel-muted);
+  font-size: 0.69rem;
+  line-height: 1.4;
+}
+
+/* ═══════════════════════════════════════════════
+   PLOTLY CHARTS
+═══════════════════════════════════════════════ */
+.int-plotly-chart {
+  width: 100%;
+  height: 340px;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+.int-hint {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--panel-muted);
+  background: var(--panel-soft-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  white-space: nowrap;
+}
+.modebar-container { opacity: 0; transition: opacity .2s; }
+.int-plotly-chart:hover .modebar-container { opacity: 1; }
+
+/* ═══════════════════════════════════════════════
+   TOGGLE
+═══════════════════════════════════════════════ */
+.internship-toggle-shell {
+  border-color: var(--panel-border);
+  background: var(--panel-soft-bg);
+}
+.internship-toggle-btn {
+  border: 0;
+  border-radius: 0.65rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--panel-muted);
+  background: transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.internship-toggle-btn.is-active {
+  background: linear-gradient(90deg,var(--primary-light),var(--primary-dark));
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════════
+   TABLE
+═══════════════════════════════════════════════ */
+.theme-table-head {
+  border-top: 1px solid var(--panel-border);
+  border-bottom: 1px solid var(--panel-border);
+  background: var(--panel-soft-bg);
+  color: var(--panel-text);
+  font-weight: 600;
+}
+.theme-table-cell {
+  border-bottom: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  color: var(--panel-text);
+}
+
+/* ═══════════════════════════════════════════════
+   STATUS CHIPS
+═══════════════════════════════════════════════ */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.status-chip-live  { color:#166534; background:#dcfce7; }
+.status-chip-open  { color:#1e3a8a; background:#dbeafe; }
+.status-chip-pause { color:#92400e; background:#fef3c7; }
+.status-chip-stop  { color:#991b1b; background:#fee2e2; }
+body.dark-theme .status-chip-live  { color:#bbf7d0; background:rgba(34,197,94,.2); }
+body.dark-theme .status-chip-open  { color:#bfdbfe; background:rgba(59,130,246,.2); }
+body.dark-theme .status-chip-pause { color:#fde68a; background:rgba(234,179,8,.2); }
+body.dark-theme .status-chip-stop  { color:#fecaca; background:rgba(239,68,68,.2); }
+
+/* ═══════════════════════════════════════════════
+   ACTION BUTTONS
+═══════════════════════════════════════════════ */
+.action-btn {
+  border: 1px solid var(--panel-border);
+  border-radius: 0.65rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--panel-text);
+  background: var(--panel-soft-bg);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.action-btn:hover  { filter: brightness(1.06); }
+.action-btn.danger { color: #ef4444; }
+</style>
+
+<script>
+(function () {
+  function getJson(id) {
+    const node = document.getElementById(id);
+    if (!node) return [];
+    try { return JSON.parse(node.textContent); } catch { return []; }
+  }
+  function toNums(arr) { return arr.map(v => Number(v || 0)); }
+
+  const monthlyLabels          = getJson("internship-monthly-labels");
+  const monthlyIncome          = toNums(getJson("internship-monthly-income"));
+  const monthlyProjectCount    = toNums(getJson("internship-monthly-project-count"));
+  const topProjectLabels       = getJson("internship-top-project-labels");
+  const topProjectIncome       = toNums(getJson("internship-top-project-income"));
+  const topMemberProjectLabels = getJson("internship-top-member-project-labels");
+  const topMemberProjectValues = toNums(getJson("internship-top-member-project-values"));
+  const topMemberIncomeLabels  = getJson("internship-top-member-income-labels");
+  const topMemberIncomeValues  = toNums(getJson("internship-top-member-income-values"));
+
+  let activeMode = "projects";
+
+  function getColors() {
+    const s = getComputedStyle(document.body);
+    const g = k => s.getPropertyValue(k).trim();
+    const dark = document.body.classList.contains("dark-theme");
+    return {
+      text     : g("--panel-text")    || (dark?"#e2e8f0":"#0f172a"),
+      muted    : g("--panel-muted")   || (dark?"#94a3b8":"#475569"),
+      border   : g("--panel-border")  || (dark?"#334155":"#cbd5e1"),
+      primary  : g("--primary-light") || "#6366f1",
+      primaryDk: g("--primary-dark")  || "#4f46e5",
+      grid     : dark?"rgba(148,163,184,0.13)":"rgba(100,116,139,0.13)",
+      paper    : dark?"#1e293b":"#ffffff",
+      dark,
+    };
+  }
+
+  function baseLayout(c, extras = {}) {
+    return {
+      paper_bgcolor: c.paper,
+      plot_bgcolor : c.paper,
+      font         : { family:"inherit", color:c.text, size:12 },
+      margin       : { t:28, r:18, b:52, l:56 },
+      legend       : { bgcolor:"rgba(0,0,0,0)", font:{ color:c.text } },
+      hoverlabel   : { bgcolor:c.dark?"#1e293b":"#fff", bordercolor:c.primary, font:{ color:c.text, size:12 } },
+      xaxis: { gridcolor:c.grid, linecolor:c.border, tickfont:{ color:c.muted }, zerolinecolor:c.border },
+      yaxis: { gridcolor:c.grid, linecolor:c.border, tickfont:{ color:c.muted }, zerolinecolor:c.border },
+      ...extras,
+    };
+  }
+
+  const cfg = {
+    scrollZoom: true,
+    displayModeBar: true,
+    modeBarButtonsToRemove: ["select2d","lasso2d","resetScale2d","toImage"],
+    responsive: true,
+    displaylogo: false,
+  };
+
+  /* Chart 1 ─ Income vs Projects (combo) */
+  function drawCombo() {
+    const c = getColors();
+    const hue = (i) => `hsla(${228 + i*9},75%,${c.dark?58:50}%,0.72)`;
+    Plotly.react("internshipIncomeProjectsChart", [
+      {
+        type:"bar", name:"Project Count",
+        x:monthlyLabels, y:monthlyProjectCount, yaxis:"y",
+        marker:{ color:monthlyProjectCount.map((_,i)=>hue(i)), line:{ color:c.primary, width:1 } },
+        hovertemplate:"<b>%{x}</b><br>Projects: <b>%{y}</b><extra></extra>",
+      },
+      {
+        type:"scatter", mode:"lines+markers", name:"Income (Rs)",
+        x:monthlyLabels, y:monthlyIncome, yaxis:"y2",
+        line:{ color:c.primaryDk, width:3, shape:"spline", smoothing:0.6 },
+        marker:{ color:"#fff", size:7, line:{ color:c.primaryDk, width:2.5 } },
+        hovertemplate:"<b>%{x}</b><br>Income: <b>₹%{y:,.0f}</b><extra></extra>",
+      },
+    ], baseLayout(c, {
+      yaxis: { title:{ text:"Projects",font:{color:c.muted} }, gridcolor:c.grid, linecolor:c.border, tickfont:{color:c.muted}, zerolinecolor:c.border },
+      yaxis2: { title:{ text:"Income (Rs)",font:{color:c.muted} }, overlaying:"y", side:"right", gridcolor:"rgba(0,0,0,0)", tickfont:{color:c.muted}, tickformat:",", zerolinecolor:c.border },
+      xaxis: { gridcolor:c.grid, linecolor:c.border, tickfont:{color:c.muted}, zerolinecolor:c.border },
+      bargap:0.35, hovermode:"x unified",
+    }), cfg);
+  }
+
+  /* Chart 2 ─ Top 5 Projects horizontal bar */
+  function drawTopProjects() {
+    const c = getColors();
+    const colors = ["#6366f1d9","#4f46e5d9","#0ea5e9d9","#10b981d9","#f59e0bd9"];
+    Plotly.react("topInternshipProjectsChart", [{
+      type:"bar", orientation:"h",
+      x:topProjectIncome, y:topProjectLabels,
+      marker:{ color:colors, line:{ color:c.border, width:1 } },
+      hovertemplate:"<b>%{y}</b><br>Income: <b>₹%{x:,.0f}</b><extra></extra>",
+    }], baseLayout(c, {
+      xaxis: { title:{text:"Income (Rs)",font:{color:c.muted}}, gridcolor:c.grid, linecolor:c.border, tickfont:{color:c.muted}, tickformat:",", zerolinecolor:c.border },
+      yaxis: { automargin:true, gridcolor:"rgba(0,0,0,0)", linecolor:c.border, tickfont:{color:c.text, size:11}, zerolinecolor:c.border },
+      margin:{ t:28, r:24, b:52, l:155 },
+      hovermode:"closest",
+    }), cfg);
+  }
+
+  /* Chart 3 ─ Top 5 Members */
+  function drawTopMembers() {
+    const c = getColors();
+    const isIncome = activeMode === "income";
+    const labels = isIncome ? topMemberIncomeLabels  : topMemberProjectLabels;
+    const values = isIncome ? topMemberIncomeValues  : topMemberProjectValues;
+    const barColors = values.map((_,i)=>`hsla(${230+i*22},72%,${c.dark?58:48}%,0.82)`);
+    Plotly.react("topInternshipMembersChart", [{
+      type:"bar", x:labels, y:values,
+      marker:{ color:barColors, line:{ color:c.primaryDk, width:1.2 } },
+      hovertemplate:isIncome
+        ?"<b>%{x}</b><br>Income: <b>₹%{y:,.0f}</b><extra></extra>"
+        :"<b>%{x}</b><br>Projects: <b>%{y}</b><extra></extra>",
+    }], baseLayout(c, {
+      yaxis: { title:{text:isIncome?"Income (Rs)":"Projects",font:{color:c.muted}}, gridcolor:c.grid, linecolor:c.border, tickfont:{color:c.muted}, tickformat:isIncome?",":"", zerolinecolor:c.border },
+      xaxis: { gridcolor:"rgba(0,0,0,0)", linecolor:c.border, tickfont:{color:c.text}, zerolinecolor:c.border },
+      bargap:0.45, hovermode:"closest",
+    }), cfg);
+  }
+
+  function drawAll() { drawCombo(); drawTopProjects(); drawTopMembers(); }
+
+  function bindToggle() {
+    document.querySelectorAll(".internship-toggle-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        activeMode = btn.dataset.mode;
+        document.querySelectorAll(".internship-toggle-btn").forEach(b =>
+          b.classList.toggle("is-active", b === btn)
+        );
+        drawTopMembers();
+      });
+    });
+  }
+
+  function observeTheme() {
+    const obs = new MutationObserver(drawAll);
+    obs.observe(document.body, { attributes:true, attributeFilter:["class"] });
+    window.internshipDashboardCleanup = () => obs.disconnect();
+  }
+
+  function loadPlotly() {
+    if (window.Plotly) return Promise.resolve();
+    if (window.__intPlotlyLoader) return window.__intPlotlyLoader;
+    window.__intPlotlyLoader = new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = "https://cdn.plot.ly/plotly-2.32.0.min.js";
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+    return window.__intPlotlyLoader;
+  }
+
+  if (window.internshipDashboardCleanup) window.internshipDashboardCleanup();
+
+  loadPlotly()
+    .then(() => { bindToggle(); drawAll(); observeTheme(); })
+    .catch(() => console.error("Failed to load Plotly.js"));
+})();
+</script>
