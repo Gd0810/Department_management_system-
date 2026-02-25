@@ -1,13 +1,7 @@
 {% include "tost.html" %}
 
 <div id="addTeamRoot" class="form-loading">
-  <div class="form-skeleton space-y-3 px-3 py-4 sm:px-4 lg:px-6">
-    <div class="sk-box sk-head"></div>
-    <div class="sk-box sk-row"></div>
-    <div class="sk-box sk-row"></div>
-    <div class="sk-box sk-row"></div>
-    <div class="sk-box sk-btn"></div>
-  </div>
+  {% include "partials/components/form_skeleton_markup.html" %}
   <div class="form-real">
 <section class="w-full max-w-none px-3 py-4 sm:px-4 lg:px-6">
   <div class="theme-panel overflow-hidden rounded-2xl border shadow-sm transition-colors">
@@ -128,31 +122,4 @@
 </section>
   </div>
 </div>
-
-<style>
-  .form-loading .form-real { opacity: 0; pointer-events: none; height: 0; overflow: hidden; }
-  .form-loading .form-skeleton { display: block; }
-  .form-skeleton { display: none; }
-  .sk-box {
-    border-radius: 12px;
-    background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%);
-    background-size: 200% 100%;
-    animation: form-shimmer 1.2s linear infinite;
-  }
-  body.dark-theme .sk-box {
-    background: linear-gradient(90deg, #223049 25%, #2f3f5b 50%, #223049 75%);
-    background-size: 200% 100%;
-  }
-  .sk-head { height: 34px; width: 40%; }
-  .sk-row { height: 62px; }
-  .sk-btn { height: 44px; width: 180px; margin-left: auto; }
-  @keyframes form-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-</style>
-
-<script>
-  (function () {
-    const root = document.getElementById("addTeamRoot");
-    if (!root) return;
-    setTimeout(() => root.classList.remove("form-loading"), 420);
-  })();
-</script>
+{% include "partials/components/form_skeleton_assets.html" with skeleton_root_id="addTeamRoot" skeleton_delay_ms=420 %}

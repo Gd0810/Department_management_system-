@@ -1,0 +1,27 @@
+<style>
+  .form-loading .form-real { opacity: 0; pointer-events: none; height: 0; overflow: hidden; }
+  .form-loading .form-skeleton { display: block; }
+  .form-skeleton { display: none; }
+  .sk-box {
+    border-radius: 12px;
+    background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%);
+    background-size: 200% 100%;
+    animation: form-shimmer 1.2s linear infinite;
+  }
+  body.dark-theme .sk-box {
+    background: linear-gradient(90deg, #223049 25%, #2f3f5b 50%, #223049 75%);
+    background-size: 200% 100%;
+  }
+  .sk-head { height: 34px; width: 40%; }
+  .sk-row { height: 62px; }
+  .sk-btn { height: 44px; width: 180px; margin-left: auto; }
+  @keyframes form-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+</style>
+
+<script>
+  (function () {
+    const root = document.getElementById("{{ skeleton_root_id }}");
+    if (!root) return;
+    setTimeout(() => root.classList.remove("form-loading"), {{ skeleton_delay_ms|default:420 }});
+  })();
+</script>
