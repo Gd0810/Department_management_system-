@@ -1,0 +1,328 @@
+<div class="w-full space-y-6 p-4 sm:p-6">
+  <div class="theme-panel overflow-hidden rounded-2xl border shadow-sm transition-colors">
+    <div class="theme-panel-soft border-b px-4 py-5 sm:px-6">
+      <h2 class="theme-text text-xl font-semibold tracking-tight">{{ category_label }} Analytics Dashboard</h2>
+      <p class="theme-muted text-sm">{{ category_label }}, project output, and team performance overview.</p>
+    </div>
+
+    <div class="p-4 sm:p-6">
+      <div class="grid grid-cols-1 gap-6">
+        {% include "partials/components/kpi.html" %}
+        {% include "partials/components/income1.html" %}
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {% include "partials/components/top5.html" %}
+          {% include "partials/components/top51.html" %}
+        </div>
+        {% include "partials/components/project_listing.html" %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ monthly_labels|json_script:"monthly-labels" }}
+{{ monthly_income|json_script:"monthly-income" }}
+{{ monthly_project_count|json_script:"monthly-project-count" }}
+{{ top_project_labels|json_script:"top-project-labels" }}
+{{ top_project_income|json_script:"top-project-income" }}
+{{ top_member_project_labels|json_script:"top-member-project-labels" }}
+{{ top_member_project_values|json_script:"top-member-project-values" }}
+{{ top_member_income_labels|json_script:"top-member-income-labels" }}
+{{ top_member_income_values|json_script:"top-member-income-values" }}
+
+<style>
+  .pc-section.pc-loading .pc-real { opacity: 0; pointer-events: none; height: 0; overflow: hidden; }
+  .pc-section.pc-loading .pc-skel { display: block; }
+  .pc-section .pc-skel { display: none; }
+  .pc-section .pc-real { opacity: 1; transition: opacity .35s ease; }
+  .sk-box { background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%); background-size: 200% 100%; animation: sk-shimmer 1.2s infinite linear; border-radius: 12px; }
+  body.dark-theme .sk-box { background: linear-gradient(90deg, #223049 25%, #2f3f5b 50%, #223049 75%); background-size: 200% 100%; }
+  .sk-card { height: 132px; }
+  .sk-chart { height: 336px; }
+  .sk-row { height: 42px; margin-bottom: 6px; }
+  @keyframes sk-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .category-toggle-shell { border-color: var(--panel-border); background: var(--panel-soft-bg); }
+  .category-toggle-btn { border: 0; border-radius: 0.65rem; padding: 0.4rem 0.75rem; font-size: 0.78rem; font-weight: 600; color: var(--panel-muted); background: transparent; transition: all 0.2s ease; }
+  .category-toggle-btn.is-active { background: linear-gradient(90deg, var(--primary-light), var(--primary-dark)); color: #fff; }
+  .theme-table-head { border-top: 1px solid var(--panel-border); border-bottom: 1px solid var(--panel-border); background: var(--panel-soft-bg); color: var(--panel-text); font-weight: 600; }
+  .theme-table-cell { border-bottom: 1px solid var(--panel-border); background: var(--panel-bg); color: var(--panel-text); }
+  .status-chip { display: inline-flex; align-items: center; border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 0.72rem; font-weight: 600; }
+  .status-chip-live { color: #166534; background: #dcfce7; }
+  .status-chip-open { color: #1e3a8a; background: #dbeafe; }
+  .status-chip-pause { color: #92400e; background: #fef3c7; }
+  .status-chip-stop { color: #991b1b; background: #fee2e2; }
+  .action-btn { border: 1px solid var(--panel-border); border-radius: 0.65rem; padding: 0.3rem 0.7rem; font-size: 0.76rem; font-weight: 600; color: var(--panel-text); background: var(--panel-soft-bg); transition: all 0.2s ease; }
+  .action-btn.danger { color: #ef4444; }
+  .kpi-card {
+    border: 1px solid var(--panel-border);
+    position: relative;
+    min-height: 136px;
+    background: var(--panel-bg);
+  }
+  .kpi-fill-bg {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    transition: width 1.1s cubic-bezier(.4,0,.2,1);
+    border-radius: inherit;
+  }
+  .kpi-inner { position: relative; z-index: 1; }
+  .kpi-income { border-left: 4px solid #2563eb; }
+  .kpi-income .kpi-fill-bg { background: linear-gradient(105deg,#2563eb22,#06b6d410); }
+  .kpi-income-share { border-left: 4px solid #06b6d4; }
+  .kpi-income-share .kpi-fill-bg { background: linear-gradient(105deg,#06b6d430,#0ea5e915); }
+  .kpi-count { border-left: 4px solid #16a34a; }
+  .kpi-count .kpi-fill-bg { background: linear-gradient(105deg,#16a34a22,#22c55e10); }
+  .kpi-count-share { border-left: 4px solid #22c55e; }
+  .kpi-count-share .kpi-fill-bg { background: linear-gradient(105deg,#22c55e30,#86efac15); }
+  .kpi-icon-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+  .kpi-icon-income { background: rgba(37,99,235,.13); color:#2563eb; }
+  .kpi-icon-income-share { background: rgba(6,182,212,.13); color:#06b6d4; }
+  .kpi-icon-count { background: rgba(22,163,74,.13); color:#16a34a; }
+  .kpi-icon-count-share { background: rgba(34,197,94,.13); color:#22c55e; }
+  body.dark-theme .kpi-icon-income { background:rgba(37,99,235,.28); color:#60a5fa; }
+  body.dark-theme .kpi-icon-income-share { background:rgba(6,182,212,.28); color:#22d3ee; }
+  body.dark-theme .kpi-icon-count { background:rgba(22,163,74,.28); color:#4ade80; }
+  body.dark-theme .kpi-icon-count-share { background:rgba(34,197,94,.28); color:#86efac; }
+  .kpi-label {
+    color: var(--panel-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin: 0;
+  }
+  .kpi-value {
+    color: var(--panel-text);
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-top: 0.2rem;
+    letter-spacing: -0.025em;
+  }
+  .kpi-unit {
+    font-size: 0.9rem;
+    font-weight: 600;
+    opacity: 0.55;
+    margin-left: 2px;
+  }
+  .kpi-badge {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 0.12rem 0.55rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .kpi-badge-cyan { background:rgba(6,182,212,.14); color:#0891b2; }
+  .kpi-badge-green { background:rgba(34,197,94,.14); color:#16a34a; }
+  body.dark-theme .kpi-badge-cyan { background:rgba(6,182,212,.28); color:#22d3ee; }
+  body.dark-theme .kpi-badge-green { background:rgba(34,197,94,.28); color:#4ade80; }
+  .kpi-bar-track {
+    width: 100%;
+    height: 5px;
+    border-radius: 999px;
+    background: color-mix(in srgb,var(--panel-border) 55%,transparent);
+    overflow: hidden;
+  }
+  .kpi-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 1.3s cubic-bezier(.4,0,.2,1);
+  }
+  .kpi-bar-cyan { background: linear-gradient(90deg,#06b6d4,#2563eb); }
+  .kpi-bar-green { background: linear-gradient(90deg,#22c55e,#16a34a); }
+  .kpi-footnote {
+    color: var(--panel-muted);
+    font-size: 0.69rem;
+    line-height: 1.4;
+  }
+</style>
+
+<script>
+  (function () {
+    const categoryKey = "{{ category_key }}";
+    const root = document.body;
+    const minSkeletonMs = 550;
+    const skeletonStart = performance.now();
+    const monthlyLabels = JSON.parse(document.getElementById("monthly-labels").textContent || "[]");
+    const monthlyIncome = JSON.parse(document.getElementById("monthly-income").textContent || "[]");
+    const monthlyProjectCount = JSON.parse(document.getElementById("monthly-project-count").textContent || "[]");
+    const topProjectLabels = JSON.parse(document.getElementById("top-project-labels").textContent || "[]");
+    const topProjectIncome = JSON.parse(document.getElementById("top-project-income").textContent || "[]");
+    const topMemberProjectLabels = JSON.parse(document.getElementById("top-member-project-labels").textContent || "[]");
+    const topMemberProjectValues = JSON.parse(document.getElementById("top-member-project-values").textContent || "[]");
+    const topMemberIncomeLabels = JSON.parse(document.getElementById("top-member-income-labels").textContent || "[]");
+    const topMemberIncomeValues = JSON.parse(document.getElementById("top-member-income-values").textContent || "[]");
+    let comboChart;
+    let topProjectsChart;
+    let topMembersChart;
+    let activeMode = "projects";
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const existing = document.querySelector(`script[src="${src}"]`);
+        if (existing) {
+          if (existing.dataset.loaded === "true") resolve();
+          else existing.addEventListener("load", () => resolve(), { once: true });
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = () => { script.dataset.loaded = "true"; resolve(); };
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    function loadChartJs() {
+      if (window.Chart && window.Chart.registry?.plugins?.get("zoom")) return Promise.resolve();
+      if (window.__sharedCategoryChartLoader) return window.__sharedCategoryChartLoader;
+      window.__sharedCategoryChartLoader = loadScript("https://cdn.jsdelivr.net/npm/chart.js")
+        .then(() => loadScript("https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"))
+        .then(() => loadScript("https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"))
+        .then(() => {
+          const plugin = window.ChartZoom || window["chartjs-plugin-zoom"];
+          if (plugin && !window.Chart.registry?.plugins?.get("zoom")) window.Chart.register(plugin);
+        });
+      return window.__sharedCategoryChartLoader;
+    }
+
+    function palette() {
+      const s = getComputedStyle(root);
+      return {
+        text: s.getPropertyValue("--panel-text").trim() || "#0f172a",
+        muted: s.getPropertyValue("--panel-muted").trim() || "#475569",
+        primary: s.getPropertyValue("--primary-light").trim() || "#6366f1",
+        primaryDark: s.getPropertyValue("--primary-dark").trim() || "#4f46e5",
+        border: s.getPropertyValue("--panel-border").trim() || "#cbd5e1",
+        softGrid: root.classList.contains("dark-theme") ? "rgba(148,163,184,.2)" : "rgba(100,116,139,.18)",
+      };
+    }
+
+    function money(v) { return Number(v).toLocaleString("en-IN"); }
+
+    function drawCharts() {
+      const colors = palette();
+      const comboCtx = document.getElementById(`incomeProjectsChart-${categoryKey}`);
+      const projectsCtx = document.getElementById(`topProjectsChart-${categoryKey}`);
+      const membersCtx = document.getElementById(`topMembersChart-${categoryKey}`);
+      if (!comboCtx || !projectsCtx || !membersCtx) return;
+
+      if (comboChart) comboChart.destroy();
+      if (topProjectsChart) topProjectsChart.destroy();
+      if (topMembersChart) topMembersChart.destroy();
+
+      comboChart = new Chart(comboCtx, {
+        type: "bar",
+        data: {
+          labels: monthlyLabels,
+          datasets: [
+            { type: "bar", label: "Total Project Count", data: monthlyProjectCount, yAxisID: "projects", backgroundColor: colors.primary + "99", borderColor: colors.primary, borderWidth: 1, borderRadius: 8, maxBarThickness: 24 },
+            { type: "line", label: "Total Income (Rs)", data: monthlyIncome, yAxisID: "income", borderColor: colors.primaryDark, backgroundColor: colors.primaryDark, borderWidth: 3, pointRadius: 4, tension: 0.35 },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: colors.text } },
+            tooltip: { callbacks: { label: (ctx) => ctx.dataset.yAxisID === "income" ? `${ctx.dataset.label}: Rs ${money(ctx.parsed.y || 0)}` : `${ctx.dataset.label}: ${ctx.parsed.y || 0}` } },
+            zoom: { pan: { enabled: true, mode: "xy", modifierKey: "shift" }, zoom: { wheel: { enabled: true }, pinch: { enabled: true }, drag: { enabled: true }, mode: "xy" } },
+          },
+          scales: {
+            x: { ticks: { color: colors.muted }, grid: { color: colors.softGrid } },
+            projects: { position: "left", ticks: { color: colors.muted, precision: 0 }, grid: { color: colors.softGrid } },
+            income: { position: "right", ticks: { color: colors.muted, callback: money }, grid: { drawOnChartArea: false } },
+          },
+        },
+      });
+
+      topProjectsChart = new Chart(projectsCtx, {
+        type: "bar",
+        data: { labels: topProjectLabels, datasets: [{ label: "Total Income (Rs)", data: topProjectIncome, backgroundColor: [colors.primary + "cc", colors.primaryDark + "cc", "#0ea5e9cc", "#10b981cc", "#f59e0bcc"], borderColor: colors.border, borderWidth: 1, borderRadius: 8 }] },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx) => `Rs ${money(ctx.parsed.x || 0)}` } },
+            zoom: { pan: { enabled: true, mode: "xy", modifierKey: "shift" }, zoom: { wheel: { enabled: true }, pinch: { enabled: true }, drag: { enabled: true }, mode: "xy" } },
+          },
+          scales: {
+            x: { ticks: { color: colors.muted, callback: money }, grid: { color: colors.softGrid } },
+            y: { ticks: { color: colors.text }, grid: { display: false } },
+          },
+        },
+      });
+
+      const labels = activeMode === "income" ? topMemberIncomeLabels : topMemberProjectLabels;
+      const values = activeMode === "income" ? topMemberIncomeValues : topMemberProjectValues;
+      const label = activeMode === "income" ? "Income Earned (Rs)" : "Project Count";
+      topMembersChart = new Chart(membersCtx, {
+        type: "bar",
+        data: { labels, datasets: [{ label, data: values, backgroundColor: colors.primary + "b3", borderColor: colors.primaryDark, borderWidth: 1, borderRadius: 8, maxBarThickness: 36 }] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: colors.text } },
+            tooltip: { callbacks: { label: (ctx) => activeMode === "income" ? `Rs ${money(ctx.parsed.y || 0)}` : `${ctx.parsed.y || 0} Projects` } },
+            zoom: { pan: { enabled: true, mode: "xy", modifierKey: "shift" }, zoom: { wheel: { enabled: true }, pinch: { enabled: true }, drag: { enabled: true }, mode: "xy" } },
+          },
+          scales: {
+            x: { ticks: { color: colors.text }, grid: { display: false } },
+            y: { ticks: { color: colors.muted, callback: activeMode === "income" ? money : undefined, precision: activeMode === "projects" ? 0 : undefined }, grid: { color: colors.softGrid } },
+          },
+        },
+      });
+    }
+
+    function bindToggle() {
+      document.querySelectorAll(`.category-toggle-btn[data-category="${categoryKey}"]`).forEach((button) => {
+        button.addEventListener("click", () => {
+          activeMode = button.dataset.mode;
+          document.querySelectorAll(`.category-toggle-btn[data-category="${categoryKey}"]`).forEach((btn) => btn.classList.toggle("is-active", btn === button));
+          drawCharts();
+        });
+      });
+    }
+
+    function revealComponents() {
+      const elapsed = performance.now() - skeletonStart;
+      const wait = Math.max(0, minSkeletonMs - elapsed);
+      setTimeout(() => {
+        document.querySelectorAll(".pc-section.pc-loading").forEach((section) => section.classList.remove("pc-loading"));
+      }, wait);
+    }
+
+    function init() {
+      if (window.categoryDashboardCleanup) window.categoryDashboardCleanup();
+      loadChartJs().then(() => {
+        bindToggle();
+        drawCharts();
+        revealComponents();
+        const observer = new MutationObserver(() => drawCharts());
+        observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+        window.categoryDashboardCleanup = function () {
+          observer.disconnect();
+          if (comboChart) comboChart.destroy();
+          if (topProjectsChart) topProjectsChart.destroy();
+          if (topMembersChart) topMembersChart.destroy();
+        };
+      });
+    }
+
+    init();
+  })();
+</script>

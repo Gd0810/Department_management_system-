@@ -1,0 +1,63 @@
+<div class="pc-section pc-loading">
+  <div class="pc-skel">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div class="sk-box sk-card"></div>
+      <div class="sk-box sk-card"></div>
+      <div class="sk-box sk-card"></div>
+      <div class="sk-box sk-card"></div>
+    </div>
+  </div>
+  <div class="pc-real">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div class="kpi-card kpi-income rounded-2xl overflow-hidden">
+        <div class="kpi-fill-bg"></div>
+        <div class="kpi-inner p-5">
+          
+          <p class="kpi-label mt-3">Overall Income From {{ category_label }}</p>
+          <p class="kpi-value">Rs {{ category_income_total|floatformat:2 }}</p>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-income-share rounded-2xl overflow-hidden">
+        <div class="kpi-fill-bg" style="width: {{ income_percentage|floatformat:2 }}%"></div>
+        <div class="kpi-inner p-5">
+          
+          <div class="flex items-start justify-between mt-3 gap-2">
+            <p class="kpi-label">{{ category_label }} Income Share</p>
+            <span class="kpi-badge kpi-badge-cyan">{{ income_percentage|floatformat:2 }}%</span>
+          </div>
+          <p class="kpi-value">{{ income_percentage|floatformat:1 }}<span class="kpi-unit">%</span></p>
+          <div class="kpi-bar-track mt-2">
+            <div class="kpi-bar-fill kpi-bar-cyan" style="width: {{ income_percentage|floatformat:2 }}%"></div>
+          </div>
+          <p class="kpi-footnote mt-2">Compared to overall project category income</p>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-count rounded-2xl overflow-hidden">
+        <div class="kpi-fill-bg"></div>
+        <div class="kpi-inner p-5">
+         
+          <p class="kpi-label mt-3">Overall {{ category_label }} Project Count</p>
+          <p class="kpi-value">{{ category_project_total }}</p>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-count-share rounded-2xl overflow-hidden">
+        <div class="kpi-fill-bg" style="width: {{ project_percentage|floatformat:2 }}%"></div>
+        <div class="kpi-inner p-5">
+          
+          <div class="flex items-start justify-between mt-3 gap-2">
+            <p class="kpi-label">{{ category_label }} Project Count Share</p>
+            <span class="kpi-badge kpi-badge-green">{{ project_percentage|floatformat:2 }}%</span>
+          </div>
+          <p class="kpi-value">{{ project_percentage|floatformat:1 }}<span class="kpi-unit">%</span></p>
+          <div class="kpi-bar-track mt-2">
+            <div class="kpi-bar-fill kpi-bar-green" style="width: {{ project_percentage|floatformat:2 }}%"></div>
+          </div>
+          <p class="kpi-footnote mt-2">Compared to overall project category count</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

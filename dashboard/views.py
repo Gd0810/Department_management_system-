@@ -100,44 +100,34 @@ def team(request):
 
 
 def client(request):
-    if not request.session.get("department_id"):
-        return redirect("login")
-    dept = get_department(request)
-    projects = dept.projects.filter(category="client")
-
-    return render(request, "partials/client.html", {"projects": projects})
+    return _render_project_category_dashboard(request, "client", "partials/client.html")
 
 
 def company(request):
-    if not request.session.get("department_id"):
-        return redirect("login")
-    dept = get_department(request)
-    projects = dept.projects.filter(category="company")
-
-    return render(request, "partials/company.html", {"projects": projects})
+    return _render_project_category_dashboard(request, "company", "partials/company.html")
 
 
 def academics(request):
-    if not request.session.get("department_id"):
-        return redirect("login")
-    dept = get_department(request)
-    projects = dept.projects.filter(category="academy")
-
-    return render(request, "partials/academics.html", {"projects": projects})
+    return _render_project_category_dashboard(request, "academy", "partials/academics.html")
 
 
 def internship(request):
-    if not request.session.get("department_id"):
-        return redirect("login")
-    dept = get_department(request)
+    return _render_project_category_dashboard(request, "internship", "partials/internship.html")
+
+
+def _build_project_category_dashboard_context(dept, category_key):
+    category_lookup = dict(Project.PROJECT_CATEGORY)
+    category_label = category_lookup.get(category_key, category_key.title())
+    category_label_plural = f"{category_label}s"
+
     projects = (
-        dept.projects.filter(category="internship")
+        dept.projects.filter(category=category_key)
         .prefetch_related("members__worker")
         .order_by("-start_date", "-id")
     )
     all_projects = dept.projects.all()
 
-    internship_income_total = (
+    category_income_total = (
         projects.aggregate(
             total=Coalesce(
                 Sum("amount"),
@@ -157,16 +147,16 @@ def internship(request):
         )["total"]
         or Decimal("0.00")
     )
-    internship_project_total = projects.count()
+    category_project_total = projects.count()
     overall_project_total = all_projects.count()
 
     income_percentage = (
-        float((internship_income_total / overall_income_total) * Decimal("100"))
+        float((category_income_total / overall_income_total) * Decimal("100"))
         if overall_income_total > 0
         else 0.0
     )
     project_percentage = (
-        (internship_project_total / overall_project_total) * 100.0
+        (category_project_total / overall_project_total) * 100.0
         if overall_project_total > 0
         else 0.0
     )
@@ -223,7 +213,7 @@ def internship(request):
     top_project_income = [float(row["income_value"] or 0) for row in top_projects_qs]
 
     top_members_count_qs = (
-        ProjectMember.objects.filter(project__department=dept, project__category="internship")
+        ProjectMember.objects.filter(project__department=dept, project__category=category_key)
         .values("worker_id", "worker__name")
         .annotate(project_count=Count("project_id", distinct=True))
         .order_by("-project_count", "worker__name")[:5]
@@ -246,9 +236,12 @@ def internship(request):
     top_member_income_values = [float(item[1]) for item in top_member_income_pairs]
 
     context = {
+        "category_key": category_key,
+        "category_label": category_label,
+        "category_label_plural": category_label_plural,
         "projects": projects,
-        "internship_income_total": float(internship_income_total),
-        "internship_project_total": internship_project_total,
+        "category_income_total": float(category_income_total),
+        "category_project_total": category_project_total,
         "income_percentage": round(income_percentage, 2),
         "project_percentage": round(project_percentage, 2),
         "monthly_labels": monthly_labels,
@@ -261,7 +254,15 @@ def internship(request):
         "top_member_income_labels": top_member_income_labels,
         "top_member_income_values": top_member_income_values,
     }
-    return render(request, "partials/internship.html", context)
+    return context
+
+
+def _render_project_category_dashboard(request, category_key, template_name):
+    if not request.session.get("department_id"):
+        return redirect("login")
+    dept = get_department(request)
+    context = _build_project_category_dashboard_context(dept, category_key)
+    return render(request, template_name, context)
 
 
 def add_team(request):
@@ -514,4 +515,3 @@ def calculate_project_payments(project):
             payments[m.id] = share
 
     return payments
-

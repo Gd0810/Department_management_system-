@@ -1,0 +1,52 @@
+<div class="pc-section pc-loading">
+  <div class="pc-skel">
+    <div class="space-y-2">
+      <div class="sk-box sk-row"></div>
+      <div class="sk-box sk-row"></div>
+      <div class="sk-box sk-row"></div>
+      <div class="sk-box sk-row"></div>
+      <div class="sk-box sk-row"></div>
+    </div>
+  </div>
+  <div class="pc-real">
+    <div class="theme-panel rounded-2xl border p-4 sm:p-5">
+      <h3 class="theme-text mb-4 text-base font-semibold">{{ category_label }} Project Listing</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[680px] border-separate border-spacing-0 text-sm">
+          <thead>
+            <tr>
+              <th class="theme-table-head rounded-tl-xl px-4 py-3 text-left">Project Title</th>
+              <th class="theme-table-head px-4 py-3 text-left">Status</th>
+              <th class="theme-table-head px-4 py-3 text-left">Start Date</th>
+              <th class="theme-table-head rounded-tr-xl px-4 py-3 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for project in projects %}
+            <tr>
+              <td class="theme-table-cell px-4 py-3">{{ project.title }}</td>
+              <td class="theme-table-cell px-4 py-3">
+                <span class="status-chip {% if project.status == 'finished' %}status-chip-open{% elif project.status == 'on_hold' %}status-chip-pause{% elif project.status == 'canceled' %}status-chip-stop{% else %}status-chip-live{% endif %}">
+                  {{ project.get_status_display }}
+                </span>
+              </td>
+              <td class="theme-table-cell px-4 py-3">{{ project.start_date|date:"Y-m-d" }}</td>
+              <td class="theme-table-cell px-4 py-3">
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" class="action-btn">View</button>
+                  <button type="button" class="action-btn">Update</button>
+                  <button type="button" class="action-btn danger">Delete</button>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td class="theme-table-cell px-4 py-4 text-center theme-muted" colspan="4">No {{ category_label|lower }} projects available.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
