@@ -229,6 +229,16 @@
     }
 
     function money(v) { return Number(v).toLocaleString("en-IN"); }
+    function hexToRgba(hex, alpha) {
+      const clean = (hex || "").replace("#", "");
+      const normalized = clean.length === 3
+        ? clean.split("").map((c) => c + c).join("")
+        : clean;
+      const r = parseInt(normalized.substring(0, 2), 16) || 99;
+      const g = parseInt(normalized.substring(2, 4), 16) || 102;
+      const b = parseInt(normalized.substring(4, 6), 16) || 241;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
 
     function drawCharts() {
       const colors = palette();
@@ -247,7 +257,31 @@
           labels: monthlyLabels,
           datasets: [
             { type: "bar", label: "Total Project Count", data: monthlyProjectCount, yAxisID: "projects", backgroundColor: colors.primary + "99", borderColor: colors.primary, borderWidth: 1, borderRadius: 8, maxBarThickness: 24 },
-            { type: "line", label: "Total Income (Rs)", data: monthlyIncome, yAxisID: "income", borderColor: colors.primaryDark, backgroundColor: colors.primaryDark, borderWidth: 3, pointRadius: 4, tension: 0.35 },
+            {
+              type: "line",
+              label: "Total Income (Rs)",
+              data: monthlyIncome,
+              yAxisID: "income",
+              borderColor: colors.primaryDark,
+              backgroundColor: function (ctx) {
+                const chart = ctx.chart;
+                const area = chart.chartArea;
+                if (!area) return hexToRgba(colors.primaryDark, 0.2);
+                const gradient = chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+                gradient.addColorStop(0, hexToRgba(colors.primaryDark, 0.34));
+                gradient.addColorStop(0.55, hexToRgba(colors.primaryDark, 0.14));
+                gradient.addColorStop(1, hexToRgba(colors.primaryDark, 0));
+                return gradient;
+              },
+              fill: "origin",
+              borderWidth: 2.6,
+              pointRadius: 3.5,
+              pointHoverRadius: 5,
+              pointBackgroundColor: colors.primaryDark,
+              pointBorderWidth: 0,
+              tension: 0.42,
+              cubicInterpolationMode: "monotone",
+            },
           ],
         },
         options: {
