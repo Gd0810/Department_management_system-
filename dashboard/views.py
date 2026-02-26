@@ -311,7 +311,37 @@ def category_projects_api(request, category_key):
     limit = max(1, min(limit, 25))
 
     dept = get_department(request)
-    queryset = dept.projects.filter(category=category_key).order_by("-start_date", "-id")
+    queryset = dept.projects.filter(category=category_key)
+
+    search_query = request.GET.get("q", "").strip()
+    month_value = request.GET.get("month", "").strip()
+    year_value = request.GET.get("year", "").strip()
+    status_value = request.GET.get("status", "").strip()
+
+    if search_query:
+        queryset = queryset.filter(title__icontains=search_query)
+
+    if month_value:
+        try:
+            month_year, month_num = month_value.split("-")
+            queryset = queryset.filter(
+                start_date__year=int(month_year),
+                start_date__month=int(month_num),
+            )
+        except (TypeError, ValueError):
+            pass
+
+    if year_value:
+        try:
+            queryset = queryset.filter(start_date__year=int(year_value))
+        except (TypeError, ValueError):
+            pass
+
+    valid_statuses = {choice[0] for choice in Project.PROJECT_STATUS}
+    if status_value in valid_statuses:
+        queryset = queryset.filter(status=status_value)
+
+    queryset = queryset.order_by("-start_date", "-id")
     total_count = queryset.count()
     rows = list(queryset[offset:offset + limit])
 

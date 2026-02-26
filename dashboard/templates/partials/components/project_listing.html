@@ -10,7 +10,59 @@
   </div>
   <div class="pc-real">
     <div class="theme-panel rounded-2xl border p-4 sm:p-5">
-      <h3 class="theme-text mb-4 text-base font-semibold">{{ category_label }} Project Listing</h3>
+      <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <h3 class="theme-text text-base font-semibold">{{ category_label }} Project Listing</h3>
+        <button
+          type="button"
+          class="action-btn action-btn-update"
+          hx-get="{% url 'add_project' %}"
+          hx-target="#content"
+          hx-swap="innerHTML"
+        >
+          <iconify-icon icon="material-symbols:add-rounded" width="16" height="16"></iconify-icon>
+          <span>Add New Project</span>
+        </button>
+      </div>
+
+      <div class="mb-4 grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-5">
+        <div class="xl:col-span-2">
+          <input
+            id="projectSearch-{{ category_key }}"
+            type="search"
+            placeholder="Search project name..."
+            class="theme-input w-full rounded-xl border px-3 py-2 text-sm outline-none transition"
+          >
+        </div>
+        <div>
+          <input
+            id="projectMonth-{{ category_key }}"
+            type="month"
+            class="theme-input w-full rounded-xl border px-3 py-2 text-sm outline-none transition"
+          >
+        </div>
+        <div>
+          <input
+            id="projectYear-{{ category_key }}"
+            type="number"
+            min="2000"
+            max="2100"
+            placeholder="Year"
+            class="theme-input w-full rounded-xl border px-3 py-2 text-sm outline-none transition"
+          >
+        </div>
+        <div class="flex gap-2">
+          <select id="projectStatus-{{ category_key }}" class="theme-input w-full rounded-xl border px-3 py-2 text-sm outline-none transition">
+            <option value="">All Status</option>
+            <option value="started">Started</option>
+            <option value="ongoing">Ongoing</option>
+            <option value="on_hold">On Hold</option>
+            <option value="canceled">Canceled</option>
+            <option value="finished">Finished</option>
+          </select>
+          <button type="button" id="projectFilterClear-{{ category_key }}" class="action-btn">Clear</button>
+        </div>
+      </div>
+
       <div class="overflow-x-auto" id="projectListingScroll-{{ category_key }}" style="max-height: 430px;">
         <table class="w-full min-w-[680px] border-separate border-spacing-0 text-sm">
           <thead>
@@ -51,13 +103,19 @@
     const loaderBody = document.getElementById(`projectListingLoader-${categoryKey}`);
     const emptyBody = document.getElementById(`projectListingEmpty-${categoryKey}`);
     const skelTemplate = document.getElementById(`projectRowSkeletonTemplate-${categoryKey}`);
-    if (!scrollWrap || !body || !loaderBody || !emptyBody || !skelTemplate) return;
+    const searchInput = document.getElementById(`projectSearch-${categoryKey}`);
+    const monthInput = document.getElementById(`projectMonth-${categoryKey}`);
+    const yearInput = document.getElementById(`projectYear-${categoryKey}`);
+    const statusInput = document.getElementById(`projectStatus-${categoryKey}`);
+    const clearBtn = document.getElementById(`projectFilterClear-${categoryKey}`);
+    if (!scrollWrap || !body || !loaderBody || !emptyBody || !skelTemplate || !searchInput || !monthInput || !yearInput || !statusInput || !clearBtn) return;
 
     const apiUrl = "{% url 'category_projects_api' '__category__' %}".replace("__category__", categoryKey);
     const pageSize = 7;
     let offset = 0;
     let hasMore = true;
     let isLoading = false;
+    let searchDebounce;
 
     function statusClass(status) {
       if (status === "finished") return "status-chip-open";
@@ -145,13 +203,36 @@
       loaderBody.innerHTML = "";
     }
 
+    function buildFilterQuery() {
+      const params = new URLSearchParams();
+      const q = searchInput.value.trim();
+      const month = monthInput.value;
+      const year = yearInput.value.trim();
+      const status = statusInput.value;
+      if (q) params.set("q", q);
+      if (month) params.set("month", month);
+      if (year) params.set("year", year);
+      if (status) params.set("status", status);
+      return params.toString();
+    }
+
+    function resetAndLoad() {
+      offset = 0;
+      hasMore = true;
+      body.innerHTML = "";
+      emptyBody.classList.add("hidden");
+      loadNextPage();
+    }
+
     async function loadNextPage() {
       if (isLoading || !hasMore) return;
       isLoading = true;
       showSkeletonRows(3);
 
       try {
-        const response = await fetch(`${apiUrl}?offset=${offset}&limit=${pageSize}`, {
+        const filterQuery = buildFilterQuery();
+        const queryPrefix = filterQuery ? `${filterQuery}&` : "";
+        const response = await fetch(`${apiUrl}?${queryPrefix}offset=${offset}&limit=${pageSize}`, {
           headers: { "X-Requested-With": "XMLHttpRequest" },
         });
         if (!response.ok) throw new Error("Request failed");
@@ -182,6 +263,23 @@
     }
 
     scrollWrap.addEventListener("scroll", onScroll);
+    searchInput.addEventListener("input", () => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(resetAndLoad, 300);
+    });
+    monthInput.addEventListener("change", resetAndLoad);
+    yearInput.addEventListener("input", () => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(resetAndLoad, 300);
+    });
+    statusInput.addEventListener("change", resetAndLoad);
+    clearBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      monthInput.value = "";
+      yearInput.value = "";
+      statusInput.value = "";
+      resetAndLoad();
+    });
     loadNextPage();
   })();
 </script>
