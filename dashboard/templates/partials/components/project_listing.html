@@ -41,14 +41,23 @@
           >
         </div>
         <div>
-          <input
-            id="projectYear-{{ category_key }}"
-            type="number"
-            min="2000"
-            max="2100"
-            placeholder="Year"
-            class="theme-input w-full rounded-xl border px-3 py-2 text-sm outline-none transition"
-          >
+          <div id="projectYearWrap-{{ category_key }}" class="relative">
+            <input id="projectYear-{{ category_key }}" type="hidden" value="">
+            <button
+              type="button"
+              id="projectYearBtn-{{ category_key }}"
+              class="theme-input flex w-full items-center justify-between rounded-xl border px-3 py-2 text-sm outline-none transition"
+            >
+              <span id="projectYearBtnLabel-{{ category_key }}">All Years</span>
+              <iconify-icon icon="material-symbols:arrow-drop-down-rounded" width="20" height="20"></iconify-icon>
+            </button>
+            <div
+              id="projectYearMenu-{{ category_key }}"
+              class="theme-panel absolute left-0 right-0 top-[calc(100%+6px)] z-20 hidden max-h-44 overflow-y-auto rounded-xl border py-1 shadow-lg"
+            >
+              <button type="button" class="project-year-option block w-full px-3 py-2 text-left text-sm" data-year="">All Years</button>
+            </div>
+          </div>
         </div>
         <div class="flex gap-2">
           <select id="projectStatus-{{ category_key }}" class="theme-input w-full rounded-xl border px-3 py-2 text-sm outline-none transition">
@@ -106,9 +115,13 @@
     const searchInput = document.getElementById(`projectSearch-${categoryKey}`);
     const monthInput = document.getElementById(`projectMonth-${categoryKey}`);
     const yearInput = document.getElementById(`projectYear-${categoryKey}`);
+    const yearWrap = document.getElementById(`projectYearWrap-${categoryKey}`);
+    const yearBtn = document.getElementById(`projectYearBtn-${categoryKey}`);
+    const yearBtnLabel = document.getElementById(`projectYearBtnLabel-${categoryKey}`);
+    const yearMenu = document.getElementById(`projectYearMenu-${categoryKey}`);
     const statusInput = document.getElementById(`projectStatus-${categoryKey}`);
     const clearBtn = document.getElementById(`projectFilterClear-${categoryKey}`);
-    if (!scrollWrap || !body || !loaderBody || !emptyBody || !skelTemplate || !searchInput || !monthInput || !yearInput || !statusInput || !clearBtn) return;
+    if (!scrollWrap || !body || !loaderBody || !emptyBody || !skelTemplate || !searchInput || !monthInput || !yearInput || !yearWrap || !yearBtn || !yearBtnLabel || !yearMenu || !statusInput || !clearBtn) return;
 
     const apiUrl = "{% url 'category_projects_api' '__category__' %}".replace("__category__", categoryKey);
     const pageSize = 7;
@@ -116,6 +129,33 @@
     let hasMore = true;
     let isLoading = false;
     let searchDebounce;
+    let yearOptionsReady = false;
+
+    function buildYearOptions(years) {
+      yearMenu.innerHTML = `<button type="button" class="project-year-option block w-full px-3 py-2 text-left text-sm" data-year="">All Years</button>`;
+      const normalized = Array.from(new Set((years || []).map((y) => Number(y)).filter((y) => Number.isInteger(y) && y > 0)))
+        .sort((a, b) => b - a);
+      normalized.forEach((yearNumber) => {
+        const optionBtn = document.createElement("button");
+        optionBtn.type = "button";
+        optionBtn.className = "project-year-option block w-full px-3 py-2 text-left text-sm";
+        optionBtn.dataset.year = String(yearNumber);
+        optionBtn.textContent = String(yearNumber);
+        yearMenu.appendChild(optionBtn);
+      });
+      yearOptionsReady = true;
+    }
+
+    function setYearValue(yearValue) {
+      yearInput.value = yearValue;
+      yearBtnLabel.textContent = yearValue || "All Years";
+      resetAndLoad();
+    }
+
+    function toggleYearMenu(forceOpen) {
+      const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : yearMenu.classList.contains("hidden");
+      yearMenu.classList.toggle("hidden", !shouldOpen);
+    }
 
     function statusClass(status) {
       if (status === "finished") return "status-chip-open";
@@ -237,6 +277,7 @@
         });
         if (!response.ok) throw new Error("Request failed");
         const data = await response.json();
+        if (!yearOptionsReady) buildYearOptions(data.available_years || []);
 
         hideSkeletonRows();
         const rows = Array.isArray(data.projects) ? data.projects : [];
@@ -268,15 +309,24 @@
       searchDebounce = setTimeout(resetAndLoad, 300);
     });
     monthInput.addEventListener("change", resetAndLoad);
-    yearInput.addEventListener("input", () => {
-      clearTimeout(searchDebounce);
-      searchDebounce = setTimeout(resetAndLoad, 300);
-    });
     statusInput.addEventListener("change", resetAndLoad);
+    yearBtn.addEventListener("click", () => {
+      toggleYearMenu();
+    });
+    yearMenu.addEventListener("click", (event) => {
+      const option = event.target.closest(".project-year-option");
+      if (!option) return;
+      toggleYearMenu(false);
+      setYearValue(option.dataset.year || "");
+    });
+    document.addEventListener("click", (event) => {
+      if (!yearWrap.contains(event.target)) toggleYearMenu(false);
+    });
     clearBtn.addEventListener("click", () => {
       searchInput.value = "";
       monthInput.value = "";
       yearInput.value = "";
+      yearBtnLabel.textContent = "All Years";
       statusInput.value = "";
       resetAndLoad();
     });

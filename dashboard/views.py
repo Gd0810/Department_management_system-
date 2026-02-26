@@ -311,7 +311,8 @@ def category_projects_api(request, category_key):
     limit = max(1, min(limit, 25))
 
     dept = get_department(request)
-    queryset = dept.projects.filter(category=category_key)
+    base_queryset = dept.projects.filter(category=category_key)
+    queryset = base_queryset
 
     search_query = request.GET.get("q", "").strip()
     month_value = request.GET.get("month", "").strip()
@@ -344,6 +345,7 @@ def category_projects_api(request, category_key):
     queryset = queryset.order_by("-start_date", "-id")
     total_count = queryset.count()
     rows = list(queryset[offset:offset + limit])
+    available_years = [d.year for d in base_queryset.dates("start_date", "year", order="DESC")]
 
     payload = []
     for project in rows:
@@ -367,6 +369,7 @@ def category_projects_api(request, category_key):
             "projects": payload,
             "next_offset": next_offset,
             "has_more": has_more,
+            "available_years": available_years,
         }
     )
 
