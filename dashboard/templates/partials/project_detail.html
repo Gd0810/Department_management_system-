@@ -117,25 +117,25 @@
           {% endif %}
         {% else %}
           {% if member_rows %}
-            <div class="overflow-x-auto">
-              <table class="w-full min-w-[720px] border-separate border-spacing-0 text-sm">
+            <div class="group-table-wrap overflow-x-auto rounded-xl border">
+              <table class="group-table w-full min-w-[720px] border-collapse text-sm">
                 <thead>
                   <tr>
-                    <th class="theme-table-head rounded-tl-xl px-4 py-3 text-left">Worker Name</th>
-                    <th class="theme-table-head px-4 py-3 text-left">Worker Type</th>
-                    <th class="theme-table-head px-4 py-3 text-left">Department Role</th>
-                    <th class="theme-table-head px-4 py-3 text-left">Contribution</th>
-                    <th class="theme-table-head rounded-tr-xl px-4 py-3 text-left">Income</th>
+                    <th class="group-th px-4 py-3 text-left">Worker Name</th>
+                    <th class="group-th px-4 py-3 text-left">Worker Type</th>
+                    <th class="group-th px-4 py-3 text-left">Department Role</th>
+                    <th class="group-th px-4 py-3 text-left">Contribution</th>
+                    <th class="group-th px-4 py-3 text-left">Income</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for member in member_rows %}
                     <tr>
-                      <td class="theme-table-cell px-4 py-3">{{ member.name }}</td>
-                      <td class="theme-table-cell px-4 py-3">{{ member.worker_type }}</td>
-                      <td class="theme-table-cell px-4 py-3">{{ member.department_role }}</td>
-                      <td class="theme-table-cell px-4 py-3">{{ member.contribution }}</td>
-                      <td class="theme-table-cell px-4 py-3">Rs {{ member.income|floatformat:2 }}</td>
+                      <td class="group-td px-4 py-3">{{ member.name }}</td>
+                      <td class="group-td px-4 py-3">{{ member.worker_type }}</td>
+                      <td class="group-td px-4 py-3">{{ member.department_role }}</td>
+                      <td class="group-td px-4 py-3">{{ member.contribution }}</td>
+                      <td class="group-td px-4 py-3">Rs {{ member.income|floatformat:2 }}</td>
                     </tr>
                   {% endfor %}
                 </tbody>
@@ -150,9 +150,7 @@
   </div>
 </section>
 
-{{ member_income_labels|json_script:"project-income-labels" }}
-{{ member_income_values|json_script:"project-income-values" }}
-{{ member_income_cumulative|json_script:"project-income-cumulative" }}
+{{ project_income|json_script:"project-income-value" }}
 {{ project_income_percentage|json_script:"project-income-pct" }}
 {{ category_remaining_percentage|json_script:"category-income-pct" }}
 
@@ -172,13 +170,14 @@
   .member-card { background: var(--panel-bg); border-color: var(--panel-border); }
   .member-label { color: var(--panel-muted); font-size: .74rem; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; }
   .member-value { color: var(--panel-text); font-size: .93rem; font-weight: 700; margin-top: 6px; }
+  .group-table-wrap { border-color: var(--panel-border); background: var(--panel-bg); }
+  .group-th { background: var(--panel-soft-bg); color: var(--panel-text); font-weight: 700; border: 1px solid var(--panel-border); }
+  .group-td { background: var(--panel-bg); color: var(--panel-text); border: 1px solid var(--panel-border); }
 </style>
 
 <script>
   (function () {
-    const labels = JSON.parse(document.getElementById("project-income-labels").textContent || "[]");
-    const values = JSON.parse(document.getElementById("project-income-values").textContent || "[]");
-    const cumulative = JSON.parse(document.getElementById("project-income-cumulative").textContent || "[]");
+    const projectIncome = Number(JSON.parse(document.getElementById("project-income-value").textContent || "0"));
     const projectPct = Number(JSON.parse(document.getElementById("project-income-pct").textContent || "0"));
     const categoryPct = Number(JSON.parse(document.getElementById("category-income-pct").textContent || "0"));
 
@@ -211,27 +210,27 @@
       window.projectIncomeChartInstance = new Chart(incomeCtx, {
         type: "bar",
         data: {
-          labels,
+          labels: ["Income Start", "Income End"],
           datasets: [
             {
               type: "bar",
-              label: "Member Income (Rs)",
-              data: values,
-              backgroundColor: "rgba(37, 99, 235, 0.55)",
-              borderColor: "#1d4ed8",
+              label: "Project Income (Rs)",
+              data: [projectIncome, projectIncome],
+              backgroundColor: "#7072FF",
+              borderColor: "#7072FF",
               borderWidth: 1,
               borderRadius: 8,
             },
             {
               type: "line",
-              label: "Cumulative Income (Rs)",
-              data: cumulative,
-              borderColor: "#0f766e",
-              backgroundColor: "rgba(15, 118, 110, 0.2)",
-              pointRadius: 3,
+              label: "Project Income Trend (Rs)",
+              data: [projectIncome, projectIncome],
+              borderColor: "#33C494",
+              backgroundColor: "#33C494",
+              pointRadius: 4,
               pointHoverRadius: 5,
-              tension: 0.35,
-              fill: true,
+              tension: 0,
+              fill: false,
             },
           ],
         },
@@ -260,7 +259,7 @@
           datasets: [
             {
               data: [projectPct, categoryPct],
-              backgroundColor: ["#2563eb", "#94a3b8"],
+              backgroundColor: ["#7072FF", "#33C494"],
               borderWidth: 0,
             },
           ],

@@ -346,15 +346,9 @@ def project_detail(request, project_id):
     }.get(project.status, {"badge_class": "status-default", "icon": "info"})
 
     member_rows = []
-    member_labels = []
-    member_income_values = []
-    member_income_cumulative = []
-    running_total = Decimal("0.00")
-
     payments = calculate_project_payments(project)
     for member in project.members.select_related("worker").all():
         amount = payments.get(member.id, Decimal("0.00"))
-        running_total += amount
         member_rows.append(
             {
                 "name": member.worker.name,
@@ -364,9 +358,6 @@ def project_detail(request, project_id):
                 "income": float(amount),
             }
         )
-        member_labels.append(member.worker.name)
-        member_income_values.append(float(amount))
-        member_income_cumulative.append(float(running_total))
 
     project_income = Decimal(project.amount or Decimal("0.00"))
     category_income_total = (
@@ -387,11 +378,6 @@ def project_detail(request, project_id):
     )
     category_remaining_percentage = max(0.0, 100.0 - project_income_percentage)
 
-    if not member_labels:
-        member_labels = [project.title]
-        member_income_values = [float(project_income)]
-        member_income_cumulative = [float(project_income)]
-
     context = {
         "project": project,
         "category_label": category_label,
@@ -399,9 +385,6 @@ def project_detail(request, project_id):
         "status_badge_class": status_meta["badge_class"],
         "status_icon": status_meta["icon"],
         "member_rows": member_rows,
-        "member_income_labels": member_labels,
-        "member_income_values": member_income_values,
-        "member_income_cumulative": member_income_cumulative,
         "project_income": float(project_income),
         "category_income_total": float(category_income_total),
         "project_income_percentage": round(project_income_percentage, 2),
