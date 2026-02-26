@@ -76,9 +76,18 @@
         <td class="theme-table-cell px-4 py-3">${project.start_date}</td>
         <td class="theme-table-cell px-4 py-3">
           <div class="flex flex-wrap gap-2">
-            <button type="button" class="action-btn view-project-btn" data-view-url="${project.view_url || ''}">View</button>
-            <button type="button" class="action-btn update-project-btn" data-update-url="${project.update_url || ''}">Update</button>
-            <button type="button" class="action-btn danger delete-project-btn" data-delete-url="${project.delete_url || ''}">Delete</button>
+            <button type="button" class="action-btn action-btn-view view-project-btn" data-view-url="${project.view_url || ''}">
+              <iconify-icon icon="material-symbols:visibility-rounded" width="16" height="16"></iconify-icon>
+              <span>View</span>
+            </button>
+            <button type="button" class="action-btn action-btn-update update-project-btn" data-update-url="${project.update_url || ''}">
+              <iconify-icon icon="material-symbols:edit-rounded" width="16" height="16"></iconify-icon>
+              <span>Update</span>
+            </button>
+            <button type="button" class="action-btn action-btn-delete delete-project-btn" data-delete-url="${project.delete_url || ''}">
+              <iconify-icon icon="material-symbols:delete-rounded" width="16" height="16"></iconify-icon>
+              <span>Delete</span>
+            </button>
           </div>
         </td>
       `;
