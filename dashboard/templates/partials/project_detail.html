@@ -66,34 +66,40 @@
 
         <div class="detail-kpi rounded-2xl border p-4">
           <div class="detail-kpi-head">
-            <span class="material-symbols-rounded">code</span>
+            <iconify-icon icon="tdesign:logo-github" width="24" height="24"></iconify-icon>
             <p>Github</p>
           </div>
           {% if project.github_link %}
-            <a class="detail-link" href="{{ project.github_link }}" target="_blank" rel="noopener noreferrer">Click here to get project source code</a>
+            <a class="detail-link source-btn inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold" href="{{ project.github_link }}" target="_blank" rel="noopener noreferrer">
+              <iconify-icon icon="material-symbols:folder-code-rounded" width="20" height="20"></iconify-icon>
+              <span>Get Source File</span>
+            </a>
           {% else %}
-            <p class="theme-muted text-sm">The source link not given</p>
+            <span class="source-btn-missing inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold">
+              <iconify-icon icon="material-symbols:link-off-rounded" width="20" height="20"></iconify-icon>
+              <span>The source link not given</span>
+            </span>
           {% endif %}
         </div>
       </div>
 
       <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <div class="theme-panel rounded-2xl border p-4 sm:p-5">
-          <h3 class="theme-text mb-3 text-base font-semibold">Project Income (Bar + Line)</h3>
+          <h3 class="theme-text mb-3 text-base font-semibold">Project Income</h3>
           <div class="relative h-[320px] w-full">
             <canvas id="projectIncomeChart"></canvas>
           </div>
         </div>
         <div class="theme-panel rounded-2xl border p-4 sm:p-5">
-          <h3 class="theme-text mb-3 text-base font-semibold">Project Income % vs {{ category_label }} Income %</h3>
+          <h3 class="theme-text mb-3 text-base font-semibold">This Project Income  vs Other {{ category_label }} Projects Income </h3>
           <div class="relative h-[320px] w-full">
             <canvas id="projectIncomeShareChart"></canvas>
           </div>
         </div>
       </div>
 
-      <div class="theme-panel rounded-2xl border p-4 sm:p-5">
-        <h3 class="theme-text mb-3 text-base font-semibold">User Details</h3>
+      <div class="theme-panel rounded-2xl border p-4 sm:p-5"> 
+        <h3 class="theme-text mb-3 text-base font-semibold">User Details Associated with Project Work</h3>
         {% if project.work_type == "solo" %}
           {% if member_rows %}
             {% with member=member_rows|first %}
@@ -160,6 +166,42 @@
   .detail-kpi-value { color: var(--panel-text); font-size: 1rem; font-weight: 700; margin-top: 10px; line-height: 1.35; }
   .detail-link { color: #2563eb; font-size: .88rem; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
   body.dark-theme .detail-link { color: #60a5fa; }
+  .source-btn {
+    margin-top: 10px;
+    text-decoration: none;
+    background: #0ed190;
+    color: #083d2e;
+    box-shadow: rgba(50, 50, 93, 0.25) 0 50px 100px -20px, rgba(0, 0, 0, 0.3) 0 30px 60px -30px, rgba(10, 37, 64, 0.35) 0 -2px 6px 0 inset;
+    transition: transform .2s ease, box-shadow .25s ease, background-color .25s ease, color .25s ease, border-color .25s ease;
+  }
+  .source-btn:hover {
+    background: #07bd80;
+    color: #05291f;
+    transform: translateY(-1px);
+    box-shadow: rgba(50, 50, 93, 0.30) 0 46px 90px -20px, rgba(0, 0, 0, 0.32) 0 26px 56px -30px, rgba(10, 37, 64, 0.40) 0 -2px 6px 0 inset;
+  }
+  body.dark-theme .source-btn {
+    background: #0f8d68;
+    border-color: #2f3f5b;
+    color: #dcfff3;
+  }
+  body.dark-theme .source-btn:hover {
+    background: #12a77a;
+    border-color: #466089;
+    color: #f5fffb;
+  }
+  .source-btn-missing {
+    margin-top: 10px;
+    background: #fee2e2;
+    border-color: #ef4444;
+    color: #991b1b;
+    box-shadow: rgba(239, 68, 68, 0.22) 0 16px 36px -18px, rgba(127, 29, 29, 0.22) 0 -2px 6px 0 inset;
+  }
+  body.dark-theme .source-btn-missing {
+    background: #3a1f23;
+    border-color: #f87171;
+    color: #fecaca;
+  }
   .status-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: .3rem .75rem; font-size: .78rem; font-weight: 700; margin-top: 10px; }
   .status-started { background: #dbeafe; color: #1d4ed8; }
   .status-ongoing { background: #dcfce7; color: #166534; }
@@ -272,7 +314,7 @@
       window.projectShareChartInstance = new Chart(shareCtx, {
         type: "doughnut",
         data: {
-          labels: ["This Project Income %", "Other Category Income %"],
+          labels: ["This Project Income ", "Other {{ category_label }} projects Income "],
           datasets: [
             {
               data: [projectPct, categoryPct],
