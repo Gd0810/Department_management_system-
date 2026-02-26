@@ -210,27 +210,33 @@
       window.projectIncomeChartInstance = new Chart(incomeCtx, {
         type: "bar",
         data: {
-          labels: ["Income Start", "Income End"],
           datasets: [
             {
               type: "bar",
               label: "Project Income (Rs)",
-              data: [projectIncome, projectIncome],
+              parsing: false,
+              data: [{ x: 1, y: projectIncome }],
               backgroundColor: "#7072FF",
               borderColor: "#7072FF",
               borderWidth: 1,
               borderRadius: 8,
+              barThickness: 56,
+              maxBarThickness: 72,
             },
             {
               type: "line",
-              label: "Project Income Trend (Rs)",
-              data: [projectIncome, projectIncome],
+              label: "Income Line (0 to Total)",
+              parsing: false,
+              data: [
+                { x: 0, y: 0 },
+                { x: 1, y: projectIncome },
+              ],
               borderColor: "#33C494",
-              backgroundColor: "#33C494",
-              pointRadius: 4,
+              backgroundColor: "rgba(51, 196, 148, 0.22)",
+              pointRadius: [4, 5],
               pointHoverRadius: 5,
               tension: 0,
-              fill: false,
+              fill: "origin",
             },
           ],
         },
@@ -240,12 +246,23 @@
           plugins: {
             tooltip: {
               callbacks: {
-                label: (ctx) => `${ctx.dataset.label}: Rs ${money(ctx.parsed.y)}`,
+                label: (ctx) => `${ctx.dataset.label}: Rs ${money(ctx.parsed?.y ?? ctx.raw?.y ?? 0)}`,
               },
             },
           },
           scales: {
+            x: {
+              type: "linear",
+              min: 0,
+              max: 1.3,
+              ticks: {
+                stepSize: 1,
+                callback: (value) => (Number(value) === 1 ? "{{ project.title|escapejs }}" : ""),
+              },
+              grid: { display: false },
+            },
             y: {
+              beginAtZero: true,
               ticks: { callback: (v) => money(v) },
             },
           },
