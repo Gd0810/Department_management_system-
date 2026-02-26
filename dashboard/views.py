@@ -267,6 +267,31 @@ def _render_project_category_dashboard(request, category_key, template_name):
     return render(request, template_name, context)
 
 
+def _category_template_name(category_key):
+    return {
+        "client": "partials/client.html",
+        "company": "partials/company.html",
+        "academy": "partials/academics.html",
+        "internship": "partials/internship.html",
+    }.get(category_key)
+
+
+def _render_category_dashboard_by_key(request, category_key):
+    template_name = _category_template_name(category_key)
+    if not template_name:
+        dept = get_department(request)
+        return render(
+            request,
+            "partials/index.html",
+            {
+                "department": dept,
+                "workers": dept.workers.count(),
+                "projects": dept.projects.count(),
+            },
+        )
+    return _render_project_category_dashboard(request, category_key, template_name)
+
+
 def category_projects_api(request, category_key):
     if not request.session.get("department_id"):
         return JsonResponse({"detail": "Unauthorized"}, status=401)
@@ -300,6 +325,8 @@ def category_projects_api(request, category_key):
                 "status_display": project.get_status_display(),
                 "start_date": project.start_date.strftime("%Y-%m-%d"),
                 "view_url": reverse("project_detail", args=[project.id]),
+                "update_url": reverse("edit_project", args=[project.id]),
+                "delete_url": reverse("delete_project", args=[project.id]),
             }
         )
 
@@ -391,6 +418,120 @@ def project_detail(request, project_id):
         "category_remaining_percentage": round(category_remaining_percentage, 2),
     }
     return render(request, "partials/project_detail.html", context)
+
+
+@require_http_methods(["GET", "POST"])
+def edit_project(request, project_id):
+    if not request.session.get("department_id"):
+        return redirect("login")
+
+    dept = get_department(request)
+    project = dept.projects.filter(id=project_id).first()
+    if not project:
+        messages.error(request, "Project not found.")
+        return redirect("index")
+
+    back_route = {
+        "client": "client",
+        "company": "company",
+        "academy": "academics",
+        "internship": "internship",
+    }.get(project.category, "index")
+
+    context = {
+        "project": project,
+        "back_url": reverse(back_route),
+        "form_data": {
+            "title": project.title,
+            "category": project.category,
+            "work_type": project.work_type,
+            "start_date": project.start_date.strftime("%Y-%m-%d"),
+            "status": project.status,
+            "amount": project.amount if project.amount is not None else "",
+            "github_link": project.github_link or "",
+        },
+    }
+
+    if request.method == "POST":
+        title = request.POST.get("title", "").strip()
+        category = request.POST.get("category", "").strip()
+        work_type = request.POST.get("work_type", "").strip()
+        start_date = request.POST.get("start_date", "").strip()
+        status = request.POST.get("status", "").strip()
+        amount = request.POST.get("amount", "").strip()
+        github_link = request.POST.get("github_link", "").strip()
+
+        context["form_data"] = {
+            "title": title,
+            "category": category,
+            "work_type": work_type,
+            "start_date": start_date,
+            "status": status,
+            "amount": amount,
+            "github_link": github_link,
+        }
+
+        valid_categories = {choice[0] for choice in Project.PROJECT_CATEGORY}
+        valid_work_types = {choice[0] for choice in Project.WORK_TYPE}
+        valid_statuses = {choice[0] for choice in Project.PROJECT_STATUS}
+
+        if not all([title, category, work_type, start_date, status]):
+            messages.error(request, "Please fill all required fields.")
+            return render(request, "partials/edit_project.html", context)
+
+        if category not in valid_categories:
+            messages.error(request, "Invalid project category selected.")
+            return render(request, "partials/edit_project.html", context)
+
+        if work_type not in valid_work_types:
+            messages.error(request, "Invalid work type selected.")
+            return render(request, "partials/edit_project.html", context)
+
+        if status not in valid_statuses:
+            messages.error(request, "Invalid status selected.")
+            return render(request, "partials/edit_project.html", context)
+
+        if category != "company" and not amount:
+            messages.error(request, "This project type requires amount")
+            return render(request, "partials/edit_project.html", context)
+
+        try:
+            project.title = title
+            project.category = category
+            project.work_type = work_type
+            project.start_date = start_date
+            project.status = status
+            project.amount = amount or None
+            project.github_link = github_link or None
+            project.full_clean()
+            project.save()
+            messages.success(request, "Project updated successfully.")
+            return _render_category_dashboard_by_key(request, project.category)
+        except (ValidationError, IntegrityError):
+            messages.error(request, "Unable to update project. Check details and try again.")
+
+    return render(request, "partials/edit_project.html", context)
+
+
+@require_http_methods(["POST"])
+def delete_project(request, project_id):
+    if not request.session.get("department_id"):
+        return redirect("login")
+
+    dept = get_department(request)
+    project = dept.projects.filter(id=project_id).first()
+    if not project:
+        messages.error(request, "Project not found.")
+        return redirect("index")
+
+    category_key = project.category
+    try:
+        project.delete()
+        messages.success(request, "Project deleted successfully.")
+    except Exception:
+        messages.error(request, "Unable to delete project.")
+
+    return _render_category_dashboard_by_key(request, category_key)
 
 
 def add_team(request):

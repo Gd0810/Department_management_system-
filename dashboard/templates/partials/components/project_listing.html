@@ -77,8 +77,8 @@
         <td class="theme-table-cell px-4 py-3">
           <div class="flex flex-wrap gap-2">
             <button type="button" class="action-btn view-project-btn" data-view-url="${project.view_url || ''}">View</button>
-            <button type="button" class="action-btn">Update</button>
-            <button type="button" class="action-btn danger">Delete</button>
+            <button type="button" class="action-btn update-project-btn" data-update-url="${project.update_url || ''}">Update</button>
+            <button type="button" class="action-btn danger delete-project-btn" data-delete-url="${project.delete_url || ''}">Delete</button>
           </div>
         </td>
       `;
@@ -90,7 +90,37 @@
           window.htmx.ajax("GET", viewUrl, { target: "#content", swap: "innerHTML" });
         });
       }
+      const updateBtn = tr.querySelector(".update-project-btn");
+      if (updateBtn) {
+        updateBtn.addEventListener("click", function () {
+          const updateUrl = this.dataset.updateUrl;
+          if (!updateUrl || !window.htmx) return;
+          window.htmx.ajax("GET", updateUrl, { target: "#content", swap: "innerHTML" });
+        });
+      }
+      const deleteBtn = tr.querySelector(".delete-project-btn");
+      if (deleteBtn) {
+        deleteBtn.addEventListener("click", function () {
+          const deleteUrl = this.dataset.deleteUrl;
+          if (!deleteUrl || !window.htmx) return;
+          if (!window.confirm("Are you sure you want to delete this project?")) return;
+          window.htmx.ajax("POST", deleteUrl, {
+            target: "#content",
+            swap: "innerHTML",
+            headers: {
+              "X-CSRFToken": getCsrfToken(),
+            },
+          });
+        });
+      }
       return tr;
+    }
+
+    function getCsrfToken() {
+      const cookieValue = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("csrftoken="));
+      return cookieValue ? decodeURIComponent(cookieValue.split("=")[1]) : "";
     }
 
     function showSkeletonRows(count) {
