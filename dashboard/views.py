@@ -447,14 +447,17 @@ def assign_project(request):
         "form_data": {},
         "projects": projects,
         "workers": workers,
+        "project_categories": Project.PROJECT_CATEGORY,
     }
 
     if request.method == "POST":
+        project_category = request.POST.get("project_category", "").strip()
         project_id = request.POST.get("project", "").strip()
         worker_id = request.POST.get("worker", "").strip()
         contribution = request.POST.get("contribution", "gold").strip() or "gold"
 
         context["form_data"] = {
+            "project_category": project_category,
             "project": project_id,
             "worker": worker_id,
             "contribution": contribution,

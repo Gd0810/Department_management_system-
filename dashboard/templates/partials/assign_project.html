@@ -6,15 +6,27 @@
 <section class="w-full max-w-none px-3 py-4 sm:px-4 lg:px-6">
   <div class="theme-panel overflow-hidden rounded-2xl border shadow-sm transition-colors">
     <div class="theme-panel-soft border-b px-4 py-5 sm:px-6">
-      <div class="flex items-center gap-3">
-        <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 7h-8V3H4a2 2 0 0 0-2 2v10a4 4 0 0 0 4 4h8v4h8a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Zm-7 9-3-3 1.41-1.41L13 13.17l3.59-3.58L18 11l-5 5Z"/>
-          </svg>
+      <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div class="flex items-center gap-3">
+          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 7h-8V3H4a2 2 0 0 0-2 2v10a4 4 0 0 0 4 4h8v4h8a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Zm-7 9-3-3 1.41-1.41L13 13.17l3.59-3.58L18 11l-5 5Z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="theme-text text-xl font-semibold tracking-tight">Assign Project Member</h2>
+            <p class="theme-muted text-sm">Map a worker to a project with contribution level.</p>
+          </div>
         </div>
-        <div>
-          <h2 class="theme-text text-xl font-semibold tracking-tight">Assign Project Member</h2>
-          <p class="theme-muted text-sm">Map a worker to a project with contribution level.</p>
+
+        <div class="w-full md:w-64">
+          <label for="project_category" class="theme-text mb-1.5 block text-sm font-medium">PROJECT_CATEGORY</label>
+          <select id="project_category" name="project_category" class="theme-input w-full rounded-xl border py-2.5 px-3 outline-none transition">
+            <option value="">All</option>
+            {% for category_key, category_label in project_categories %}
+              <option value="{{ category_key }}" {% if form_data.project_category == category_key %}selected{% endif %}>{{ category_label }}</option>
+            {% endfor %}
+          </select>
         </div>
       </div>
     </div>
@@ -40,7 +52,7 @@
               <select id="project" name="project" required class="theme-input w-full rounded-xl border py-2.5 pl-10 pr-3 outline-none transition">
                 <option value="">Select Project</option>
                 {% for project in projects %}
-                  <option value="{{ project.id }}" {% if form_data.project == project.id|stringformat:"s" %}selected{% endif %}>
+                  <option value="{{ project.id }}" data-category="{{ project.category }}" {% if form_data.project == project.id|stringformat:"s" %}selected{% endif %}>
                     {{ project.title }} ({{ project.get_work_type_display }})
                   </option>
                 {% endfor %}
@@ -97,3 +109,29 @@
   </div>
 </div>
 {% include "partials/components/form_skeleton_assets.html" with skeleton_root_id="assignProjectRoot" skeleton_delay_ms=420 %}
+<script>
+  (function () {
+    const categorySelect = document.getElementById("project_category");
+    const projectSelect = document.getElementById("project");
+    if (!categorySelect || !projectSelect) return;
+
+    const projectOptions = Array.from(projectSelect.options).slice(1);
+
+    function filterProjectsByCategory() {
+      const selectedCategory = categorySelect.value;
+      let selectedStillVisible = false;
+
+      projectOptions.forEach((option) => {
+        const matches = !selectedCategory || option.dataset.category === selectedCategory;
+        option.hidden = !matches;
+        option.disabled = !matches;
+        if (matches && option.selected) selectedStillVisible = true;
+      });
+
+      if (!selectedStillVisible) projectSelect.value = "";
+    }
+
+    categorySelect.addEventListener("change", filterProjectsByCategory);
+    filterProjectsByCategory();
+  })();
+</script>
