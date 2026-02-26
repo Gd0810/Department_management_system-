@@ -11,6 +11,7 @@ from django.db import IntegrityError
 from django.db.models import Count, Sum, Value, DecimalField
 from django.db.models.functions import Coalesce, TruncMonth
 from django.contrib import messages
+from django.urls import reverse
 
 
 
@@ -298,6 +299,7 @@ def category_projects_api(request, category_key):
                 "status": project.status,
                 "status_display": project.get_status_display(),
                 "start_date": project.start_date.strftime("%Y-%m-%d"),
+                "view_url": reverse("project_detail", args=[project.id]),
             }
         )
 
@@ -310,6 +312,102 @@ def category_projects_api(request, category_key):
             "has_more": has_more,
         }
     )
+
+
+def project_detail(request, project_id):
+    if not request.session.get("department_id"):
+        return redirect("login")
+
+    dept = get_department(request)
+    project = (
+        dept.projects.filter(id=project_id)
+        .prefetch_related("members__worker")
+        .first()
+    )
+    if not project:
+        messages.error(request, "Project not found.")
+        return redirect("index")
+
+    category_lookup = dict(Project.PROJECT_CATEGORY)
+    category_label = category_lookup.get(project.category, project.category.title())
+    back_route = {
+        "client": "client",
+        "company": "company",
+        "academy": "academics",
+        "internship": "internship",
+    }.get(project.category, "index")
+
+    status_meta = {
+        "started": {"badge_class": "status-started", "icon": "rocket_launch"},
+        "ongoing": {"badge_class": "status-ongoing", "icon": "play_circle"},
+        "on_hold": {"badge_class": "status-hold", "icon": "pause_circle"},
+        "canceled": {"badge_class": "status-canceled", "icon": "cancel"},
+        "finished": {"badge_class": "status-finished", "icon": "task_alt"},
+    }.get(project.status, {"badge_class": "status-default", "icon": "info"})
+
+    member_rows = []
+    member_labels = []
+    member_income_values = []
+    member_income_cumulative = []
+    running_total = Decimal("0.00")
+
+    payments = calculate_project_payments(project)
+    for member in project.members.select_related("worker").all():
+        amount = payments.get(member.id, Decimal("0.00"))
+        running_total += amount
+        member_rows.append(
+            {
+                "name": member.worker.name,
+                "worker_type": member.worker.get_worker_type_display(),
+                "department_role": member.worker.department_role,
+                "contribution": member.get_contribution_display(),
+                "income": float(amount),
+            }
+        )
+        member_labels.append(member.worker.name)
+        member_income_values.append(float(amount))
+        member_income_cumulative.append(float(running_total))
+
+    project_income = Decimal(project.amount or Decimal("0.00"))
+    category_income_total = (
+        dept.projects.filter(category=project.category).aggregate(
+            total=Coalesce(
+                Sum("amount"),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )
+        )["total"]
+        or Decimal("0.00")
+    )
+
+    project_income_percentage = (
+        float((project_income / category_income_total) * Decimal("100"))
+        if category_income_total > 0
+        else 0.0
+    )
+    category_remaining_percentage = max(0.0, 100.0 - project_income_percentage)
+
+    if not member_labels:
+        member_labels = [project.title]
+        member_income_values = [float(project_income)]
+        member_income_cumulative = [float(project_income)]
+
+    context = {
+        "project": project,
+        "category_label": category_label,
+        "back_url": reverse(back_route),
+        "status_badge_class": status_meta["badge_class"],
+        "status_icon": status_meta["icon"],
+        "member_rows": member_rows,
+        "member_income_labels": member_labels,
+        "member_income_values": member_income_values,
+        "member_income_cumulative": member_income_cumulative,
+        "project_income": float(project_income),
+        "category_income_total": float(category_income_total),
+        "project_income_percentage": round(project_income_percentage, 2),
+        "category_remaining_percentage": round(category_remaining_percentage, 2),
+    }
+    return render(request, "partials/project_detail.html", context)
 
 
 def add_team(request):

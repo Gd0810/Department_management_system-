@@ -1,0 +1,289 @@
+<section class="w-full space-y-6 px-3 py-4 sm:px-4 lg:px-6">
+  <div class="theme-panel overflow-hidden rounded-2xl border shadow-sm">
+    <div class="theme-panel-soft border-b px-4 py-4 sm:px-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="theme-text text-xl font-semibold tracking-tight">Project Details</h2>
+          <p class="theme-muted text-sm">{{ project.title }} overview and performance</p>
+        </div>
+        <button
+          type="button"
+          class="theme-btn-secondary inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium"
+          hx-get="{{ back_url }}"
+          hx-target="#content"
+          hx-swap="innerHTML"
+        >
+          <span class="material-symbols-rounded text-base">arrow_back</span>
+          Back To Listing
+        </button>
+      </div>
+    </div>
+
+    <div class="space-y-6 p-4 sm:p-6">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div class="detail-kpi rounded-2xl border p-4">
+          <div class="detail-kpi-head">
+            <span class="material-symbols-rounded">work</span>
+            <p>Project Name</p>
+          </div>
+          <p class="detail-kpi-value">{{ project.title }}</p>
+        </div>
+
+        <div class="detail-kpi rounded-2xl border p-4">
+          <div class="detail-kpi-head">
+            <span class="material-symbols-rounded">category</span>
+            <p>Project Category</p>
+          </div>
+          <p class="detail-kpi-value">{{ category_label }}</p>
+        </div>
+
+        <div class="detail-kpi rounded-2xl border p-4">
+          <div class="detail-kpi-head">
+            <span class="material-symbols-rounded">event</span>
+            <p>Project Start Date</p>
+          </div>
+          <p class="detail-kpi-value">{{ project.start_date|date:"Y-m-d" }}</p>
+        </div>
+
+        <div class="detail-kpi rounded-2xl border p-4">
+          <div class="detail-kpi-head">
+            <span class="material-symbols-rounded">lan</span>
+            <p>Project Work Type</p>
+          </div>
+          <p class="detail-kpi-value">{{ project.get_work_type_display }}</p>
+        </div>
+
+        <div class="detail-kpi rounded-2xl border p-4">
+          <div class="detail-kpi-head">
+            <span class="material-symbols-rounded">info</span>
+            <p>Project Status</p>
+          </div>
+          <div class="status-chip {{ status_badge_class }}">
+            <span class="material-symbols-rounded text-base">{{ status_icon }}</span>
+            <span>{{ project.get_status_display }}</span>
+          </div>
+        </div>
+
+        <div class="detail-kpi rounded-2xl border p-4">
+          <div class="detail-kpi-head">
+            <span class="material-symbols-rounded">code</span>
+            <p>Github</p>
+          </div>
+          {% if project.github_link %}
+            <a class="detail-link" href="{{ project.github_link }}" target="_blank" rel="noopener noreferrer">Click here to get project source code</a>
+          {% else %}
+            <p class="theme-muted text-sm">The source link not given</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div class="theme-panel rounded-2xl border p-4 sm:p-5">
+          <h3 class="theme-text mb-3 text-base font-semibold">Project Income (Bar + Line)</h3>
+          <div class="relative h-[320px] w-full">
+            <canvas id="projectIncomeChart"></canvas>
+          </div>
+        </div>
+        <div class="theme-panel rounded-2xl border p-4 sm:p-5">
+          <h3 class="theme-text mb-3 text-base font-semibold">Project Income % vs {{ category_label }} Income %</h3>
+          <div class="relative h-[320px] w-full">
+            <canvas id="projectIncomeShareChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="theme-panel rounded-2xl border p-4 sm:p-5">
+        <h3 class="theme-text mb-3 text-base font-semibold">User Details</h3>
+        {% if project.work_type == "solo" %}
+          {% if member_rows %}
+            {% with member=member_rows|first %}
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div class="member-card rounded-xl border p-3">
+                  <p class="member-label">Worker Name</p>
+                  <p class="member-value">{{ member.name }}</p>
+                </div>
+                <div class="member-card rounded-xl border p-3">
+                  <p class="member-label">Worker Type</p>
+                  <p class="member-value">{{ member.worker_type }}</p>
+                </div>
+                <div class="member-card rounded-xl border p-3">
+                  <p class="member-label">Department Role</p>
+                  <p class="member-value">{{ member.department_role }}</p>
+                </div>
+              </div>
+            {% endwith %}
+          {% else %}
+            <p class="theme-muted text-sm">No worker assigned yet for this solo project.</p>
+          {% endif %}
+        {% else %}
+          {% if member_rows %}
+            <div class="overflow-x-auto">
+              <table class="w-full min-w-[720px] border-separate border-spacing-0 text-sm">
+                <thead>
+                  <tr>
+                    <th class="theme-table-head rounded-tl-xl px-4 py-3 text-left">Worker Name</th>
+                    <th class="theme-table-head px-4 py-3 text-left">Worker Type</th>
+                    <th class="theme-table-head px-4 py-3 text-left">Department Role</th>
+                    <th class="theme-table-head px-4 py-3 text-left">Contribution</th>
+                    <th class="theme-table-head rounded-tr-xl px-4 py-3 text-left">Income</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for member in member_rows %}
+                    <tr>
+                      <td class="theme-table-cell px-4 py-3">{{ member.name }}</td>
+                      <td class="theme-table-cell px-4 py-3">{{ member.worker_type }}</td>
+                      <td class="theme-table-cell px-4 py-3">{{ member.department_role }}</td>
+                      <td class="theme-table-cell px-4 py-3">{{ member.contribution }}</td>
+                      <td class="theme-table-cell px-4 py-3">Rs {{ member.income|floatformat:2 }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="theme-muted text-sm">No workers assigned yet for this group project.</p>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{{ member_income_labels|json_script:"project-income-labels" }}
+{{ member_income_values|json_script:"project-income-values" }}
+{{ member_income_cumulative|json_script:"project-income-cumulative" }}
+{{ project_income_percentage|json_script:"project-income-pct" }}
+{{ category_remaining_percentage|json_script:"category-income-pct" }}
+
+<style>
+  .detail-kpi { background: var(--panel-bg); border-color: var(--panel-border); }
+  .detail-kpi-head { display: flex; align-items: center; gap: 8px; color: var(--panel-muted); font-size: 0.76rem; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; }
+  .detail-kpi-value { color: var(--panel-text); font-size: 1rem; font-weight: 700; margin-top: 10px; line-height: 1.35; }
+  .detail-link { color: #2563eb; font-size: .88rem; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+  body.dark-theme .detail-link { color: #60a5fa; }
+  .status-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: .3rem .75rem; font-size: .78rem; font-weight: 700; margin-top: 10px; }
+  .status-started { background: #dbeafe; color: #1d4ed8; }
+  .status-ongoing { background: #dcfce7; color: #166534; }
+  .status-hold { background: #fef3c7; color: #92400e; }
+  .status-canceled { background: #fee2e2; color: #991b1b; }
+  .status-finished { background: #dcfce7; color: #047857; }
+  .status-default { background: #e2e8f0; color: #334155; }
+  .member-card { background: var(--panel-bg); border-color: var(--panel-border); }
+  .member-label { color: var(--panel-muted); font-size: .74rem; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; }
+  .member-value { color: var(--panel-text); font-size: .93rem; font-weight: 700; margin-top: 6px; }
+</style>
+
+<script>
+  (function () {
+    const labels = JSON.parse(document.getElementById("project-income-labels").textContent || "[]");
+    const values = JSON.parse(document.getElementById("project-income-values").textContent || "[]");
+    const cumulative = JSON.parse(document.getElementById("project-income-cumulative").textContent || "[]");
+    const projectPct = Number(JSON.parse(document.getElementById("project-income-pct").textContent || "0"));
+    const categoryPct = Number(JSON.parse(document.getElementById("category-income-pct").textContent || "0"));
+
+    const incomeCtx = document.getElementById("projectIncomeChart");
+    const shareCtx = document.getElementById("projectIncomeShareChart");
+    if (!incomeCtx || !shareCtx) return;
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const existing = document.querySelector(`script[src="${src}"]`);
+        if (existing) {
+          if (existing.dataset.loaded === "true") resolve();
+          else existing.addEventListener("load", () => resolve(), { once: true });
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = () => { script.dataset.loaded = "true"; resolve(); };
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    function money(v) { return Number(v || 0).toLocaleString("en-IN"); }
+
+    function draw() {
+      if (window.projectIncomeChartInstance) window.projectIncomeChartInstance.destroy();
+      if (window.projectShareChartInstance) window.projectShareChartInstance.destroy();
+
+      window.projectIncomeChartInstance = new Chart(incomeCtx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [
+            {
+              type: "bar",
+              label: "Member Income (Rs)",
+              data: values,
+              backgroundColor: "rgba(37, 99, 235, 0.55)",
+              borderColor: "#1d4ed8",
+              borderWidth: 1,
+              borderRadius: 8,
+            },
+            {
+              type: "line",
+              label: "Cumulative Income (Rs)",
+              data: cumulative,
+              borderColor: "#0f766e",
+              backgroundColor: "rgba(15, 118, 110, 0.2)",
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              tension: 0.35,
+              fill: true,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: Rs ${money(ctx.parsed.y)}`,
+              },
+            },
+          },
+          scales: {
+            y: {
+              ticks: { callback: (v) => money(v) },
+            },
+          },
+        },
+      });
+
+      window.projectShareChartInstance = new Chart(shareCtx, {
+        type: "doughnut",
+        data: {
+          labels: ["This Project Income %", "Other Category Income %"],
+          datasets: [
+            {
+              data: [projectPct, categoryPct],
+              backgroundColor: ["#2563eb", "#94a3b8"],
+              borderWidth: 0,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.label}: ${Number(ctx.parsed || 0).toFixed(2)}%`,
+              },
+            },
+          },
+          cutout: "65%",
+        },
+      });
+    }
+
+    if (window.Chart) {
+      draw();
+      return;
+    }
+    loadScript("https://cdn.jsdelivr.net/npm/chart.js").then(draw).catch(() => {});
+  })();
+</script>

@@ -76,12 +76,20 @@
         <td class="theme-table-cell px-4 py-3">${project.start_date}</td>
         <td class="theme-table-cell px-4 py-3">
           <div class="flex flex-wrap gap-2">
-            <button type="button" class="action-btn">View</button>
+            <button type="button" class="action-btn view-project-btn" data-view-url="${project.view_url || ''}">View</button>
             <button type="button" class="action-btn">Update</button>
             <button type="button" class="action-btn danger">Delete</button>
           </div>
         </td>
       `;
+      const viewBtn = tr.querySelector(".view-project-btn");
+      if (viewBtn) {
+        viewBtn.addEventListener("click", function () {
+          const viewUrl = this.dataset.viewUrl;
+          if (!viewUrl || !window.htmx) return;
+          window.htmx.ajax("GET", viewUrl, { target: "#content", swap: "innerHTML" });
+        });
+      }
       return tr;
     }
 
