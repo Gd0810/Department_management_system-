@@ -35,15 +35,15 @@
 
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div class="theme-panel rounded-2xl border p-4 sm:p-5">
-          <h3 class="theme-text mb-3 text-base font-semibold">Experience Days (Joined to Today)</h3>
+          <h3 class="theme-text mb-3 text-base font-semibold">Project Status Responsibility</h3>
           <div class="relative h-[320px] w-full">
-            <canvas id="workerExperienceChart"></canvas>
+            <canvas id="workerStatusChart"></canvas>
           </div>
         </div>
         <div class="theme-panel rounded-2xl border p-4 sm:p-5">
-          <h3 class="theme-text mb-3 text-base font-semibold">Staff vs Interns</h3>
+          <h3 class="theme-text mb-3 text-base font-semibold">Productivity vs Income vs Experience</h3>
           <div class="relative h-[320px] w-full">
-            <canvas id="workerRadarChart"></canvas>
+            <canvas id="workerBubbleChart"></canvas>
           </div>
         </div>
       </div>
@@ -111,8 +111,11 @@
 {{ worker_income_values|json_script:"worker-income-values" }}
 {{ worker_project_values|json_script:"worker-project-values" }}
 {{ worker_experience_values|json_script:"worker-experience-values" }}
-{{ radar_labels|json_script:"worker-radar-labels" }}
-{{ radar_values|json_script:"worker-radar-values" }}
+{{ worker_type_values|json_script:"worker-type-values" }}
+{{ worker_finished_values|json_script:"worker-finished-values" }}
+{{ worker_ongoing_values|json_script:"worker-ongoing-values" }}
+{{ worker_on_hold_values|json_script:"worker-on-hold-values" }}
+{{ worker_canceled_values|json_script:"worker-canceled-values" }}
 
 <style>
   .kpi-card { border-color: var(--panel-border); background: var(--panel-bg); }
@@ -158,13 +161,16 @@
     const incomeValues = JSON.parse(document.getElementById("worker-income-values").textContent || "[]");
     const projectValues = JSON.parse(document.getElementById("worker-project-values").textContent || "[]");
     const experienceValues = JSON.parse(document.getElementById("worker-experience-values").textContent || "[]");
-    const radarLabels = JSON.parse(document.getElementById("worker-radar-labels").textContent || "[]");
-    const radarValues = JSON.parse(document.getElementById("worker-radar-values").textContent || "[]");
+    const workerTypes = JSON.parse(document.getElementById("worker-type-values").textContent || "[]");
+    const finishedValues = JSON.parse(document.getElementById("worker-finished-values").textContent || "[]");
+    const ongoingValues = JSON.parse(document.getElementById("worker-ongoing-values").textContent || "[]");
+    const onHoldValues = JSON.parse(document.getElementById("worker-on-hold-values").textContent || "[]");
+    const canceledValues = JSON.parse(document.getElementById("worker-canceled-values").textContent || "[]");
 
     const incomeProjectCtx = document.getElementById("workerIncomeProjectsChart");
-    const expCtx = document.getElementById("workerExperienceChart");
-    const radarCtx = document.getElementById("workerRadarChart");
-    if (!incomeProjectCtx || !expCtx || !radarCtx) return;
+    const statusCtx = document.getElementById("workerStatusChart");
+    const bubbleCtx = document.getElementById("workerBubbleChart");
+    if (!incomeProjectCtx || !statusCtx || !bubbleCtx) return;
 
     function loadScript(src) {
       return new Promise((resolve, reject) => {
@@ -183,8 +189,24 @@
     }
 
     function money(v) { return Number(v || 0).toLocaleString("en-IN"); }
+    function detectDarkMode() {
+      const root = document.documentElement;
+      const body = document.body;
+      return root.classList.contains("dark-theme")
+        || body.classList.contains("dark-theme")
+        || root.classList.contains("dark")
+        || body.classList.contains("dark")
+        || root.getAttribute("data-theme") === "dark"
+        || body.getAttribute("data-theme") === "dark";
+    }
 
     function drawCharts() {
+      const isDarkMode = detectDarkMode();
+      const axisTextColor = isDarkMode ? "#ffffff" : "#6b7280";
+      const axisTitleColor = isDarkMode ? "#ffffff" : "#374151";
+      const axisGridColor = isDarkMode ? "rgba(255,255,255,0.15)" : "rgba(107,114,128,0.12)";
+      const totalLineColor = isDarkMode ? "#ffffff" : "#111827";
+
       if (window.teamChart1) window.teamChart1.destroy();
       if (window.teamChart2) window.teamChart2.destroy();
       if (window.teamChart3) window.teamChart3.destroy();
@@ -219,75 +241,320 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: {
+            duration: 1200,
+            delay: (ctx) => (ctx.type === "data" ? (ctx.dataIndex * 80) + (ctx.datasetIndex * 120) : 0),
+          },
           scales: {
+            x: {
+              ticks: { color: axisTextColor },
+              grid: { color: axisGridColor },
+            },
             income: {
               position: "left",
-              ticks: { callback: (v) => money(v) },
+              ticks: { color: axisTextColor, callback: (v) => money(v) },
+              title: { display: true, text: "Income (Rs)", color: axisTitleColor },
+              grid: { color: axisGridColor },
             },
             projects: {
               position: "right",
+              title: { display: true, text: "Project Count", color: axisTitleColor },
               grid: { drawOnChartArea: false },
-              ticks: { precision: 0 },
+              ticks: { color: axisTextColor, precision: 0 },
             },
           },
         },
       });
 
-      window.teamChart2 = new Chart(expCtx, {
-        type: "polarArea",
+      window.teamChart2 = new Chart(statusCtx, {
+        type: "bar",
         data: {
           labels,
           datasets: [
             {
-              label: "Experience Days",
-              data: experienceValues,
-              backgroundColor: [
-                "rgba(112, 114, 255, 0.7)",
-                "rgba(51, 196, 148, 0.7)",
-                "rgba(59, 130, 246, 0.7)",
-                "rgba(245, 158, 11, 0.7)",
-                "rgba(236, 72, 153, 0.7)",
-                "rgba(139, 92, 246, 0.7)",
-              ],
-              borderColor: "#ffffff",
+              label: "Finished",
+              data: finishedValues,
+              stack: "status",
+              backgroundColor: "rgba(51, 196, 148, 0.85)",
+              borderColor: "#33C494",
               borderWidth: 1,
+            },
+            {
+              label: "Ongoing",
+              data: ongoingValues,
+              stack: "status",
+              backgroundColor: "rgba(112, 114, 255, 0.85)",
+              borderColor: "#7072FF",
+              borderWidth: 1,
+            },
+            {
+              label: "On Hold",
+              data: onHoldValues,
+              stack: "status",
+              backgroundColor: "rgba(245, 158, 11, 0.85)",
+              borderColor: "#f59e0b",
+              borderWidth: 1,
+            },
+            {
+              label: "Cancelled",
+              data: canceledValues,
+              stack: "status",
+              backgroundColor: "rgba(239, 68, 68, 0.85)",
+              borderColor: "#ef4444",
+              borderWidth: 1,
+            },
+            {
+              type: "line",
+              label: "Total Assigned Projects",
+              data: labels.map((_, idx) => Number(finishedValues[idx] || 0) + Number(ongoingValues[idx] || 0) + Number(onHoldValues[idx] || 0) + Number(canceledValues[idx] || 0)),
+              yAxisID: "count",
+              borderColor: totalLineColor,
+              backgroundColor: totalLineColor,
+              pointRadius: 3,
+              tension: 0.3,
             },
           ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: {
+            duration: 1300,
+            delay: (ctx) => (ctx.type === "data" ? (ctx.dataIndex * 70) + (ctx.datasetIndex * 110) : 0),
+          },
+          animations: {
+            y: {
+              easing: "easeInOutElastic",
+              from: 0,
+              duration: 1400,
+            },
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y || 0}`,
+              },
+            },
+          },
+          scales: {
+            x: {
+              stacked: true,
+              ticks: { color: axisTextColor, maxRotation: 40, minRotation: 0 },
+              title: { display: true, text: "Worker", color: axisTitleColor },
+              grid: { color: axisGridColor },
+            },
+            count: {
+              beginAtZero: true,
+              stacked: true,
+              ticks: {
+                color: axisTextColor,
+                precision: 0,
+              },
+              title: {
+                display: true,
+                text: "Project Count",
+                color: axisTitleColor,
+              },
+              grid: { color: axisGridColor },
+            },
+          },
         },
       });
 
-      window.teamChart3 = new Chart(radarCtx, {
-        type: "radar",
+      const staffPoints = [];
+      const internPoints = [];
+      for (let i = 0; i < labels.length; i += 1) {
+        const point = {
+          x: Number(projectValues[i] || 0),
+          y: Number(incomeValues[i] || 0),
+          r: Math.max(5, Math.min(24, Math.sqrt(Number(experienceValues[i] || 0)))),
+          workerName: labels[i],
+          expDays: Number(experienceValues[i] || 0),
+        };
+        if ((workerTypes[i] || "").toLowerCase() === "staff") staffPoints.push(point);
+        else internPoints.push(point);
+      }
+
+      window.teamChart3 = new Chart(bubbleCtx, {
+        type: "bubble",
         data: {
-          labels: radarLabels,
           datasets: [
             {
-              label: "Worker Mix",
-              data: radarValues,
+              label: "Staff",
+              data: staffPoints,
               borderColor: "#7072FF",
-              backgroundColor: "rgba(112, 114, 255, 0.15)",
-              pointBackgroundColor: "#7072FF",
-              pointRadius: 0,
+              backgroundColor: "rgba(112, 114, 255, 0.35)",
+            },
+            {
+              label: "Intern",
+              data: internPoints,
+              borderColor: "#33C494",
+              backgroundColor: "rgba(51, 196, 148, 0.35)",
             },
           ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          elements: { line: { borderWidth: 2 } },
-          scales: { r: { ticks: { precision: 0 }, pointLabels: { font: { size: 12 } } } },
+          animation: {
+            duration: 1200,
+            delay: (ctx) => (ctx.type === "data" ? (ctx.dataIndex * 90) + (ctx.datasetIndex * 120) : 0),
+          },
+          animations: {
+            y: {
+              easing: "easeInOutElastic",
+              from: 0,
+              duration: 1350,
+            },
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const p = ctx.raw || {};
+                  return `${p.workerName || ctx.dataset.label}: Projects ${p.x || 0}, Income Rs ${money(p.y || 0)}, Experience ${p.expDays || 0} days`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              title: { display: true, text: "Total Projects Done", color: axisTitleColor },
+              ticks: { color: axisTextColor, precision: 0 },
+              grid: { color: axisGridColor },
+            },
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: "Total Income Generated (Rs)", color: axisTitleColor },
+              ticks: { color: axisTextColor, callback: (v) => money(v) },
+              grid: { color: axisGridColor },
+            },
+          },
         },
       });
+    }
+
+    function applyThemeToCharts() {
+      const isDarkMode = detectDarkMode();
+      const axisTextColor = isDarkMode ? "#ffffff" : "#6b7280";
+      const axisTitleColor = isDarkMode ? "#ffffff" : "#374151";
+      const axisGridColor = isDarkMode ? "rgba(255,255,255,0.15)" : "rgba(107,114,128,0.12)";
+      const totalLineColor = isDarkMode ? "#ffffff" : "#111827";
+
+      const chart1 = window.teamChart1;
+      if (chart1 && chart1.options && chart1.options.scales) {
+        if (chart1.options.scales.x) {
+          chart1.options.scales.x.ticks = chart1.options.scales.x.ticks || {};
+          chart1.options.scales.x.grid = chart1.options.scales.x.grid || {};
+          chart1.options.scales.x.ticks.color = axisTextColor;
+          chart1.options.scales.x.grid.color = axisGridColor;
+        }
+        if (chart1.options.scales.income) {
+          chart1.options.scales.income.ticks = chart1.options.scales.income.ticks || {};
+          chart1.options.scales.income.title = chart1.options.scales.income.title || {};
+          chart1.options.scales.income.grid = chart1.options.scales.income.grid || {};
+          chart1.options.scales.income.ticks.color = axisTextColor;
+          chart1.options.scales.income.title.color = axisTitleColor;
+          chart1.options.scales.income.grid.color = axisGridColor;
+        }
+        if (chart1.options.scales.projects) {
+          chart1.options.scales.projects.ticks = chart1.options.scales.projects.ticks || {};
+          chart1.options.scales.projects.title = chart1.options.scales.projects.title || {};
+          chart1.options.scales.projects.ticks.color = axisTextColor;
+          chart1.options.scales.projects.title.color = axisTitleColor;
+        }
+        chart1.update("none");
+      }
+
+      const chart2 = window.teamChart2;
+      if (chart2 && chart2.options && chart2.options.scales) {
+        if (chart2.options.scales.x) {
+          chart2.options.scales.x.ticks = chart2.options.scales.x.ticks || {};
+          chart2.options.scales.x.title = chart2.options.scales.x.title || {};
+          chart2.options.scales.x.grid = chart2.options.scales.x.grid || {};
+          chart2.options.scales.x.ticks.color = axisTextColor;
+          chart2.options.scales.x.title.color = axisTitleColor;
+          chart2.options.scales.x.grid.color = axisGridColor;
+        }
+        if (chart2.options.scales.count) {
+          chart2.options.scales.count.ticks = chart2.options.scales.count.ticks || {};
+          chart2.options.scales.count.title = chart2.options.scales.count.title || {};
+          chart2.options.scales.count.grid = chart2.options.scales.count.grid || {};
+          chart2.options.scales.count.ticks.color = axisTextColor;
+          chart2.options.scales.count.title.color = axisTitleColor;
+          chart2.options.scales.count.grid.color = axisGridColor;
+        }
+        if (chart2.data && chart2.data.datasets && chart2.data.datasets[4]) {
+          chart2.data.datasets[4].borderColor = totalLineColor;
+          chart2.data.datasets[4].backgroundColor = totalLineColor;
+        }
+        chart2.update("none");
+      }
+
+      const chart3 = window.teamChart3;
+      if (chart3 && chart3.options && chart3.options.scales) {
+        if (chart3.options.scales.x) {
+          chart3.options.scales.x.ticks = chart3.options.scales.x.ticks || {};
+          chart3.options.scales.x.title = chart3.options.scales.x.title || {};
+          chart3.options.scales.x.grid = chart3.options.scales.x.grid || {};
+          chart3.options.scales.x.ticks.color = axisTextColor;
+          chart3.options.scales.x.title.color = axisTitleColor;
+          chart3.options.scales.x.grid.color = axisGridColor;
+        }
+        if (chart3.options.scales.y) {
+          chart3.options.scales.y.ticks = chart3.options.scales.y.ticks || {};
+          chart3.options.scales.y.title = chart3.options.scales.y.title || {};
+          chart3.options.scales.y.grid = chart3.options.scales.y.grid || {};
+          chart3.options.scales.y.ticks.color = axisTextColor;
+          chart3.options.scales.y.title.color = axisTitleColor;
+          chart3.options.scales.y.grid.color = axisGridColor;
+        }
+        chart3.update("none");
+      }
+    }
+
+    function installThemeWatcher() {
+      if (window.__teamThemeObserverInstalled) return;
+      window.__teamThemeObserverInstalled = true;
+
+      let frame = null;
+      const scheduleThemeApply = () => {
+        if (frame) cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(() => {
+          frame = null;
+          applyThemeToCharts();
+        });
+      };
+
+      const observer = new MutationObserver(() => {
+        // Mirror the category dashboard behavior: rebuild charts on theme class toggle.
+        drawCharts();
+        scheduleThemeApply();
+      });
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class", "data-theme"],
+      });
+      observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ["class", "data-theme"],
+      });
+
+      window.addEventListener("themechange", scheduleThemeApply);
+      window.addEventListener("storage", scheduleThemeApply);
     }
 
     if (window.Chart) {
       drawCharts();
+      installThemeWatcher();
+      applyThemeToCharts();
       return;
     }
-    loadScript("https://cdn.jsdelivr.net/npm/chart.js").then(drawCharts).catch(() => {});
+    loadScript("https://cdn.jsdelivr.net/npm/chart.js").then(() => {
+      drawCharts();
+      installThemeWatcher();
+      applyThemeToCharts();
+    }).catch(() => {});
   })();
 </script>

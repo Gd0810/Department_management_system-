@@ -137,11 +137,34 @@ def team(request):
             if member.worker_id in active_worker_ids:
                 worker_income_map[member.worker_id] += payments.get(member.id, Decimal("0.00"))
 
+    worker_status_map = defaultdict(lambda: {
+        "finished": 0,
+        "ongoing": 0,
+        "on_hold": 0,
+        "canceled": 0,
+    })
+    worker_status_rows = (
+        ProjectMember.objects
+        .filter(worker__in=active_workers, project__department=dept)
+        .values("worker_id", "project__status")
+        .annotate(project_count=Count("project_id", distinct=True))
+    )
+    for row in worker_status_rows:
+        worker_id = row["worker_id"]
+        status_key = row["project__status"]
+        if status_key in worker_status_map[worker_id]:
+            worker_status_map[worker_id][status_key] = int(row["project_count"] or 0)
+
     today = date.today()
     worker_labels = []
     worker_income_values = []
     worker_project_values = []
     worker_experience_values = []
+    worker_type_values = []
+    worker_finished_values = []
+    worker_ongoing_values = []
+    worker_on_hold_values = []
+    worker_canceled_values = []
     worker_rows = []
 
     for worker in active_workers:
@@ -157,6 +180,12 @@ def team(request):
         worker_income_values.append(float(worker_income_map.get(worker.id, Decimal("0.00"))))
         worker_project_values.append(worker_project_count_map.get(worker.id, 0))
         worker_experience_values.append(max((today - worker.date_of_join).days, 0))
+        worker_type_values.append(worker.worker_type)
+        status_counts = worker_status_map[worker.id]
+        worker_finished_values.append(status_counts["finished"])
+        worker_ongoing_values.append(status_counts["ongoing"])
+        worker_on_hold_values.append(status_counts["on_hold"])
+        worker_canceled_values.append(status_counts["canceled"])
         worker_rows.append(
             {
                 "id": worker.id,
@@ -176,12 +205,15 @@ def team(request):
         "total_projects": total_projects,
         "workers_project_avg_pct": round(workers_project_avg_pct, 2),
         "workers_income_avg_pct": round(float(workers_income_avg_pct), 6),
-        "radar_labels": ["Staff", "Interns"],
-        "radar_values": [staff_count, intern_count],
         "worker_labels": worker_labels,
         "worker_income_values": worker_income_values,
         "worker_project_values": worker_project_values,
         "worker_experience_values": worker_experience_values,
+        "worker_type_values": worker_type_values,
+        "worker_finished_values": worker_finished_values,
+        "worker_ongoing_values": worker_ongoing_values,
+        "worker_on_hold_values": worker_on_hold_values,
+        "worker_canceled_values": worker_canceled_values,
         "workers": worker_rows,
     }
     return render(request, "partials/team.html", context)
