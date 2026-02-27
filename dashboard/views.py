@@ -12,6 +12,7 @@ from django.db.models import Count, Sum, Value, DecimalField
 from django.db.models.functions import Coalesce, TruncMonth
 from django.contrib import messages
 from django.urls import reverse
+from .project_d.overall import generate_category_csv_report, generate_category_pdf_report
 
 
 
@@ -372,6 +373,25 @@ def category_projects_api(request, category_key):
             "available_years": available_years,
         }
     )
+
+
+@require_http_methods(["GET"])
+def project_category_report(request, category_key, file_format):
+    if not request.session.get("department_id"):
+        return redirect("login")
+
+    valid_categories = {choice[0] for choice in Project.PROJECT_CATEGORY}
+    if category_key not in valid_categories:
+        return JsonResponse({"detail": "Invalid category"}, status=400)
+
+    dept = get_department(request)
+    file_format = (file_format or "").lower()
+    if file_format == "csv":
+        return generate_category_csv_report(dept, category_key)
+    if file_format == "pdf":
+        return generate_category_pdf_report(dept, category_key)
+
+    return JsonResponse({"detail": "Unsupported format"}, status=400)
 
 
 def project_detail(request, project_id):

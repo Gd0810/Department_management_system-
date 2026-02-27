@@ -19,6 +19,7 @@ urlpatterns = [
     path('project/<int:project_id>/edit/', views.edit_project, name="edit_project"),
     path('project/<int:project_id>/delete/', views.delete_project, name="delete_project"),
     path('api/projects/<str:category_key>/', views.category_projects_api, name="category_projects_api"),
+    path('reports/projects/<str:category_key>/<str:file_format>/', views.project_category_report, name="project_category_report"),
     path('logout/', views.logout_view, name="logout"),
     path('test/', TemplateView.as_view(template_name='test.html'), name="test"),
  ]
