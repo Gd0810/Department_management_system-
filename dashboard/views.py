@@ -161,6 +161,8 @@ def team(request):
     worker_project_values = []
     worker_experience_values = []
     worker_type_values = []
+    worker_image_urls = []
+    worker_initials = []
     worker_finished_values = []
     worker_ongoing_values = []
     worker_on_hold_values = []
@@ -181,6 +183,8 @@ def team(request):
         worker_project_values.append(worker_project_count_map.get(worker.id, 0))
         worker_experience_values.append(max((today - worker.date_of_join).days, 0))
         worker_type_values.append(worker.worker_type)
+        worker_image_urls.append(worker.image.url if worker.image else "")
+        worker_initials.append(initials)
         status_counts = worker_status_map[worker.id]
         worker_finished_values.append(status_counts["finished"])
         worker_ongoing_values.append(status_counts["ongoing"])
@@ -210,6 +214,8 @@ def team(request):
         "worker_project_values": worker_project_values,
         "worker_experience_values": worker_experience_values,
         "worker_type_values": worker_type_values,
+        "worker_image_urls": worker_image_urls,
+        "worker_initials": worker_initials,
         "worker_finished_values": worker_finished_values,
         "worker_ongoing_values": worker_ongoing_values,
         "worker_on_hold_values": worker_on_hold_values,

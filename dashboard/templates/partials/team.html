@@ -112,6 +112,8 @@
 {{ worker_project_values|json_script:"worker-project-values" }}
 {{ worker_experience_values|json_script:"worker-experience-values" }}
 {{ worker_type_values|json_script:"worker-type-values" }}
+{{ worker_image_urls|json_script:"worker-image-urls" }}
+{{ worker_initials|json_script:"worker-initials" }}
 {{ worker_finished_values|json_script:"worker-finished-values" }}
 {{ worker_ongoing_values|json_script:"worker-ongoing-values" }}
 {{ worker_on_hold_values|json_script:"worker-on-hold-values" }}
@@ -162,6 +164,8 @@
     const projectValues = JSON.parse(document.getElementById("worker-project-values").textContent || "[]");
     const experienceValues = JSON.parse(document.getElementById("worker-experience-values").textContent || "[]");
     const workerTypes = JSON.parse(document.getElementById("worker-type-values").textContent || "[]");
+    const workerImageUrls = JSON.parse(document.getElementById("worker-image-urls").textContent || "[]");
+    const workerInitials = JSON.parse(document.getElementById("worker-initials").textContent || "[]");
     const finishedValues = JSON.parse(document.getElementById("worker-finished-values").textContent || "[]");
     const ongoingValues = JSON.parse(document.getElementById("worker-ongoing-values").textContent || "[]");
     const onHoldValues = JSON.parse(document.getElementById("worker-on-hold-values").textContent || "[]");
@@ -189,6 +193,58 @@
     }
 
     function money(v) { return Number(v || 0).toLocaleString("en-IN"); }
+    function buildInitialAvatar(initials) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 44;
+      canvas.height = 44;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return canvas;
+      ctx.fillStyle = "#dbeafe";
+      ctx.strokeStyle = "#bfdbfe";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(22, 22, 20, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#1d4ed8";
+      ctx.font = "700 15px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText((initials || "NA").toUpperCase().slice(0, 2), 22, 22);
+      return canvas;
+    }
+
+    function buildPhotoAvatar(photoUrl, initials, chartRef, pointStyles, index) {
+      if (!photoUrl) return;
+      const image = new Image();
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 44;
+        canvas.height = 44;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(22, 22, 20, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(image, 2, 2, 40, 40);
+        ctx.restore();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(22, 22, 20, 0, Math.PI * 2);
+        ctx.stroke();
+        pointStyles[index] = canvas;
+        if (chartRef && chartRef.update) chartRef.update("none");
+      };
+      image.onerror = () => {
+        pointStyles[index] = buildInitialAvatar(initials);
+        if (chartRef && chartRef.update) chartRef.update("none");
+      };
+      image.src = photoUrl;
+    }
+
     function detectDarkMode() {
       const root = document.documentElement;
       const body = document.body;
@@ -206,6 +262,7 @@
       const axisTitleColor = isDarkMode ? "#ffffff" : "#374151";
       const axisGridColor = isDarkMode ? "rgba(255,255,255,0.15)" : "rgba(107,114,128,0.12)";
       const totalLineColor = isDarkMode ? "#ffffff" : "#111827";
+      const avatarPointStyles = labels.map((_, idx) => buildInitialAvatar(workerInitials[idx]));
 
       if (window.teamChart1) window.teamChart1.destroy();
       if (window.teamChart2) window.teamChart2.destroy();
@@ -224,7 +281,9 @@
               backgroundColor: "rgba(112, 114, 255, 0.15)",
               tension: 0.35,
               fill: true,
-              pointRadius: 3,
+              pointStyle: avatarPointStyles,
+              pointRadius: 9,
+              pointHoverRadius: 11,
             },
             {
               label: "Per Person Project Count",
@@ -234,7 +293,9 @@
               backgroundColor: "rgba(51, 196, 148, 0.15)",
               tension: 0.35,
               fill: true,
-              pointRadius: 3,
+              pointStyle: avatarPointStyles,
+              pointRadius: 9,
+              pointHoverRadius: 11,
             },
           ],
         },
@@ -265,6 +326,7 @@
           },
         },
       });
+      workerImageUrls.forEach((url, idx) => buildPhotoAvatar(url, workerInitials[idx], window.teamChart1, avatarPointStyles, idx));
 
       window.teamChart2 = new Chart(statusCtx, {
         type: "bar",
