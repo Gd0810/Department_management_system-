@@ -54,30 +54,102 @@ def build_category_report_data(dept, category_key):
     }
 
 
+
 def generate_category_csv_report(dept, category_key):
+    """Generate minimal Excel report with proper table alignment and no UI styling."""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment
+        has_openpyxl = True
+    except ImportError:
+        has_openpyxl = False
+
     report = build_category_report_data(dept, category_key)
-    filename = f"{category_key}_projects_report.csv"
-    response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
 
-    writer = csv.writer(response)
-    writer.writerow(["Department Name", report["department_name"]])
-    writer.writerow(["Category", report["category_label"]])
-    writer.writerow(["Overall Income for Category", f'{report["overall_income"]:.2f}'])
-    writer.writerow(["Overall Projects for Category", report["overall_project_count"]])
-    writer.writerow(["Generated At", report["generated_at"]])
-    writer.writerow([])
-    writer.writerow(["Project Name", "Start Date", "Status", "Worker Name for Project"])
-
-    for row in report["projects"]:
-        writer.writerow(
-            [
+    if not has_openpyxl:
+        filename = f"{category_key}_projects_report.csv"
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        writer = csv.writer(response, lineterminator="\n")
+        writer.writerow(["Department Name", report["department_name"]])
+        writer.writerow(["Category", report["category_label"]])
+        writer.writerow(["Total Income", f"\u20B9{report['overall_income']:,.2f}"])
+        writer.writerow(["Total Projects", report["overall_project_count"]])
+        writer.writerow(["Generated At", report["generated_at"]])
+        writer.writerow([])
+        writer.writerow(["Project Name", "Start Date", "Status", "Amount", "Assigned Workers"])
+        for row in report["projects"]:
+            writer.writerow([
                 row["project_name"],
                 row["start_date"],
                 row["status"],
+                f"\u20B9{Decimal(row['amount']):,.2f}",
                 row["worker_names"],
-            ]
-        )
+            ])
+        return response
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Projects Report"
+    ws.sheet_view.showGridLines = True
+
+    ws.column_dimensions["A"].width = 34
+    ws.column_dimensions["B"].width = 14
+    ws.column_dimensions["C"].width = 14
+    ws.column_dimensions["D"].width = 14
+    ws.column_dimensions["E"].width = 48
+
+    row_idx = 1
+    summary_rows = [
+        ("Department Name", report["department_name"]),
+        ("Category", report["category_label"]),
+        ("Total Income", f"\u20B9{report['overall_income']:,.2f}"),
+        ("Total Projects", str(report["overall_project_count"])),
+        ("Generated At", report["generated_at"]),
+    ]
+
+    for label, value in summary_rows:
+        ws.cell(row=row_idx, column=1, value=label).font = Font(bold=True)
+        ws.cell(row=row_idx, column=2, value=value)
+        row_idx += 1
+
+    row_idx += 1
+    headers = ["Project Name", "Start Date", "Status", "Amount", "Assigned Workers"]
+    for col_idx, header in enumerate(headers, start=1):
+        cell = ws.cell(row=row_idx, column=col_idx, value=header)
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal="left", vertical="center")
+
+    table_first_data_row = row_idx + 1
+    row_idx += 1
+
+    for item in report["projects"]:
+        ws.cell(row=row_idx, column=1, value=item["project_name"])
+        ws.cell(row=row_idx, column=2, value=item["start_date"])
+        ws.cell(row=row_idx, column=3, value=item["status"])
+        ws.cell(row=row_idx, column=4, value=f"\u20B9{Decimal(item['amount']):,.2f}")
+        ws.cell(row=row_idx, column=5, value=item["worker_names"])
+        for col_idx in range(1, 6):
+            ws.cell(row=row_idx, column=col_idx).alignment = Alignment(
+                horizontal="left",
+                vertical="center",
+                wrap_text=(col_idx == 5),
+            )
+        row_idx += 1
+
+    ws.freeze_panes = f"A{table_first_data_row}"
+
+    filename = f"{category_key}_projects_report.xlsx"
+    output = BytesIO()
+    wb.save(output)
+    payload = output.getvalue()
+    output.close()
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response.write(payload)
     return response
 
 def generate_category_pdf_report(dept, category_key):
@@ -372,3 +444,5 @@ def generate_category_pdf_report(dept, category_key):
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     response.write(pdf_bytes)
     return response
+
+
