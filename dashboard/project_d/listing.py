@@ -1,5 +1,6 @@
 from decimal import Decimal
 from io import BytesIO
+import os
 
 from django.http import HttpResponse, JsonResponse
 
@@ -142,6 +143,8 @@ def generate_project_listing_pdf_report(dept, category_key, query_params):
         from reportlab.lib import colors
         from reportlab.lib.styles import ParagraphStyle
         from reportlab.lib.units import mm
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
         from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle
         from reportlab.lib.enums import TA_LEFT
     except ImportError:
@@ -153,6 +156,20 @@ def generate_project_listing_pdf_report(dept, category_key, query_params):
 
     projects = _filtered_projects_for_report(dept, category_key, query_params)
     rows = _listing_rows(projects)
+
+    font_name = "Helvetica"
+    for path in [
+        "C:/Windows/Fonts/arial.ttf",
+        "C:/Windows/Fonts/calibri.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    ]:
+        if os.path.exists(path):
+            try:
+                pdfmetrics.registerFont(TTFont("ListingSans", path))
+                font_name = "ListingSans"
+                break
+            except Exception:
+                pass
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -167,14 +184,14 @@ def generate_project_listing_pdf_report(dept, category_key, query_params):
 
     table_header_style = ParagraphStyle(
         "th",
-        fontName="Helvetica-Bold",
+        fontName=font_name,
         fontSize=9,
         textColor=colors.white,
         alignment=TA_LEFT,
     )
     table_cell_style = ParagraphStyle(
         "td",
-        fontName="Helvetica",
+        fontName=font_name,
         fontSize=8.5,
         textColor=colors.HexColor("#1f2937"),
         alignment=TA_LEFT,
