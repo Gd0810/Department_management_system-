@@ -12,16 +12,42 @@
     <div class="theme-panel rounded-2xl border p-4 sm:p-5">
       <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <h3 class="theme-text text-base font-semibold">{{ category_label }} Project Listing</h3>
-        <button
-          type="button"
-          class="action-btn action-btn-update"
-          hx-get="{% url 'add_project' %}"
-          hx-target="#content"
-          hx-swap="innerHTML"
-        >
-          <iconify-icon icon="material-symbols:add-rounded" width="16" height="16"></iconify-icon>
-          <span>Add New Project</span>
-        </button>
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="relative inline-block text-left">
+            <button
+              type="button"
+              id="listingReportDropdownBtn-{{ category_key }}"
+              class="action-btn action-btn-view inline-flex items-center gap-2"
+            >
+              <iconify-icon icon="material-symbols:download-rounded" width="16" height="16"></iconify-icon>
+              <span>Listing Report</span>
+              <iconify-icon icon="material-symbols:arrow-drop-down-rounded" width="18" height="18"></iconify-icon>
+            </button>
+            <div
+              id="listingReportDropdownMenu-{{ category_key }}"
+              class="theme-panel absolute right-0 z-20 mt-2 hidden min-w-[170px] rounded-xl border p-1 shadow-lg"
+            >
+              <a id="listingReportExcelLink-{{ category_key }}" href="#" class="report-menu-item">
+                <iconify-icon class="report-menu-icon" icon="vscode-icons:file-type-excel" width="20" height="20"></iconify-icon>
+                <span>EXCEL Report</span>
+              </a>
+              <a id="listingReportPdfLink-{{ category_key }}" href="#" class="report-menu-item">
+                <iconify-icon class="report-menu-icon" icon="material-icon-theme:pdf" width="20" height="20"></iconify-icon>
+                <span>PDF Report</span>
+              </a>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="action-btn action-btn-update"
+            hx-get="{% url 'add_project' %}"
+            hx-target="#content"
+            hx-swap="innerHTML"
+          >
+            <iconify-icon icon="material-symbols:add-rounded" width="16" height="16"></iconify-icon>
+            <span>Add New Project</span>
+          </button>
+        </div>
       </div>
 
       <div class="mb-4 grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-5">
@@ -121,9 +147,14 @@
     const yearMenu = document.getElementById(`projectYearMenu-${categoryKey}`);
     const statusInput = document.getElementById(`projectStatus-${categoryKey}`);
     const clearBtn = document.getElementById(`projectFilterClear-${categoryKey}`);
-    if (!scrollWrap || !body || !loaderBody || !emptyBody || !skelTemplate || !searchInput || !monthInput || !yearInput || !yearWrap || !yearBtn || !yearBtnLabel || !yearMenu || !statusInput || !clearBtn) return;
+    const listingReportBtn = document.getElementById(`listingReportDropdownBtn-${categoryKey}`);
+    const listingReportMenu = document.getElementById(`listingReportDropdownMenu-${categoryKey}`);
+    const listingReportExcelLink = document.getElementById(`listingReportExcelLink-${categoryKey}`);
+    const listingReportPdfLink = document.getElementById(`listingReportPdfLink-${categoryKey}`);
+    if (!scrollWrap || !body || !loaderBody || !emptyBody || !skelTemplate || !searchInput || !monthInput || !yearInput || !yearWrap || !yearBtn || !yearBtnLabel || !yearMenu || !statusInput || !clearBtn || !listingReportBtn || !listingReportMenu || !listingReportExcelLink || !listingReportPdfLink) return;
 
     const apiUrl = "{% url 'category_projects_api' '__category__' %}".replace("__category__", categoryKey);
+    const listingReportBase = "{% url 'project_listing_report' '__category__' '__format__' %}".replace("__category__", categoryKey);
     const pageSize = 7;
     let offset = 0;
     let hasMore = true;
@@ -256,6 +287,14 @@
       return params.toString();
     }
 
+    function updateListingReportLinks() {
+      const filterQuery = buildFilterQuery();
+      const excelUrl = `${listingReportBase.replace("__format__", "csv")}${filterQuery ? `?${filterQuery}` : ""}`;
+      const pdfUrl = `${listingReportBase.replace("__format__", "pdf")}${filterQuery ? `?${filterQuery}` : ""}`;
+      listingReportExcelLink.href = excelUrl;
+      listingReportPdfLink.href = pdfUrl;
+    }
+
     function resetAndLoad() {
       offset = 0;
       hasMore = true;
@@ -307,9 +346,16 @@
     searchInput.addEventListener("input", () => {
       clearTimeout(searchDebounce);
       searchDebounce = setTimeout(resetAndLoad, 300);
+      updateListingReportLinks();
     });
-    monthInput.addEventListener("change", resetAndLoad);
-    statusInput.addEventListener("change", resetAndLoad);
+    monthInput.addEventListener("change", () => {
+      resetAndLoad();
+      updateListingReportLinks();
+    });
+    statusInput.addEventListener("change", () => {
+      resetAndLoad();
+      updateListingReportLinks();
+    });
     yearBtn.addEventListener("click", () => {
       toggleYearMenu();
     });
@@ -318,9 +364,21 @@
       if (!option) return;
       toggleYearMenu(false);
       setYearValue(option.dataset.year || "");
+      updateListingReportLinks();
     });
     document.addEventListener("click", (event) => {
       if (!yearWrap.contains(event.target)) toggleYearMenu(false);
+      if (!listingReportMenu.contains(event.target) && !listingReportBtn.contains(event.target)) {
+        listingReportMenu.classList.add("hidden");
+      }
+    });
+    listingReportBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      updateListingReportLinks();
+      listingReportMenu.classList.toggle("hidden");
+    });
+    listingReportMenu.addEventListener("click", () => {
+      listingReportMenu.classList.add("hidden");
     });
     clearBtn.addEventListener("click", () => {
       searchInput.value = "";
@@ -329,7 +387,9 @@
       yearBtnLabel.textContent = "All Years";
       statusInput.value = "";
       resetAndLoad();
+      updateListingReportLinks();
     });
+    updateListingReportLinks();
     loadNextPage();
   })();
 </script>

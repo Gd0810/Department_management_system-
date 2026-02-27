@@ -13,6 +13,7 @@ from django.db.models.functions import Coalesce, TruncMonth
 from django.contrib import messages
 from django.urls import reverse
 from .project_d.overall import generate_category_csv_report, generate_category_pdf_report
+from .project_d.listing import generate_project_listing_excel_report, generate_project_listing_pdf_report
 
 
 
@@ -390,6 +391,25 @@ def project_category_report(request, category_key, file_format):
         return generate_category_csv_report(dept, category_key)
     if file_format == "pdf":
         return generate_category_pdf_report(dept, category_key)
+
+    return JsonResponse({"detail": "Unsupported format"}, status=400)
+
+
+@require_http_methods(["GET"])
+def project_listing_report(request, category_key, file_format):
+    if not request.session.get("department_id"):
+        return redirect("login")
+
+    valid_categories = {choice[0] for choice in Project.PROJECT_CATEGORY}
+    if category_key not in valid_categories:
+        return JsonResponse({"detail": "Invalid category"}, status=400)
+
+    dept = get_department(request)
+    file_format = (file_format or "").lower()
+    if file_format == "csv":
+        return generate_project_listing_excel_report(dept, category_key, request.GET)
+    if file_format == "pdf":
+        return generate_project_listing_pdf_report(dept, category_key, request.GET)
 
     return JsonResponse({"detail": "Unsupported format"}, status=400)
 
