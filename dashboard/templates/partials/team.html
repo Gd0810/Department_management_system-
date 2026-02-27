@@ -159,6 +159,8 @@
 
 <script>
   (function () {
+    if (window.teamDashboardCleanup) window.teamDashboardCleanup();
+
     const labels = JSON.parse(document.getElementById("worker-labels").textContent || "[]");
     const incomeValues = JSON.parse(document.getElementById("worker-income-values").textContent || "[]");
     const projectValues = JSON.parse(document.getElementById("worker-project-values").textContent || "[]");
@@ -175,6 +177,11 @@
     const statusCtx = document.getElementById("workerStatusChart");
     const bubbleCtx = document.getElementById("workerBubbleChart");
     if (!incomeProjectCtx || !statusCtx || !bubbleCtx) return;
+    let teamChart1 = null;
+    let teamChart2 = null;
+    let teamChart3 = null;
+    let themeObserver = null;
+    let themeFrame = null;
 
     function loadScript(src) {
       return new Promise((resolve, reject) => {
@@ -264,11 +271,11 @@
       const totalLineColor = isDarkMode ? "#ffffff" : "#111827";
       const avatarPointStyles = labels.map((_, idx) => buildInitialAvatar(workerInitials[idx]));
 
-      if (window.teamChart1) window.teamChart1.destroy();
-      if (window.teamChart2) window.teamChart2.destroy();
-      if (window.teamChart3) window.teamChart3.destroy();
+      if (teamChart1) teamChart1.destroy();
+      if (teamChart2) teamChart2.destroy();
+      if (teamChart3) teamChart3.destroy();
 
-      window.teamChart1 = new Chart(incomeProjectCtx, {
+      teamChart1 = new Chart(incomeProjectCtx, {
         type: "line",
         data: {
           labels,
@@ -326,9 +333,9 @@
           },
         },
       });
-      workerImageUrls.forEach((url, idx) => buildPhotoAvatar(url, workerInitials[idx], window.teamChart1, avatarPointStyles, idx));
+      workerImageUrls.forEach((url, idx) => buildPhotoAvatar(url, workerInitials[idx], teamChart1, avatarPointStyles, idx));
 
-      window.teamChart2 = new Chart(statusCtx, {
+      teamChart2 = new Chart(statusCtx, {
         type: "bar",
         data: {
           labels,
@@ -437,7 +444,7 @@
         else internPoints.push(point);
       }
 
-      window.teamChart3 = new Chart(bubbleCtx, {
+      teamChart3 = new Chart(bubbleCtx, {
         type: "bubble",
         data: {
           datasets: [
@@ -504,7 +511,7 @@
       const axisGridColor = isDarkMode ? "rgba(255,255,255,0.15)" : "rgba(107,114,128,0.12)";
       const totalLineColor = isDarkMode ? "#ffffff" : "#111827";
 
-      const chart1 = window.teamChart1;
+      const chart1 = teamChart1;
       if (chart1 && chart1.options && chart1.options.scales) {
         if (chart1.options.scales.x) {
           chart1.options.scales.x.ticks = chart1.options.scales.x.ticks || {};
@@ -529,7 +536,7 @@
         chart1.update("none");
       }
 
-      const chart2 = window.teamChart2;
+      const chart2 = teamChart2;
       if (chart2 && chart2.options && chart2.options.scales) {
         if (chart2.options.scales.x) {
           chart2.options.scales.x.ticks = chart2.options.scales.x.ticks || {};
@@ -554,7 +561,7 @@
         chart2.update("none");
       }
 
-      const chart3 = window.teamChart3;
+      const chart3 = teamChart3;
       if (chart3 && chart3.options && chart3.options.scales) {
         if (chart3.options.scales.x) {
           chart3.options.scales.x.ticks = chart3.options.scales.x.ticks || {};
@@ -577,34 +584,55 @@
     }
 
     function installThemeWatcher() {
-      if (window.__teamThemeObserverInstalled) return;
-      window.__teamThemeObserverInstalled = true;
-
-      let frame = null;
       const scheduleThemeApply = () => {
-        if (frame) cancelAnimationFrame(frame);
-        frame = requestAnimationFrame(() => {
-          frame = null;
+        if (themeFrame) cancelAnimationFrame(themeFrame);
+        themeFrame = requestAnimationFrame(() => {
+          themeFrame = null;
           applyThemeToCharts();
         });
       };
 
-      const observer = new MutationObserver(() => {
-        // Mirror the category dashboard behavior: rebuild charts on theme class toggle.
+      if (themeObserver) themeObserver.disconnect();
+      themeObserver = new MutationObserver(() => {
         drawCharts();
         scheduleThemeApply();
       });
-      observer.observe(document.documentElement, {
+      themeObserver.observe(document.documentElement, {
         attributes: true,
         attributeFilter: ["class", "data-theme"],
       });
-      observer.observe(document.body, {
+      themeObserver.observe(document.body, {
         attributes: true,
         attributeFilter: ["class", "data-theme"],
       });
 
       window.addEventListener("themechange", scheduleThemeApply);
       window.addEventListener("storage", scheduleThemeApply);
+
+      window.teamDashboardCleanup = function () {
+        window.removeEventListener("themechange", scheduleThemeApply);
+        window.removeEventListener("storage", scheduleThemeApply);
+        if (themeObserver) {
+          themeObserver.disconnect();
+          themeObserver = null;
+        }
+        if (themeFrame) {
+          cancelAnimationFrame(themeFrame);
+          themeFrame = null;
+        }
+        if (teamChart1) {
+          teamChart1.destroy();
+          teamChart1 = null;
+        }
+        if (teamChart2) {
+          teamChart2.destroy();
+          teamChart2 = null;
+        }
+        if (teamChart3) {
+          teamChart3.destroy();
+          teamChart3 = null;
+        }
+      };
     }
 
     if (window.Chart) {
