@@ -21,8 +21,14 @@
             id="reportDropdownMenu-{{ category_key }}"
             class="theme-panel absolute right-0 z-20 mt-2 hidden min-w-[160px] rounded-xl border p-1 shadow-lg"
           >
-            <a href="{% url 'project_category_report' category_key 'csv' %}" class="report-menu-item">CSV Report</a>
-            <a href="{% url 'project_category_report' category_key 'pdf' %}" class="report-menu-item">PDF Report</a>
+            <a href="{% url 'project_category_report' category_key 'csv' %}" class="report-menu-item">
+              <iconify-icon class="report-menu-icon" icon="vscode-icons:file-type-excel" width="20" height="20"></iconify-icon>
+              <span>EXCEL Report</span>
+            </a>
+            <a href="{% url 'project_category_report' category_key 'pdf' %}" class="report-menu-item">
+              <iconify-icon class="report-menu-icon" icon="material-icon-theme:pdf" width="20" height="20"></iconify-icon>
+              <span>PDF Report</span>
+            </a>
           </div>
         </div>
       </div>
@@ -143,7 +149,10 @@
     color: #fca5a5;
   }
   .report-menu-item {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    line-height: 1;
     border-radius: 0.6rem;
     padding: 0.45rem 0.65rem;
     color: var(--panel-text);
@@ -151,6 +160,12 @@
     font-weight: 600;
     text-decoration: none;
     transition: background-color .15s ease;
+  }
+  .report-menu-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+    flex-shrink: 0;
   }
   .report-menu-item:hover {
     background: var(--panel-soft-bg);
