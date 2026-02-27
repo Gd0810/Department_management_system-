@@ -1,17 +1,293 @@
-<h2>Team Members</h2>
+{% include "tost.html" %}
+<section class="w-full space-y-6 p-4 sm:p-6">
+  <div class="theme-panel overflow-hidden rounded-2xl border shadow-sm">
+    <div class="theme-panel-soft border-b px-4 py-5 sm:px-6">
+      <h2 class="theme-text text-xl font-semibold tracking-tight">Team Dashboard</h2>
+      <p class="theme-muted text-sm">Active team analytics and worker performance overview.</p>
+    </div>
 
-<table class="table">
-<tr>
-    <th>Name</th>
-    <th>Type</th>
-    <th>Posting</th>
-</tr>
+    <div class="space-y-6 p-4 sm:p-6">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div class="kpi-card rounded-2xl border p-4">
+          <p class="kpi-label">Total Staff Count</p>
+          <p class="kpi-value">{{ staff_count }}</p>
+        </div>
+        <div class="kpi-card rounded-2xl border p-4">
+          <p class="kpi-label">Total Intern Count</p>
+          <p class="kpi-value">{{ intern_count }}</p>
+        </div>
+        <div class="kpi-card rounded-2xl border p-4">
+          <p class="kpi-label">Workers / Total Projects (Average %)</p>
+          <p class="kpi-value">{{ workers_project_avg_pct|floatformat:2 }}%</p>
+        </div>
+        <div class="kpi-card rounded-2xl border p-4">
+          <p class="kpi-label">Workers / Total Income (Average %)</p>
+          <p class="kpi-value">{{ workers_income_avg_pct|floatformat:6 }}%</p>
+        </div>
+      </div>
 
-{% for w in workers %}
-<tr>
-    <td>{{ w.name }}</td>
-    <td>{{ w.get_worker_type_display }}</td>
-    <td>{{ w.posting }}</td>
-</tr>
-{% endfor %}
-</table>
+      <div class="theme-panel rounded-2xl border p-4 sm:p-5">
+        <h3 class="theme-text mb-3 text-base font-semibold">Per Person Income vs Project Count</h3>
+        <div class="relative h-[350px] w-full">
+          <canvas id="workerIncomeProjectsChart"></canvas>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div class="theme-panel rounded-2xl border p-4 sm:p-5">
+          <h3 class="theme-text mb-3 text-base font-semibold">Experience Days (Joined to Today)</h3>
+          <div class="relative h-[320px] w-full">
+            <canvas id="workerExperienceChart"></canvas>
+          </div>
+        </div>
+        <div class="theme-panel rounded-2xl border p-4 sm:p-5">
+          <h3 class="theme-text mb-3 text-base font-semibold">Staff vs Interns</h3>
+          <div class="relative h-[320px] w-full">
+            <canvas id="workerRadarChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="theme-panel rounded-2xl border p-4 sm:p-5">
+        <h3 class="theme-text mb-3 text-base font-semibold">Worker Listing</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[850px] border-separate border-spacing-0 text-sm">
+            <thead>
+              <tr>
+                <th class="theme-table-head rounded-tl-xl px-4 py-3 text-left">Name</th>
+                <th class="theme-table-head px-4 py-3 text-left">Email</th>
+                <th class="theme-table-head px-4 py-3 text-left">Date Of Join</th>
+                <th class="theme-table-head px-4 py-3 text-left">Posting</th>
+                <th class="theme-table-head rounded-tr-xl px-4 py-3 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for worker in workers %}
+                <tr>
+                  <td class="theme-table-cell px-4 py-3">
+                    <div class="flex items-center gap-3">
+                      {% if worker.image_url %}
+                        <img src="{{ worker.image_url }}" alt="{{ worker.name }}" class="h-9 w-9 rounded-full object-cover">
+                      {% else %}
+                        <div class="avatar-fallback">{{ worker.initials }}</div>
+                      {% endif %}
+                      <span class="font-semibold">{{ worker.name }}</span>
+                    </div>
+                  </td>
+                  <td class="theme-table-cell px-4 py-3">{{ worker.email|default:"-" }}</td>
+                  <td class="theme-table-cell px-4 py-3">{{ worker.date_of_join|date:"Y-m-d" }}</td>
+                  <td class="theme-table-cell px-4 py-3">{{ worker.posting }}</td>
+                  <td class="theme-table-cell px-4 py-3">
+                    <div class="flex flex-wrap gap-2">
+                      <button type="button" class="action-btn action-btn-view" onclick="alert('Worker view coming soon')">
+                        <iconify-icon icon="material-symbols:visibility-rounded" width="16" height="16"></iconify-icon>
+                        <span>View</span>
+                      </button>
+                      <button type="button" class="action-btn action-btn-update" onclick="alert('Worker update coming soon')">
+                        <iconify-icon icon="material-symbols:edit-rounded" width="16" height="16"></iconify-icon>
+                        <span>Update</span>
+                      </button>
+                      <button type="button" class="action-btn action-btn-delete" onclick="alert('Worker delete coming soon')">
+                        <iconify-icon icon="material-symbols:delete-rounded" width="16" height="16"></iconify-icon>
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td class="theme-table-cell px-4 py-4 text-center theme-muted" colspan="5">No active workers available.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{{ worker_labels|json_script:"worker-labels" }}
+{{ worker_income_values|json_script:"worker-income-values" }}
+{{ worker_project_values|json_script:"worker-project-values" }}
+{{ worker_experience_values|json_script:"worker-experience-values" }}
+{{ radar_labels|json_script:"worker-radar-labels" }}
+{{ radar_values|json_script:"worker-radar-values" }}
+
+<style>
+  .kpi-card { border-color: var(--panel-border); background: var(--panel-bg); }
+  .kpi-label { color: var(--panel-muted); font-size: .75rem; font-weight: 600; }
+  .kpi-value { color: var(--panel-text); font-size: 1.5rem; font-weight: 800; margin-top: .25rem; }
+  .theme-table-head { border-top: 1px solid var(--panel-border); border-bottom: 1px solid var(--panel-border); background: var(--panel-soft-bg); color: var(--panel-text); font-weight: 600; }
+  .theme-table-cell { border-bottom: 1px solid var(--panel-border); background: var(--panel-bg); color: var(--panel-text); }
+  .avatar-fallback {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .76rem;
+    font-weight: 700;
+    color: #1d4ed8;
+    background: #dbeafe;
+    border: 1px solid #bfdbfe;
+    text-transform: uppercase;
+  }
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border: 1px solid var(--panel-border);
+    border-radius: 0.65rem;
+    padding: 0.34rem 0.72rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--panel-text);
+    background: var(--panel-soft-bg);
+    transition: all 0.2s ease;
+  }
+  .action-btn-view { background: #e0edff; border-color: #bfdbfe; color: #1d4ed8; }
+  .action-btn-update { background: #e7f9ef; border-color: #bbf7d0; color: #15803d; }
+  .action-btn-delete { background: #fee2e2; border-color: #fecaca; color: #b91c1c; }
+</style>
+
+<script>
+  (function () {
+    const labels = JSON.parse(document.getElementById("worker-labels").textContent || "[]");
+    const incomeValues = JSON.parse(document.getElementById("worker-income-values").textContent || "[]");
+    const projectValues = JSON.parse(document.getElementById("worker-project-values").textContent || "[]");
+    const experienceValues = JSON.parse(document.getElementById("worker-experience-values").textContent || "[]");
+    const radarLabels = JSON.parse(document.getElementById("worker-radar-labels").textContent || "[]");
+    const radarValues = JSON.parse(document.getElementById("worker-radar-values").textContent || "[]");
+
+    const incomeProjectCtx = document.getElementById("workerIncomeProjectsChart");
+    const expCtx = document.getElementById("workerExperienceChart");
+    const radarCtx = document.getElementById("workerRadarChart");
+    if (!incomeProjectCtx || !expCtx || !radarCtx) return;
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const existing = document.querySelector(`script[src="${src}"]`);
+        if (existing) {
+          if (existing.dataset.loaded === "true") resolve();
+          else existing.addEventListener("load", () => resolve(), { once: true });
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = () => { script.dataset.loaded = "true"; resolve(); };
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    function money(v) { return Number(v || 0).toLocaleString("en-IN"); }
+
+    function drawCharts() {
+      if (window.teamChart1) window.teamChart1.destroy();
+      if (window.teamChart2) window.teamChart2.destroy();
+      if (window.teamChart3) window.teamChart3.destroy();
+
+      window.teamChart1 = new Chart(incomeProjectCtx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Per Person Income (Rs)",
+              data: incomeValues,
+              yAxisID: "income",
+              borderColor: "#7072FF",
+              backgroundColor: "rgba(112, 114, 255, 0.15)",
+              tension: 0.35,
+              fill: true,
+              pointRadius: 3,
+            },
+            {
+              label: "Per Person Project Count",
+              data: projectValues,
+              yAxisID: "projects",
+              borderColor: "#33C494",
+              backgroundColor: "rgba(51, 196, 148, 0.15)",
+              tension: 0.35,
+              fill: true,
+              pointRadius: 3,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            income: {
+              position: "left",
+              ticks: { callback: (v) => money(v) },
+            },
+            projects: {
+              position: "right",
+              grid: { drawOnChartArea: false },
+              ticks: { precision: 0 },
+            },
+          },
+        },
+      });
+
+      window.teamChart2 = new Chart(expCtx, {
+        type: "polarArea",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Experience Days",
+              data: experienceValues,
+              backgroundColor: [
+                "rgba(112, 114, 255, 0.7)",
+                "rgba(51, 196, 148, 0.7)",
+                "rgba(59, 130, 246, 0.7)",
+                "rgba(245, 158, 11, 0.7)",
+                "rgba(236, 72, 153, 0.7)",
+                "rgba(139, 92, 246, 0.7)",
+              ],
+              borderColor: "#ffffff",
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+        },
+      });
+
+      window.teamChart3 = new Chart(radarCtx, {
+        type: "radar",
+        data: {
+          labels: radarLabels,
+          datasets: [
+            {
+              label: "Worker Mix",
+              data: radarValues,
+              borderColor: "#7072FF",
+              backgroundColor: "rgba(112, 114, 255, 0.15)",
+              pointBackgroundColor: "#7072FF",
+              pointRadius: 0,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          elements: { line: { borderWidth: 2 } },
+          scales: { r: { ticks: { precision: 0 }, pointLabels: { font: { size: 12 } } } },
+        },
+      });
+    }
+
+    if (window.Chart) {
+      drawCharts();
+      return;
+    }
+    loadScript("https://cdn.jsdelivr.net/npm/chart.js").then(drawCharts).catch(() => {});
+  })();
+</script>

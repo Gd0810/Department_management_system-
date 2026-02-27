@@ -98,9 +98,93 @@ def team(request):
     if not request.session.get("department_id"):
         return redirect("login")
     dept = get_department(request)
-    workers = dept.workers.all()
+    active_workers = dept.workers.filter(working_status__in=["joind", "on board"]).order_by("name")
+    all_projects = dept.projects.all().prefetch_related("members__worker")
 
-    return render(request, "partials/team.html", {"workers": workers})
+    staff_count = active_workers.filter(worker_type="staff").count()
+    intern_count = active_workers.filter(worker_type="intern").count()
+    total_workers = staff_count + intern_count
+    total_projects = all_projects.count()
+    total_income = (
+        all_projects.aggregate(
+            total=Coalesce(
+                Sum("amount"),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )
+        )["total"]
+        or Decimal("0.00")
+    )
+
+    workers_project_avg_pct = (total_workers / total_projects) * 100 if total_projects > 0 else 0
+    workers_income_avg_pct = (Decimal(total_workers) / total_income) * Decimal("100") if total_income > 0 else Decimal("0")
+
+    worker_project_count_map = defaultdict(int)
+    membership_rows = (
+        ProjectMember.objects
+        .filter(worker__in=active_workers, project__department=dept)
+        .values("worker_id")
+        .annotate(project_count=Count("project_id", distinct=True))
+    )
+    for row in membership_rows:
+        worker_project_count_map[row["worker_id"]] = int(row["project_count"] or 0)
+
+    worker_income_map = defaultdict(Decimal)
+    active_worker_ids = set(active_workers.values_list("id", flat=True))
+    for project in all_projects:
+        payments = calculate_project_payments(project)
+        for member in project.members.all():
+            if member.worker_id in active_worker_ids:
+                worker_income_map[member.worker_id] += payments.get(member.id, Decimal("0.00"))
+
+    today = date.today()
+    worker_labels = []
+    worker_income_values = []
+    worker_project_values = []
+    worker_experience_values = []
+    worker_rows = []
+
+    for worker in active_workers:
+        parts = [part for part in worker.name.split() if part]
+        if len(parts) >= 2:
+            initials = (parts[0][0] + parts[1][0]).upper()
+        elif parts:
+            initials = parts[0][:2].upper()
+        else:
+            initials = "NA"
+
+        worker_labels.append(worker.name)
+        worker_income_values.append(float(worker_income_map.get(worker.id, Decimal("0.00"))))
+        worker_project_values.append(worker_project_count_map.get(worker.id, 0))
+        worker_experience_values.append(max((today - worker.date_of_join).days, 0))
+        worker_rows.append(
+            {
+                "id": worker.id,
+                "name": worker.name,
+                "email": worker.email,
+                "date_of_join": worker.date_of_join,
+                "posting": worker.posting,
+                "image_url": worker.image.url if worker.image else "",
+                "initials": initials,
+            }
+        )
+
+    context = {
+        "staff_count": staff_count,
+        "intern_count": intern_count,
+        "total_workers": total_workers,
+        "total_projects": total_projects,
+        "workers_project_avg_pct": round(workers_project_avg_pct, 2),
+        "workers_income_avg_pct": round(float(workers_income_avg_pct), 6),
+        "radar_labels": ["Staff", "Interns"],
+        "radar_values": [staff_count, intern_count],
+        "worker_labels": worker_labels,
+        "worker_income_values": worker_income_values,
+        "worker_project_values": worker_project_values,
+        "worker_experience_values": worker_experience_values,
+        "workers": worker_rows,
+    }
+    return render(request, "partials/team.html", context)
 
 
 def client(request):
