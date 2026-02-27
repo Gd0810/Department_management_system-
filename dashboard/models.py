@@ -23,6 +23,13 @@ class Worker(models.Model):
         ('intern', 'Intern'),
     )
 
+    WORKING_STATUS = (
+        ('joind', 'Joined'),
+        ('on board', 'On Board'),
+        ('relived', 'Relived'),
+    )
+
+
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name="workers")
 
     worker_type = models.CharField(max_length=10, choices=WORKER_TYPE)
@@ -32,6 +39,7 @@ class Worker(models.Model):
     image = models.ImageField(upload_to='workers/', blank=True, null=True)
     posting = models.CharField(max_length=150)
     department_role = models.CharField(max_length=100)
+    working_status = models.CharField(max_length=20, choices=WORKING_STATUS)
 
     def __str__(self):
         return f"{self.name} ({self.worker_type})"

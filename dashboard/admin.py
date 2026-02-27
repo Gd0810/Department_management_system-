@@ -17,8 +17,8 @@ class DepartmentAdmin(admin.ModelAdmin):
 
 @admin.register(Worker)
 class WorkerAdmin(admin.ModelAdmin):
-    list_display = ("name", "worker_type", "department", "posting")
-    list_filter = ("worker_type", "department")
+    list_display = ("name", "worker_type", "department", "posting", "working_status")
+    list_filter = ("worker_type", "department","working_status")
     search_fields = ("name",)
 
 class ProjectMemberInline(admin.TabularInline):
