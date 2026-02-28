@@ -55,39 +55,14 @@
 {{ top_project_income|json_script:"top-project-income" }}
 {{ top_member_project_labels|json_script:"top-member-project-labels" }}
 {{ top_member_project_values|json_script:"top-member-project-values" }}
+{{ top_member_project_image_urls|json_script:"top-member-project-image-urls" }}
+{{ top_member_project_initials|json_script:"top-member-project-initials" }}
 {{ top_member_income_labels|json_script:"top-member-income-labels" }}
 {{ top_member_income_values|json_script:"top-member-income-values" }}
+{{ top_member_income_image_urls|json_script:"top-member-income-image-urls" }}
+{{ top_member_income_initials|json_script:"top-member-income-initials" }}
 
 <style>
-  .pc-section.pc-loading .pc-real { opacity: 0; pointer-events: none; height: 0; overflow: hidden; }
-  .pc-section.pc-loading .pc-skel { display: block; }
-  .pc-section .pc-skel { display: none; }
-  .pc-section .pc-real { opacity: 1; transition: opacity .35s ease; }
-  .sk-box { background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%); background-size: 200% 100%; animation: sk-shimmer 1.2s infinite linear; border-radius: 12px; }
-  body.dark-theme .sk-box { background: linear-gradient(90deg, #223049 25%, #2f3f5b 50%, #223049 75%); background-size: 200% 100%; }
-  .sk-card { height: 132px; }
-  .sk-chart { height: 336px; }
-  .sk-row { height: 42px; margin-bottom: 6px; }
-  .table-skel-line {
-    height: 12px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%);
-    background-size: 200% 100%;
-    animation: sk-shimmer 1.2s infinite linear;
-  }
-  .table-skel-pill {
-    height: 24px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%);
-    background-size: 200% 100%;
-    animation: sk-shimmer 1.2s infinite linear;
-  }
-  body.dark-theme .table-skel-line,
-  body.dark-theme .table-skel-pill {
-    background: linear-gradient(90deg, #223049 25%, #2f3f5b 50%, #223049 75%);
-    background-size: 200% 100%;
-  }
-  @keyframes sk-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
   .category-toggle-shell { border-color: var(--panel-border); background: var(--panel-soft-bg); }
   .category-toggle-btn { border: 0; border-radius: 0.65rem; padding: 0.4rem 0.75rem; font-size: 0.78rem; font-weight: 600; color: var(--panel-muted); background: transparent; transition: all 0.2s ease; }
   .category-toggle-btn.is-active { background: linear-gradient(90deg, var(--primary-light), var(--primary-dark)); color: #fff; }
@@ -270,8 +245,6 @@
   (function () {
     const categoryKey = "{{ category_key }}";
     const root = document.body;
-    const minSkeletonMs = 550;
-    const skeletonStart = performance.now();
     const monthlyLabels = JSON.parse(document.getElementById("monthly-labels").textContent || "[]");
     const monthlyIncome = JSON.parse(document.getElementById("monthly-income").textContent || "[]");
     const monthlyProjectCount = JSON.parse(document.getElementById("monthly-project-count").textContent || "[]");
@@ -279,12 +252,18 @@
     const topProjectIncome = JSON.parse(document.getElementById("top-project-income").textContent || "[]");
     const topMemberProjectLabels = JSON.parse(document.getElementById("top-member-project-labels").textContent || "[]");
     const topMemberProjectValues = JSON.parse(document.getElementById("top-member-project-values").textContent || "[]");
+    const topMemberProjectImageUrls = JSON.parse(document.getElementById("top-member-project-image-urls").textContent || "[]");
+    const topMemberProjectInitials = JSON.parse(document.getElementById("top-member-project-initials").textContent || "[]");
     const topMemberIncomeLabels = JSON.parse(document.getElementById("top-member-income-labels").textContent || "[]");
     const topMemberIncomeValues = JSON.parse(document.getElementById("top-member-income-values").textContent || "[]");
+    const topMemberIncomeImageUrls = JSON.parse(document.getElementById("top-member-income-image-urls").textContent || "[]");
+    const topMemberIncomeInitials = JSON.parse(document.getElementById("top-member-income-initials").textContent || "[]");
     let comboChart;
     let topProjectsChart;
     let topMembersChart;
     let activeMode = "projects";
+    const avatarCanvasCache = new Map();
+    const avatarImageLoading = new Set();
 
     function loadScript(src) {
       return new Promise((resolve, reject) => {
@@ -303,15 +282,9 @@
     }
 
     function loadChartJs() {
-      if (window.Chart && window.Chart.registry?.plugins?.get("zoom")) return Promise.resolve();
+      if (window.Chart) return Promise.resolve();
       if (window.__sharedCategoryChartLoader) return window.__sharedCategoryChartLoader;
-      window.__sharedCategoryChartLoader = loadScript("https://cdn.jsdelivr.net/npm/chart.js")
-        .then(() => loadScript("https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"))
-        .then(() => loadScript("https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"))
-        .then(() => {
-          const plugin = window.ChartZoom || window["chartjs-plugin-zoom"];
-          if (plugin && !window.Chart.registry?.plugins?.get("zoom")) window.Chart.register(plugin);
-        });
+      window.__sharedCategoryChartLoader = loadScript("https://cdn.jsdelivr.net/npm/chart.js");
       return window.__sharedCategoryChartLoader;
     }
 
@@ -338,6 +311,87 @@
       const b = parseInt(normalized.substring(4, 6), 16) || 241;
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
+
+    function fallbackAvatar(initials) {
+      const key = `fallback:${initials || "NA"}`;
+      if (avatarCanvasCache.has(key)) return avatarCanvasCache.get(key);
+      const canvas = document.createElement("canvas");
+      canvas.width = 34;
+      canvas.height = 34;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.fillStyle = "#dbeafe";
+        ctx.strokeStyle = "#bfdbfe";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(17, 17, 15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#1d4ed8";
+        ctx.font = "700 12px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText((initials || "NA").toUpperCase().slice(0, 2), 17, 17);
+      }
+      avatarCanvasCache.set(key, canvas);
+      return canvas;
+    }
+
+    function resolveAvatarCanvas(url, initials) {
+      const key = url ? `img:${url}` : `fallback:${initials || "NA"}`;
+      if (avatarCanvasCache.has(key)) return avatarCanvasCache.get(key);
+      const placeholder = fallbackAvatar(initials);
+      if (!url || avatarImageLoading.has(url)) return placeholder;
+
+      avatarImageLoading.add(url);
+      const image = new Image();
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 34;
+        canvas.height = 34;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(17, 17, 15, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(image, 2, 2, 30, 30);
+          ctx.restore();
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(17, 17, 15, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        avatarCanvasCache.set(key, canvas);
+        avatarImageLoading.delete(url);
+        if (topMembersChart) topMembersChart.update("none");
+      };
+      image.onerror = () => {
+        avatarImageLoading.delete(url);
+      };
+      image.src = url;
+      return placeholder;
+    }
+
+    const memberAvatarPlugin = {
+      id: "memberAvatarPlugin",
+      afterDatasetsDraw(chart) {
+        if (!chart || chart.canvas.id !== `topMembersChart-${categoryKey}`) return;
+        const urls = activeMode === "income" ? topMemberIncomeImageUrls : topMemberProjectImageUrls;
+        const initials = activeMode === "income" ? topMemberIncomeInitials : topMemberProjectInitials;
+        const datasetMeta = chart.getDatasetMeta(0);
+        if (!datasetMeta || !datasetMeta.data) return;
+        const ctx = chart.ctx;
+        datasetMeta.data.forEach((bar, index) => {
+          const avatar = resolveAvatarCanvas(urls[index] || "", initials[index] || "");
+          const x = bar.x - 17;
+          const y = bar.y - 40;
+          ctx.drawImage(avatar, x, y, 34, 34);
+        });
+      },
+    };
 
     function drawCharts() {
       const colors = palette();
@@ -386,10 +440,14 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: {
+            duration: 1100,
+            easing: "easeOutCubic",
+            delay: (ctx) => (ctx.type === "data" ? (ctx.dataIndex * 90) + (ctx.datasetIndex * 120) : 0),
+          },
           plugins: {
             legend: { labels: { color: colors.text } },
             tooltip: { callbacks: { label: (ctx) => ctx.dataset.yAxisID === "income" ? `${ctx.dataset.label}: Rs ${money(ctx.parsed.y || 0)}` : `${ctx.dataset.label}: ${ctx.parsed.y || 0}` } },
-            zoom: { pan: { enabled: true, mode: "xy", modifierKey: "shift" }, zoom: { wheel: { enabled: true }, pinch: { enabled: true }, drag: { enabled: true }, mode: "xy" } },
           },
           scales: {
             x: { ticks: { color: colors.muted }, grid: { color: colors.softGrid } },
@@ -406,10 +464,22 @@
           indexAxis: "y",
           responsive: true,
           maintainAspectRatio: false,
+          animations: {
+            y: {
+              easing: "easeInOutElastic",
+              from: (ctx) => {
+                if (ctx.type === "data") {
+                  if (ctx.mode === "default" && !ctx.dropped) {
+                    ctx.dropped = true;
+                    return 0;
+                  }
+                }
+              },
+            },
+          },
           plugins: {
             legend: { display: false },
             tooltip: { callbacks: { label: (ctx) => `Rs ${money(ctx.parsed.x || 0)}` } },
-            zoom: { pan: { enabled: true, mode: "xy", modifierKey: "shift" }, zoom: { wheel: { enabled: true }, pinch: { enabled: true }, drag: { enabled: true }, mode: "xy" } },
           },
           scales: {
             x: { ticks: { color: colors.muted, callback: money }, grid: { color: colors.softGrid } },
@@ -424,13 +494,27 @@
       topMembersChart = new Chart(membersCtx, {
         type: "bar",
         data: { labels, datasets: [{ label, data: values, backgroundColor: colors.primary + "b3", borderColor: colors.primaryDark, borderWidth: 1, borderRadius: 8, maxBarThickness: 36 }] },
+        plugins: [memberAvatarPlugin],
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animations: {
+            y: {
+              easing: "easeInOutElastic",
+              from: (ctx) => {
+                if (ctx.type === "data") {
+                  if (ctx.mode === "default" && !ctx.dropped) {
+                    ctx.dropped = true;
+                    return 0;
+                  }
+                }
+              },
+            },
+          },
+          layout: { padding: { top: 44 } },
           plugins: {
-            legend: { labels: { color: colors.text } },
+            legend: { display: false },
             tooltip: { callbacks: { label: (ctx) => activeMode === "income" ? `Rs ${money(ctx.parsed.y || 0)}` : `${ctx.parsed.y || 0} Projects` } },
-            zoom: { pan: { enabled: true, mode: "xy", modifierKey: "shift" }, zoom: { wheel: { enabled: true }, pinch: { enabled: true }, drag: { enabled: true }, mode: "xy" } },
           },
           scales: {
             x: { ticks: { color: colors.text }, grid: { display: false } },
@@ -450,20 +534,11 @@
       });
     }
 
-    function revealComponents() {
-      const elapsed = performance.now() - skeletonStart;
-      const wait = Math.max(0, minSkeletonMs - elapsed);
-      setTimeout(() => {
-        document.querySelectorAll(".pc-section.pc-loading").forEach((section) => section.classList.remove("pc-loading"));
-      }, wait);
-    }
-
     function init() {
       if (window.categoryDashboardCleanup) window.categoryDashboardCleanup();
       loadChartJs().then(() => {
         bindToggle();
         drawCharts();
-        revealComponents();
         const reportBtn = document.getElementById(`reportDropdownBtn-${categoryKey}`);
         const reportMenu = document.getElementById(`reportDropdownMenu-${categoryKey}`);
         const closeReportMenu = (evt) => {

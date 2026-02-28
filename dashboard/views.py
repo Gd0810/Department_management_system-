@@ -363,19 +363,53 @@ def _build_project_category_dashboard_context(dept, category_key):
     top_member_project_labels = [row["worker__name"] for row in top_members_count_qs]
     top_member_project_values = [int(row["project_count"]) for row in top_members_count_qs]
 
+    def worker_initials(name):
+        parts = [part for part in (name or "").split() if part]
+        if len(parts) >= 2:
+            return (parts[0][0] + parts[1][0]).upper()
+        if parts:
+            return parts[0][:2].upper()
+        return "NA"
+
+    project_mode_member_ids = [int(row["worker_id"]) for row in top_members_count_qs]
+    project_mode_worker_map = {
+        worker.id: worker
+        for worker in dept.workers.filter(id__in=project_mode_member_ids)
+    }
+    top_member_project_image_urls = []
+    top_member_project_initials = []
+    for row in top_members_count_qs:
+        worker_obj = project_mode_worker_map.get(int(row["worker_id"]))
+        top_member_project_image_urls.append(worker_obj.image.url if worker_obj and worker_obj.image else "")
+        top_member_project_initials.append(worker_initials(row["worker__name"]))
+
     member_income_map = defaultdict(Decimal)
+    member_name_map = {}
     for project in projects:
         payments = calculate_project_payments(project)
         for member in project.members.all():
-            member_income_map[member.worker.name] += payments.get(member.id, Decimal("0.00"))
+            member_income_map[member.worker_id] += payments.get(member.id, Decimal("0.00"))
+            member_name_map[member.worker_id] = member.worker.name
 
     top_member_income_pairs = sorted(
         member_income_map.items(),
         key=lambda entry: entry[1],
         reverse=True,
     )[:5]
-    top_member_income_labels = [item[0] for item in top_member_income_pairs]
+    top_member_income_worker_ids = [int(item[0]) for item in top_member_income_pairs]
+    top_member_income_labels = [member_name_map.get(item[0], "Unknown") for item in top_member_income_pairs]
     top_member_income_values = [float(item[1]) for item in top_member_income_pairs]
+    income_mode_worker_map = {
+        worker.id: worker
+        for worker in dept.workers.filter(id__in=top_member_income_worker_ids)
+    }
+    top_member_income_image_urls = []
+    top_member_income_initials = []
+    for worker_id, _income in top_member_income_pairs:
+        worker_obj = income_mode_worker_map.get(int(worker_id))
+        worker_name = member_name_map.get(worker_id, "Unknown")
+        top_member_income_image_urls.append(worker_obj.image.url if worker_obj and worker_obj.image else "")
+        top_member_income_initials.append(worker_initials(worker_name))
 
     context = {
         "category_key": category_key,
@@ -393,8 +427,12 @@ def _build_project_category_dashboard_context(dept, category_key):
         "top_project_income": top_project_income,
         "top_member_project_labels": top_member_project_labels,
         "top_member_project_values": top_member_project_values,
+        "top_member_project_image_urls": top_member_project_image_urls,
+        "top_member_project_initials": top_member_project_initials,
         "top_member_income_labels": top_member_income_labels,
         "top_member_income_values": top_member_income_values,
+        "top_member_income_image_urls": top_member_income_image_urls,
+        "top_member_income_initials": top_member_income_initials,
     }
     return context
 

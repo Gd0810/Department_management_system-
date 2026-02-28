@@ -1,17 +1,12 @@
-<div class="pc-section pc-loading">
-  <div class="pc-skel"><div class="sk-box sk-chart"></div></div>
-  <div class="pc-real">
-    <div class="theme-panel rounded-2xl border p-4 sm:p-5">
-      <div class="mb-4 flex items-center justify-between gap-3">
-        <h3 class="theme-text text-base font-semibold">Top 5 Team Members ({{ category_label }} Performance)</h3>
-        <div class="inline-flex rounded-xl border p-1 category-toggle-shell">
-          <button type="button" class="category-toggle-btn is-active" data-category="{{ category_key }}" data-mode="projects">Project Count</button>
-          <button type="button" class="category-toggle-btn" data-category="{{ category_key }}" data-mode="income">Income Earned</button>
-        </div>
-      </div>
-      <div class="relative h-[320px] w-full">
-        <canvas id="topMembersChart-{{ category_key }}"></canvas>
-      </div>
+<div class="theme-panel rounded-2xl border p-4 sm:p-5">
+  <div class="mb-4 flex items-center justify-between gap-3">
+    <h3 class="theme-text text-base font-semibold">Top 5 Team Members ({{ category_label }} Performance)</h3>
+    <div class="inline-flex rounded-xl border p-1 category-toggle-shell">
+      <button type="button" class="category-toggle-btn is-active" data-category="{{ category_key }}" data-mode="projects">Project Count</button>
+      <button type="button" class="category-toggle-btn" data-category="{{ category_key }}" data-mode="income">Income Earned</button>
     </div>
+  </div>
+  <div class="relative h-[320px] w-full">
+    <canvas id="topMembersChart-{{ category_key }}"></canvas>
   </div>
 </div>

@@ -1,15 +1,4 @@
-<div class="pc-section pc-loading">
-  <div class="pc-skel">
-    <div class="space-y-2">
-      <div class="sk-box sk-row"></div>
-      <div class="sk-box sk-row"></div>
-      <div class="sk-box sk-row"></div>
-      <div class="sk-box sk-row"></div>
-      <div class="sk-box sk-row"></div>
-    </div>
-  </div>
-  <div class="pc-real">
-    <div class="theme-panel rounded-2xl border p-4 sm:p-5">
+<div class="theme-panel rounded-2xl border p-4 sm:p-5">
       <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <h3 class="theme-text text-base font-semibold">{{ category_label }} Project Listing</h3>
         <div class="flex flex-wrap items-center gap-2">
@@ -109,7 +98,6 @@
             </tr>
           </thead>
           <tbody id="projectListingBody-{{ category_key }}"></tbody>
-          <tbody id="projectListingLoader-{{ category_key }}" class="hidden"></tbody>
           <tbody id="projectListingEmpty-{{ category_key }}" class="hidden">
             <tr>
               <td class="theme-table-cell px-4 py-4 text-center theme-muted" colspan="4">No {{ category_label|lower }} projects available.</td>
@@ -117,27 +105,14 @@
           </tbody>
         </table>
       </div>
-    </div>
-  </div>
 </div>
-
-<template id="projectRowSkeletonTemplate-{{ category_key }}">
-  <tr class="project-row-skeleton">
-    <td class="theme-table-cell px-4 py-3"><div class="table-skel-line w-4/5"></div></td>
-    <td class="theme-table-cell px-4 py-3"><div class="table-skel-pill w-2/3"></div></td>
-    <td class="theme-table-cell px-4 py-3"><div class="table-skel-line w-1/2"></div></td>
-    <td class="theme-table-cell px-4 py-3"><div class="table-skel-line w-3/4"></div></td>
-  </tr>
-</template>
 
 <script>
   (function () {
     const categoryKey = "{{ category_key }}";
     const scrollWrap = document.getElementById(`projectListingScroll-${categoryKey}`);
     const body = document.getElementById(`projectListingBody-${categoryKey}`);
-    const loaderBody = document.getElementById(`projectListingLoader-${categoryKey}`);
     const emptyBody = document.getElementById(`projectListingEmpty-${categoryKey}`);
-    const skelTemplate = document.getElementById(`projectRowSkeletonTemplate-${categoryKey}`);
     const searchInput = document.getElementById(`projectSearch-${categoryKey}`);
     const monthInput = document.getElementById(`projectMonth-${categoryKey}`);
     const yearInput = document.getElementById(`projectYear-${categoryKey}`);
@@ -151,7 +126,7 @@
     const listingReportMenu = document.getElementById(`listingReportDropdownMenu-${categoryKey}`);
     const listingReportExcelLink = document.getElementById(`listingReportExcelLink-${categoryKey}`);
     const listingReportPdfLink = document.getElementById(`listingReportPdfLink-${categoryKey}`);
-    if (!scrollWrap || !body || !loaderBody || !emptyBody || !skelTemplate || !searchInput || !monthInput || !yearInput || !yearWrap || !yearBtn || !yearBtnLabel || !yearMenu || !statusInput || !clearBtn || !listingReportBtn || !listingReportMenu || !listingReportExcelLink || !listingReportPdfLink) return;
+    if (!scrollWrap || !body || !emptyBody || !searchInput || !monthInput || !yearInput || !yearWrap || !yearBtn || !yearBtnLabel || !yearMenu || !statusInput || !clearBtn || !listingReportBtn || !listingReportMenu || !listingReportExcelLink || !listingReportPdfLink) return;
 
     const apiUrl = "{% url 'category_projects_api' '__category__' %}".replace("__category__", categoryKey);
     const listingReportBase = "{% url 'project_listing_report' '__category__' '__format__' %}".replace("__category__", categoryKey);
@@ -261,19 +236,6 @@
       return cookieValue ? decodeURIComponent(cookieValue.split("=")[1]) : "";
     }
 
-    function showSkeletonRows(count) {
-      loaderBody.classList.remove("hidden");
-      loaderBody.innerHTML = "";
-      for (let i = 0; i < count; i += 1) {
-        loaderBody.appendChild(skelTemplate.content.firstElementChild.cloneNode(true));
-      }
-    }
-
-    function hideSkeletonRows() {
-      loaderBody.classList.add("hidden");
-      loaderBody.innerHTML = "";
-    }
-
     function buildFilterQuery() {
       const params = new URLSearchParams();
       const q = searchInput.value.trim();
@@ -306,7 +268,6 @@
     async function loadNextPage() {
       if (isLoading || !hasMore) return;
       isLoading = true;
-      showSkeletonRows(3);
 
       try {
         const filterQuery = buildFilterQuery();
@@ -317,8 +278,6 @@
         if (!response.ok) throw new Error("Request failed");
         const data = await response.json();
         if (!yearOptionsReady) buildYearOptions(data.available_years || []);
-
-        hideSkeletonRows();
         const rows = Array.isArray(data.projects) ? data.projects : [];
         if (!rows.length && offset === 0) {
           emptyBody.classList.remove("hidden");
@@ -330,7 +289,6 @@
         offset = Number(data.next_offset || (offset + rows.length));
         hasMore = Boolean(data.has_more);
       } catch (error) {
-        hideSkeletonRows();
       } finally {
         isLoading = false;
       }
