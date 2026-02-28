@@ -212,6 +212,7 @@ def team(request):
                 "posting": worker.posting,
                 "image_url": worker.image.url if worker.image else "",
                 "initials": initials,
+                "worker_type": worker.worker_type,
                 "working_status": worker.working_status,
             }
         )

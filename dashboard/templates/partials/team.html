@@ -75,7 +75,28 @@
       </div>
 
       <div class="theme-panel rounded-2xl border p-4 sm:p-5">
-        <h3 class="theme-text mb-3 text-base font-semibold">Worker Listing</h3>
+        <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <h3 class="theme-text text-base font-semibold">Worker Listing</h3>
+          <div class="grid w-full grid-cols-1 gap-2 md:grid-cols-3 lg:w-auto">
+            <input
+              id="workerSearch"
+              type="search"
+              placeholder="Search name or email..."
+              class="theme-input min-w-[220px] rounded-xl border px-3 py-2 text-sm outline-none transition"
+            >
+            <select id="workerTypeFilter" class="theme-input min-w-[150px] rounded-xl border px-3 py-2 text-sm outline-none transition">
+              <option value="">All Worker Type</option>
+              <option value="staff">Staff</option>
+              <option value="intern">Intern</option>
+            </select>
+            <select id="workerStatusFilter" class="theme-input min-w-[170px] rounded-xl border px-3 py-2 text-sm outline-none transition">
+              <option value="">All Working Status</option>
+              <option value="joind">Joined</option>
+              <option value="on board">On Board</option>
+              <option value="relived">Relived</option>
+            </select>
+          </div>
+        </div>
         <div class="overflow-auto" id="workerListingScroll" style="max-height: 430px;">
           <table class="w-full min-w-[850px] border-separate border-spacing-0 text-sm">
             <thead>
@@ -89,7 +110,7 @@
             </thead>
             <tbody id="workerListingBody">
               {% for worker in workers %}
-                <tr data-worker-row="1">
+                <tr data-worker-row="1" data-worker-name="{{ worker.name|lower }}" data-worker-email="{{ worker.email|default:''|lower }}" data-worker-type="{{ worker.worker_type|lower }}" data-worker-status="{{ worker.working_status|lower }}">
                   <td class="theme-table-cell px-4 py-3">
                     <div class="flex items-center gap-3">
                       <div class="avatar-wrap">
@@ -128,6 +149,11 @@
                   <td class="theme-table-cell px-4 py-4 text-center theme-muted" colspan="5">No workers available.</td>
                 </tr>
               {% endfor %}
+            </tbody>
+            <tbody id="workerListingFilterEmpty" class="hidden">
+              <tr>
+                <td class="theme-table-cell px-4 py-4 text-center theme-muted" colspan="5">No workers match the selected filters.</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -296,6 +322,10 @@
     let themeFrame = null;
     let workerScrollWrap = null;
     let workerScrollHandler = null;
+    let workerSearchInput = null;
+    let workerTypeFilter = null;
+    let workerStatusFilter = null;
+    let workerFilterHandler = null;
 
     function loadScript(src) {
       return new Promise((resolve, reject) => {
@@ -730,6 +760,16 @@
           workerScrollWrap.removeEventListener("scroll", workerScrollHandler);
           workerScrollHandler = null;
         }
+        if (workerSearchInput && workerFilterHandler) {
+          workerSearchInput.removeEventListener("input", workerFilterHandler);
+        }
+        if (workerTypeFilter && workerFilterHandler) {
+          workerTypeFilter.removeEventListener("change", workerFilterHandler);
+        }
+        if (workerStatusFilter && workerFilterHandler) {
+          workerStatusFilter.removeEventListener("change", workerFilterHandler);
+        }
+        workerFilterHandler = null;
         if (themeObserver) {
           themeObserver.disconnect();
           themeObserver = null;
@@ -756,26 +796,58 @@
     function initWorkerListingLazyScroll() {
       workerScrollWrap = document.getElementById("workerListingScroll");
       const workerListingBody = document.getElementById("workerListingBody");
-      if (!workerScrollWrap || !workerListingBody) return;
+      const workerFilterEmpty = document.getElementById("workerListingFilterEmpty");
+      workerSearchInput = document.getElementById("workerSearch");
+      workerTypeFilter = document.getElementById("workerTypeFilter");
+      workerStatusFilter = document.getElementById("workerStatusFilter");
+      if (!workerScrollWrap || !workerListingBody || !workerFilterEmpty || !workerSearchInput || !workerTypeFilter || !workerStatusFilter) return;
 
       const rows = Array.from(workerListingBody.querySelectorAll('tr[data-worker-row="1"]'));
       const pageSize = 7;
       if (!rows.length) return;
 
-      let visibleCount = Math.min(pageSize, rows.length);
-      rows.forEach((row, idx) => {
-        row.style.display = idx < visibleCount ? "" : "none";
-      });
+      let filteredRows = rows.slice();
+      let visibleCount = 0;
 
-      if (visibleCount >= rows.length) return;
+      const hideAllRows = () => {
+        rows.forEach((row) => {
+          row.style.display = "none";
+        });
+      };
 
       const loadMoreRows = () => {
-        if (visibleCount >= rows.length) return;
-        const nextCount = Math.min(visibleCount + pageSize, rows.length);
+        if (visibleCount >= filteredRows.length) return;
+        const nextCount = Math.min(visibleCount + pageSize, filteredRows.length);
         for (let i = visibleCount; i < nextCount; i += 1) {
-          rows[i].style.display = "";
+          filteredRows[i].style.display = "";
         }
         visibleCount = nextCount;
+      };
+
+      const applyWorkerFilters = () => {
+        const query = (workerSearchInput.value || "").trim().toLowerCase();
+        const selectedType = (workerTypeFilter.value || "").trim().toLowerCase();
+        const selectedStatus = (workerStatusFilter.value || "").trim().toLowerCase();
+
+        filteredRows = rows.filter((row) => {
+          const name = (row.dataset.workerName || "").toLowerCase();
+          const email = (row.dataset.workerEmail || "").toLowerCase();
+          const type = (row.dataset.workerType || "").toLowerCase();
+          const status = (row.dataset.workerStatus || "").toLowerCase();
+
+          const searchOk = !query || name.includes(query) || email.includes(query);
+          const typeOk = !selectedType || type === selectedType;
+          const statusOk = !selectedStatus || status === selectedStatus;
+          return searchOk && typeOk && statusOk;
+        });
+
+        hideAllRows();
+        visibleCount = 0;
+        workerFilterEmpty.classList.toggle("hidden", filteredRows.length !== 0);
+        if (filteredRows.length) {
+          loadMoreRows();
+        }
+        workerScrollWrap.scrollTop = 0;
       };
 
       workerScrollHandler = () => {
@@ -784,6 +856,13 @@
         if (nearBottom) loadMoreRows();
       };
       workerScrollWrap.addEventListener("scroll", workerScrollHandler);
+
+      workerFilterHandler = applyWorkerFilters;
+      workerSearchInput.addEventListener("input", workerFilterHandler);
+      workerTypeFilter.addEventListener("change", workerFilterHandler);
+      workerStatusFilter.addEventListener("change", workerFilterHandler);
+
+      applyWorkerFilters();
     }
 
     if (window.Chart) {
