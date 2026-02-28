@@ -133,14 +133,24 @@
                         <iconify-icon icon="material-symbols:visibility-rounded" width="16" height="16"></iconify-icon>
                         <span>View</span>
                       </button>
-                      <button type="button" class="action-btn action-btn-update" onclick="alert('Worker update coming soon')">
+                      <button type="button" class="action-btn action-btn-update" hx-get="{{ worker.update_url }}" hx-target="#content" hx-swap="innerHTML">
                         <iconify-icon icon="material-symbols:edit-rounded" width="16" height="16"></iconify-icon>
                         <span>Update</span>
                       </button>
-                      <button type="button" class="action-btn action-btn-delete" onclick="alert('Worker delete coming soon')">
-                        <iconify-icon icon="material-symbols:delete-rounded" width="16" height="16"></iconify-icon>
-                        <span>Delete</span>
-                      </button>
+                      <form
+                        method="post"
+                        action="{{ worker.delete_url }}"
+                        hx-post="{{ worker.delete_url }}"
+                        hx-target="#content"
+                        hx-swap="innerHTML"
+                        hx-confirm="Are you sure you want to delete this worker?"
+                      >
+                        {% csrf_token %}
+                        <button type="submit" class="action-btn action-btn-delete">
+                          <iconify-icon icon="material-symbols:delete-rounded" width="16" height="16"></iconify-icon>
+                          <span>Delete</span>
+                        </button>
+                      </form>
                     </div>
                   </td>
                 </tr>

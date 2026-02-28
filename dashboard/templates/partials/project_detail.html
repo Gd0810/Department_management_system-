@@ -219,6 +219,17 @@
 
 <script>
   (function () {
+    // Reset scroll when loaded via HTMX so details start from top section.
+    requestAnimationFrame(() => {
+      const content = document.getElementById("content");
+      if (content && typeof content.scrollTo === "function") {
+        content.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }
+      if (typeof window.scrollTo === "function") {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }
+    });
+
     const projectIncome = Number(JSON.parse(document.getElementById("project-income-value").textContent || "0"));
     const projectPct = Number(JSON.parse(document.getElementById("project-income-pct").textContent || "0"));
     const categoryPct = Number(JSON.parse(document.getElementById("category-income-pct").textContent || "0"));

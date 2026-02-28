@@ -215,6 +215,8 @@ def team(request):
                 "worker_type": worker.worker_type,
                 "working_status": worker.working_status,
                 "view_url": reverse("worker_detail", args=[worker.id]),
+                "update_url": reverse("edit_worker", args=[worker.id]),
+                "delete_url": reverse("delete_worker", args=[worker.id]),
             }
         )
 
@@ -1014,6 +1016,100 @@ def add_team(request):
             messages.error(request, "Unable to add team member. Check details and try again.")
 
     return render(request, "partials/add_team.html", context)
+
+
+@require_http_methods(["GET", "POST"])
+def edit_worker(request, worker_id):
+    if not request.session.get("department_id"):
+        return redirect("login")
+    dept = get_department(request)
+    worker = dept.workers.filter(id=worker_id).first()
+    if not worker:
+        messages.error(request, "Worker not found.")
+        return redirect("team")
+
+    context = {
+        "worker": worker,
+        "form_data": {
+            "worker_type": worker.worker_type,
+            "working_status": worker.working_status,
+            "name": worker.name,
+            "email": worker.email or "",
+            "date_of_join": worker.date_of_join.strftime("%Y-%m-%d"),
+            "posting": worker.posting,
+            "department_role": worker.department_role,
+        },
+    }
+
+    if request.method == "POST":
+        worker_type = request.POST.get("worker_type", "").strip()
+        working_status = request.POST.get("working_status", "").strip()
+        name = request.POST.get("name", "").strip()
+        email = request.POST.get("email", "").strip().lower()
+        date_of_join = request.POST.get("date_of_join", "").strip()
+        posting = request.POST.get("posting", "").strip()
+        department_role = request.POST.get("department_role", "").strip()
+        image = request.FILES.get("image")
+        context["form_data"] = {
+            "worker_type": worker_type,
+            "working_status": working_status,
+            "name": name,
+            "email": email,
+            "date_of_join": date_of_join,
+            "posting": posting,
+            "department_role": department_role,
+        }
+
+        valid_worker_types = {choice[0] for choice in Worker.WORKER_TYPE}
+        valid_working_statuses = {choice[0] for choice in Worker.WORKING_STATUS}
+
+        if not all([worker_type, working_status, name, date_of_join, posting, department_role]):
+            messages.error(request, "Please fill all required fields.")
+            return render(request, "partials/edit_worker.html", context)
+        if worker_type not in valid_worker_types:
+            messages.error(request, "Invalid worker type selected.")
+            return render(request, "partials/edit_worker.html", context)
+        if working_status not in valid_working_statuses:
+            messages.error(request, "Invalid working status selected.")
+            return render(request, "partials/edit_worker.html", context)
+
+        try:
+            worker.worker_type = worker_type
+            worker.working_status = working_status
+            worker.name = name
+            worker.email = email or None
+            worker.date_of_join = date_of_join
+            worker.posting = posting
+            worker.department_role = department_role
+            if image:
+                worker.image = image
+            worker.full_clean()
+            worker.save()
+            messages.success(request, "Worker updated successfully.")
+            return team(request)
+        except (ValidationError, IntegrityError):
+            messages.error(request, "Unable to update worker. Check details and try again.")
+
+    return render(request, "partials/edit_worker.html", context)
+
+
+@require_http_methods(["POST"])
+def delete_worker(request, worker_id):
+    if not request.session.get("department_id"):
+        return redirect("login")
+    dept = get_department(request)
+    worker = dept.workers.filter(id=worker_id).first()
+    if not worker:
+        messages.error(request, "Worker not found.")
+        return redirect("team")
+
+    try:
+        worker.delete()
+        messages.success(request, "Worker deleted successfully.")
+    except Exception:
+        messages.error(request, "Unable to delete worker.")
+
+    return team(request)
 
 
 def add_project(request):
