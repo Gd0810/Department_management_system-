@@ -98,11 +98,11 @@ def team(request):
     if not request.session.get("department_id"):
         return redirect("login")
     dept = get_department(request)
-    active_workers = dept.workers.filter(working_status__in=["joind", "on board"]).order_by("name")
+    all_workers = dept.workers.all().order_by("name")
     all_projects = dept.projects.all().prefetch_related("members__worker")
 
-    staff_count = active_workers.filter(worker_type="staff").count()
-    intern_count = active_workers.filter(worker_type="intern").count()
+    staff_count = all_workers.filter(worker_type="staff").count()
+    intern_count = all_workers.filter(worker_type="intern").count()
     total_workers = staff_count + intern_count
     total_projects = all_projects.count()
     total_income = (
@@ -122,7 +122,7 @@ def team(request):
     worker_project_count_map = defaultdict(int)
     membership_rows = (
         ProjectMember.objects
-        .filter(worker__in=active_workers, project__department=dept)
+        .filter(worker__in=all_workers, project__department=dept)
         .values("worker_id")
         .annotate(project_count=Count("project_id", distinct=True))
     )
@@ -130,11 +130,11 @@ def team(request):
         worker_project_count_map[row["worker_id"]] = int(row["project_count"] or 0)
 
     worker_income_map = defaultdict(Decimal)
-    active_worker_ids = set(active_workers.values_list("id", flat=True))
+    all_worker_ids = set(all_workers.values_list("id", flat=True))
     for project in all_projects:
         payments = calculate_project_payments(project)
         for member in project.members.all():
-            if member.worker_id in active_worker_ids:
+            if member.worker_id in all_worker_ids:
                 worker_income_map[member.worker_id] += payments.get(member.id, Decimal("0.00"))
 
     worker_status_map = defaultdict(lambda: {
@@ -145,7 +145,7 @@ def team(request):
     })
     worker_status_rows = (
         ProjectMember.objects
-        .filter(worker__in=active_workers, project__department=dept)
+        .filter(worker__in=all_workers, project__department=dept)
         .values("worker_id", "project__status")
         .annotate(project_count=Count("project_id", distinct=True))
     )
@@ -169,7 +169,7 @@ def team(request):
     worker_canceled_values = []
     worker_rows = []
 
-    for worker in active_workers:
+    for worker in all_workers:
         parts = [part for part in worker.name.split() if part]
         if len(parts) >= 2:
             initials = (parts[0][0] + parts[1][0]).upper()
@@ -199,6 +199,7 @@ def team(request):
                 "posting": worker.posting,
                 "image_url": worker.image.url if worker.image else "",
                 "initials": initials,
+                "working_status": worker.working_status,
             }
         )
 

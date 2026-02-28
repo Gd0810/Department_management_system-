@@ -66,11 +66,14 @@
                 <tr>
                   <td class="theme-table-cell px-4 py-3">
                     <div class="flex items-center gap-3">
-                      {% if worker.image_url %}
-                        <img src="{{ worker.image_url }}" alt="{{ worker.name }}" class="h-9 w-9 rounded-full object-cover">
-                      {% else %}
-                        <div class="avatar-fallback">{{ worker.initials }}</div>
-                      {% endif %}
+                      <div class="avatar-wrap">
+                        {% if worker.image_url %}
+                          <img src="{{ worker.image_url }}" alt="{{ worker.name }}" class="h-9 w-9 rounded-full object-cover">
+                        {% else %}
+                          <div class="avatar-fallback">{{ worker.initials }}</div>
+                        {% endif %}
+                        <span class="avatar-status-dot {% if worker.working_status == 'joind' %}dot-joined{% elif worker.working_status == 'on board' %}dot-onboard{% else %}dot-relived{% endif %}" title="{{ worker.working_status }}"></span>
+                      </div>
                       <span class="font-semibold">{{ worker.name }}</span>
                     </div>
                   </td>
@@ -96,7 +99,7 @@
                 </tr>
               {% empty %}
                 <tr>
-                  <td class="theme-table-cell px-4 py-4 text-center theme-muted" colspan="5">No active workers available.</td>
+                  <td class="theme-table-cell px-4 py-4 text-center theme-muted" colspan="5">No workers available.</td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -125,6 +128,7 @@
   .kpi-value { color: var(--panel-text); font-size: 1.5rem; font-weight: 800; margin-top: .25rem; }
   .theme-table-head { border-top: 1px solid var(--panel-border); border-bottom: 1px solid var(--panel-border); background: var(--panel-soft-bg); color: var(--panel-text); font-weight: 600; }
   .theme-table-cell { border-bottom: 1px solid var(--panel-border); background: var(--panel-bg); color: var(--panel-text); }
+  .avatar-wrap { position: relative; width: 2.25rem; height: 2.25rem; }
   .avatar-fallback {
     width: 2.25rem;
     height: 2.25rem;
@@ -139,6 +143,19 @@
     border: 1px solid #bfdbfe;
     text-transform: uppercase;
   }
+  .avatar-status-dot {
+    position: absolute;
+    right: -1px;
+    bottom: -1px;
+    width: 0.62rem;
+    height: 0.62rem;
+    border-radius: 999px;
+    border: 2px solid var(--panel-bg);
+    box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.14);
+  }
+  .dot-joined { background: #facc15; }
+  .dot-onboard { background: #22c55e; }
+  .dot-relived { background: #ef4444; }
   .action-btn {
     display: inline-flex;
     align-items: center;
