@@ -76,7 +76,7 @@
 
       <div class="theme-panel rounded-2xl border p-4 sm:p-5">
         <h3 class="theme-text mb-3 text-base font-semibold">Worker Listing</h3>
-        <div class="overflow-x-auto">
+        <div class="overflow-auto" id="workerListingScroll" style="max-height: 430px;">
           <table class="w-full min-w-[850px] border-separate border-spacing-0 text-sm">
             <thead>
               <tr>
@@ -87,9 +87,9 @@
                 <th class="theme-table-head rounded-tr-xl px-4 py-3 text-left">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="workerListingBody">
               {% for worker in workers %}
-                <tr>
+                <tr data-worker-row="1">
                   <td class="theme-table-cell px-4 py-3">
                     <div class="flex items-center gap-3">
                       <div class="avatar-wrap">
@@ -294,6 +294,8 @@
     let teamChart3 = null;
     let themeObserver = null;
     let themeFrame = null;
+    let workerScrollWrap = null;
+    let workerScrollHandler = null;
 
     function loadScript(src) {
       return new Promise((resolve, reject) => {
@@ -724,6 +726,10 @@
       window.teamDashboardCleanup = function () {
         window.removeEventListener("themechange", scheduleThemeApply);
         window.removeEventListener("storage", scheduleThemeApply);
+        if (workerScrollWrap && workerScrollHandler) {
+          workerScrollWrap.removeEventListener("scroll", workerScrollHandler);
+          workerScrollHandler = null;
+        }
         if (themeObserver) {
           themeObserver.disconnect();
           themeObserver = null;
@@ -747,13 +753,48 @@
       };
     }
 
+    function initWorkerListingLazyScroll() {
+      workerScrollWrap = document.getElementById("workerListingScroll");
+      const workerListingBody = document.getElementById("workerListingBody");
+      if (!workerScrollWrap || !workerListingBody) return;
+
+      const rows = Array.from(workerListingBody.querySelectorAll('tr[data-worker-row="1"]'));
+      const pageSize = 7;
+      if (!rows.length) return;
+
+      let visibleCount = Math.min(pageSize, rows.length);
+      rows.forEach((row, idx) => {
+        row.style.display = idx < visibleCount ? "" : "none";
+      });
+
+      if (visibleCount >= rows.length) return;
+
+      const loadMoreRows = () => {
+        if (visibleCount >= rows.length) return;
+        const nextCount = Math.min(visibleCount + pageSize, rows.length);
+        for (let i = visibleCount; i < nextCount; i += 1) {
+          rows[i].style.display = "";
+        }
+        visibleCount = nextCount;
+      };
+
+      workerScrollHandler = () => {
+        const threshold = 100;
+        const nearBottom = workerScrollWrap.scrollTop + workerScrollWrap.clientHeight >= workerScrollWrap.scrollHeight - threshold;
+        if (nearBottom) loadMoreRows();
+      };
+      workerScrollWrap.addEventListener("scroll", workerScrollHandler);
+    }
+
     if (window.Chart) {
+      initWorkerListingLazyScroll();
       drawCharts();
       installThemeWatcher();
       applyThemeToCharts();
       return;
     }
     loadScript("https://cdn.jsdelivr.net/npm/chart.js").then(() => {
+      initWorkerListingLazyScroll();
       drawCharts();
       installThemeWatcher();
       applyThemeToCharts();

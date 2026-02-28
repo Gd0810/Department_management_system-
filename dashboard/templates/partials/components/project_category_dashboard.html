@@ -262,6 +262,7 @@
     let topProjectsChart;
     let topMembersChart;
     let activeMode = "projects";
+    let delayedTopProjects = false;
     const avatarCanvasCache = new Map();
     const avatarImageLoading = new Set();
 
@@ -394,6 +395,7 @@
     };
 
     function drawCharts() {
+      delayedTopProjects = false;
       const colors = palette();
       const comboCtx = document.getElementById(`incomeProjectsChart-${categoryKey}`);
       const projectsCtx = document.getElementById(`topProjectsChart-${categoryKey}`);
@@ -464,16 +466,22 @@
           indexAxis: "y",
           responsive: true,
           maintainAspectRatio: false,
+          animation: {
+            onComplete: () => {
+              delayedTopProjects = true;
+            },
+          },
           animations: {
-            y: {
+            x: {
+              from: 0,
               easing: "easeInOutElastic",
-              from: (ctx) => {
-                if (ctx.type === "data") {
-                  if (ctx.mode === "default" && !ctx.dropped) {
-                    ctx.dropped = true;
-                    return 0;
-                  }
+              duration: 1200,
+              delay: (context) => {
+                let delay = 0;
+                if (context.type === "data" && !delayedTopProjects) {
+                  delay = context.dataIndex * 300 + context.datasetIndex * 100;
                 }
+                return delay;
               },
             },
           },
@@ -482,8 +490,8 @@
             tooltip: { callbacks: { label: (ctx) => `Rs ${money(ctx.parsed.x || 0)}` } },
           },
           scales: {
-            x: { ticks: { color: colors.muted, callback: money }, grid: { color: colors.softGrid } },
-            y: { ticks: { color: colors.text }, grid: { display: false } },
+            x: { stacked: true, ticks: { color: colors.muted, callback: money }, grid: { color: colors.softGrid } },
+            y: { stacked: true, ticks: { color: colors.text }, grid: { display: false } },
           },
         },
       });
