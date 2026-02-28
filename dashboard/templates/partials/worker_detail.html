@@ -415,6 +415,17 @@ rgba(255, 255, 255, 0.8) 0px -2px 6px 0px inset;
 
 <script>
   (function () {
+    // When loaded via HTMX, reset both page and content container scroll to top.
+    requestAnimationFrame(() => {
+      const content = document.getElementById("content");
+      if (content && typeof content.scrollTo === "function") {
+        content.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }
+      if (typeof window.scrollTo === "function") {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }
+    });
+
     if (window.workerDetailCleanup) window.workerDetailCleanup();
 
     const labels = JSON.parse(document.getElementById("worker-radar-labels").textContent || "[]");
