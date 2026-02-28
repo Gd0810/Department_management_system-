@@ -129,7 +129,7 @@
                   <td class="theme-table-cell px-4 py-3">{{ worker.posting }}</td>
                   <td class="theme-table-cell px-4 py-3">
                     <div class="flex flex-wrap gap-2">
-                      <button type="button" class="action-btn action-btn-view" onclick="alert('Worker view coming soon')">
+                      <button type="button" class="action-btn action-btn-view" hx-get="{{ worker.view_url }}" hx-target="#content" hx-swap="innerHTML">
                         <iconify-icon icon="material-symbols:visibility-rounded" width="16" height="16"></iconify-icon>
                         <span>View</span>
                       </button>

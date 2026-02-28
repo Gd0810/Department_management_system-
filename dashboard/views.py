@@ -8,7 +8,7 @@ from decimal import Decimal
 from datetime import date
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-from django.db.models import Count, Sum, Value, DecimalField
+from django.db.models import Count, Sum, Value, DecimalField, Avg
 from django.db.models.functions import Coalesce, TruncMonth
 from django.contrib import messages
 from django.urls import reverse
@@ -214,6 +214,7 @@ def team(request):
                 "initials": initials,
                 "worker_type": worker.worker_type,
                 "working_status": worker.working_status,
+                "view_url": reverse("worker_detail", args=[worker.id]),
             }
         )
 
@@ -240,6 +241,145 @@ def team(request):
         "workers": worker_rows,
     }
     return render(request, "partials/team.html", context)
+
+
+def worker_detail(request, worker_id):
+    if not request.session.get("department_id"):
+        return redirect("login")
+
+    dept = get_department(request)
+    worker = dept.workers.filter(id=worker_id).first()
+    if not worker:
+        messages.error(request, "Worker not found.")
+        return redirect("team")
+
+    parts = [part for part in worker.name.split() if part]
+    if len(parts) >= 2:
+        initials = (parts[0][0] + parts[1][0]).upper()
+    elif parts:
+        initials = parts[0][:2].upper()
+    else:
+        initials = "NA"
+
+    assigned_projects = list(
+        dept.projects.filter(members__worker=worker)
+        .distinct()
+        .prefetch_related("members__worker")
+    )
+    project_count = len(assigned_projects)
+
+    total_income = Decimal("0.00")
+    finished_count = 0
+    group_count = 0
+    project_amount_sum = Decimal("0.00")
+    project_amount_count = 0
+
+    for project in assigned_projects:
+        payments = calculate_project_payments(project)
+        member_obj = None
+        for member in project.members.all():
+            if member.worker_id == worker.id:
+                member_obj = member
+                break
+        if member_obj:
+            total_income += payments.get(member_obj.id, Decimal("0.00"))
+        if project.status == "finished":
+            finished_count += 1
+        if project.work_type == "group":
+            group_count += 1
+        if project.amount is not None:
+            project_amount_sum += Decimal(project.amount)
+            project_amount_count += 1
+
+    avg_project_amount = (
+        (project_amount_sum / Decimal(project_amount_count))
+        if project_amount_count > 0
+        else Decimal("0.00")
+    )
+
+    project_count_rows = (
+        ProjectMember.objects.filter(project__department=dept)
+        .values("worker_id")
+        .annotate(total=Count("project_id", distinct=True))
+    )
+    max_project_count = max((int(row["total"] or 0) for row in project_count_rows), default=1)
+
+    income_map = defaultdict(Decimal)
+    for project in dept.projects.all().prefetch_related("members__worker"):
+        payments = calculate_project_payments(project)
+        for member in project.members.all():
+            income_map[member.worker_id] += payments.get(member.id, Decimal("0.00"))
+    max_worker_income = max((value for value in income_map.values()), default=Decimal("1.00"))
+    if max_worker_income <= 0:
+        max_worker_income = Decimal("1.00")
+
+    avg_amount_rows = (
+        ProjectMember.objects.filter(project__department=dept)
+        .values("worker_id")
+        .annotate(
+            avg_amount=Coalesce(
+                Avg("project__amount"),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )
+        )
+    )
+    max_avg_project_amount = max((Decimal(row["avg_amount"] or Decimal("0.00")) for row in avg_amount_rows), default=Decimal("1.00"))
+    if max_avg_project_amount <= 0:
+        max_avg_project_amount = Decimal("1.00")
+
+    completion_rate = (finished_count / project_count) * 100 if project_count > 0 else 0.0
+    team_participation = (group_count / project_count) * 100 if project_count > 0 else 0.0
+
+    project_count_score = min(100.0, (project_count / max_project_count) * 100 if max_project_count > 0 else 0.0)
+    total_income_score = min(100.0, float((total_income / max_worker_income) * Decimal("100")))
+    avg_project_amount_score = min(100.0, float((avg_project_amount / max_avg_project_amount) * Decimal("100")))
+
+    radar_metrics = [
+        ("Project Count", project_count_score, str(project_count)),
+        ("Total Income", total_income_score, f"Rs {float(total_income):.2f}"),
+        ("Completion Rate", completion_rate, f"{completion_rate:.2f}%"),
+        ("Avg Project Amount", avg_project_amount_score, f"Rs {float(avg_project_amount):.2f}"),
+        ("Team Participation", team_participation, f"{team_participation:.2f}%"),
+    ]
+
+    radar_labels = [item[0] for item in radar_metrics]
+    radar_values = [round(float(item[1]), 2) for item in radar_metrics]
+    metric_rows = []
+    for label, score, display_value in radar_metrics:
+        clamped_score = max(0.0, min(100.0, float(score)))
+        metric_rows.append(
+            {
+                "label": label,
+                "display_value": display_value,
+                "score": round(clamped_score, 2),
+                "stars_out_of_5": round((clamped_score / 100.0) * 5.0, 1),
+                "fill_pct": round(clamped_score, 2),
+            }
+        )
+
+    performance_score = round(sum(radar_values) / len(radar_values), 2) if radar_values else 0.0
+    overall_stars_out_of_5 = round((performance_score / 100.0) * 5.0, 1)
+
+    status_meta = {
+        "joind": {"label": "Joined", "class_name": "status-joined"},
+        "on board": {"label": "On Board", "class_name": "status-onboard"},
+        "relived": {"label": "Relived", "class_name": "status-relived"},
+    }.get(worker.working_status, {"label": worker.working_status.title(), "class_name": "status-relived"})
+
+    context = {
+        "worker": worker,
+        "worker_image_url": worker.image.url if worker.image else "",
+        "worker_initials": initials,
+        "status_meta": status_meta,
+        "performance_score": performance_score,
+        "overall_stars_out_of_5": overall_stars_out_of_5,
+        "overall_fill_pct": performance_score,
+        "radar_labels": radar_labels,
+        "radar_values": radar_values,
+        "metric_rows": metric_rows,
+    }
+    return render(request, "partials/worker_detail.html", context)
 
 
 def client(request):
