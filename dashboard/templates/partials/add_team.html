@@ -57,6 +57,21 @@
           </div>
 
           <div>
+            <label for="working_status" class="theme-text mb-1.5 block text-sm font-medium">Working Status</label>
+            <div class="relative">
+              <span class="theme-muted pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm5 11h-6V7h2v4h4Z"/></svg>
+              </span>
+              <select id="working_status" name="working_status" required class="theme-input w-full rounded-xl border py-2.5 pl-10 pr-3 outline-none transition">
+                <option value="">Select Working Status</option>
+                <option value="joind" {% if form_data.working_status == 'joind' %}selected{% endif %}>Joined</option>
+                <option value="on board" {% if form_data.working_status == 'on board' %}selected{% endif %}>On Board</option>
+                <option value="relived" {% if form_data.working_status == 'relived' %}selected{% endif %}>Relived</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
             <label for="email" class="theme-text mb-1.5 block text-sm font-medium">Email</label>
             <div class="relative">
               <span class="theme-muted pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -96,7 +111,7 @@
             </div>
           </div>
 
-          <div class="md:col-span-2">
+          <div>
             <label for="image" class="theme-text mb-1.5 block text-sm font-medium">Profile Image</label>
             <div class="relative">
               <span class="theme-muted pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">

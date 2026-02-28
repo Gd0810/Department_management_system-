@@ -791,6 +791,7 @@ def add_team(request):
 
     if request.method == "POST":
         worker_type = request.POST.get("worker_type", "").strip()
+        working_status = request.POST.get("working_status", "").strip()
         name = request.POST.get("name", "").strip()
         email = request.POST.get("email", "").strip().lower()
         date_of_join = request.POST.get("date_of_join", "").strip()
@@ -799,6 +800,7 @@ def add_team(request):
         image = request.FILES.get("image")
         context["form_data"] = {
             "worker_type": worker_type,
+            "working_status": working_status,
             "name": name,
             "email": email,
             "date_of_join": date_of_join,
@@ -807,19 +809,25 @@ def add_team(request):
         }
 
         valid_worker_types = {choice[0] for choice in Worker.WORKER_TYPE}
+        valid_working_statuses = {choice[0] for choice in Worker.WORKING_STATUS}
 
-        if not all([worker_type, name, date_of_join, posting, department_role]):
+        if not all([worker_type, working_status, name, date_of_join, posting, department_role]):
             messages.error(request, "Please fill all required fields.")
             return render(request, "partials/add_team.html", context)
 
         if worker_type not in valid_worker_types:
             messages.error(request, "Invalid worker type selected.")
             return render(request, "partials/add_team.html", context)
+        
+        if working_status not in valid_working_statuses:
+            messages.error(request, "Invalid working status selected.")
+            return render(request, "partials/add_team.html", context)
 
         try:
             worker = Worker(
                 department=dept,
                 worker_type=worker_type,
+                working_status=working_status,
                 name=name,
                 email=email or None,
                 date_of_join=date_of_join,
