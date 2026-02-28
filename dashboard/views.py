@@ -367,6 +367,33 @@ def worker_detail(request, worker_id):
         "relived": {"label": "Relived", "class_name": "status-relived"},
     }.get(worker.working_status, {"label": worker.working_status.title(), "class_name": "status-relived"})
 
+    category_lookup = dict(Project.PROJECT_CATEGORY)
+    category_count_map = {key: 0 for key, _label in Project.PROJECT_CATEGORY}
+    worker_project_rows = []
+    for project in sorted(assigned_projects, key=lambda p: (p.start_date, p.id), reverse=True):
+        category_count_map[project.category] = category_count_map.get(project.category, 0) + 1
+        worker_project_rows.append(
+            {
+                "title": project.title,
+                "category_label": category_lookup.get(project.category, project.category.title()),
+                "amount": float(project.amount) if project.amount is not None else None,
+                "view_url": reverse("project_detail", args=[project.id]),
+            }
+        )
+
+    category_chart_labels = [
+        category_lookup.get("client", "Client"),
+        category_lookup.get("company", "Company"),
+        category_lookup.get("academy", "Academy"),
+        category_lookup.get("internship", "Internship"),
+    ]
+    category_chart_values = [
+        int(category_count_map.get("client", 0)),
+        int(category_count_map.get("company", 0)),
+        int(category_count_map.get("academy", 0)),
+        int(category_count_map.get("internship", 0)),
+    ]
+
     context = {
         "worker": worker,
         "worker_image_url": worker.image.url if worker.image else "",
@@ -378,6 +405,9 @@ def worker_detail(request, worker_id):
         "radar_labels": radar_labels,
         "radar_values": radar_values,
         "metric_rows": metric_rows,
+        "worker_project_rows": worker_project_rows,
+        "category_chart_labels": category_chart_labels,
+        "category_chart_values": category_chart_values,
     }
     return render(request, "partials/worker_detail.html", context)
 

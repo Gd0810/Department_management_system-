@@ -8,21 +8,21 @@
           <h2 class="theme-text text-xl font-semibold tracking-tight">Worker Detail</h2>
           <p class="theme-muted text-sm">Performance and profile overview.</p>
         </div>
-        <button
+         <button
           type="button"
-          class="action-btn action-btn-view"
+          class="theme-btn-secondary inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium"
           hx-get="{% url 'team' %}"
           hx-target="#content"
           hx-swap="innerHTML"
         >
-          <iconify-icon icon="material-symbols:arrow-back-rounded" width="16" height="16"></iconify-icon>
-          <span>Back To Team</span>
+          <span class="material-symbols-rounded text-base">arrow_back</span>
+          Back To Team
         </button>
       </div>
     </div>
 
     <div class="space-y-6 p-4 sm:p-6">
-      <div class="grid grid-cols-1 gap-6 lg:grid-cols-10">
+      <div class="grid grid-cols-1 gap-2 lg:grid-cols-10">
         <div class="lg:col-span-3">
           <div class="profile-card">
             {% if worker_image_url %}
@@ -33,19 +33,19 @@
             <h3 class="theme-text mt-3 text-lg font-semibold">{{ worker.name }}</h3>
             <p class="theme-muted text-sm">Performance Score</p>
             <div class="star-meter stars-5 mt-2" style="--fill: {{ overall_fill_pct|floatformat:2 }}%;">
-              <span class="star-meter-base">★★★★★</span>
-              <span class="star-meter-fill">★★★★★</span>
+              <span class="star-meter-base">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+              <span class="star-meter-fill">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
             </div>
-            <p class="theme-muted mt-2 text-xs">{{ overall_stars_out_of_5|floatformat:1 }}/5</p>
+            <p class="theme-muted mt-2 text-l font-semibold">{{ overall_stars_out_of_5|floatformat:1 }}/5</p>
           </div>
         </div>
 
         <div class="lg:col-span-7 space-y-4">
-          <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div class="grid grid-cols-1 gap-2 md:grid-cols-3">
             <div class="detail-kpi">
               <div class="detail-head">
                 <span class="detail-icon icon-type">
-                  <iconify-icon icon="material-symbols:badge-outline-rounded" width="16" height="16"></iconify-icon>
+                  <iconify-icon icon="material-symbols:badge-outline-rounded" width="24" height="24"></iconify-icon>
                 </span>
               </div>
               <p class="detail-label">Worker Type</p>
@@ -54,27 +54,27 @@
             <div class="detail-kpi">
               <div class="detail-head">
                 <span class="detail-icon icon-email">
-                  <iconify-icon icon="material-symbols:mail-outline-rounded" width="16" height="16"></iconify-icon>
+                  <iconify-icon icon="material-symbols:mail-outline-rounded" width="24" height="24"></iconify-icon>
                 </span>
               </div>
               <p class="detail-label">Email</p>
-              <p class="detail-value">{{ worker.email|default:"-" }}</p>
+              <p class="detail-value detail-email">{{ worker.email|default:"-" }}</p>
             </div>
             <div class="detail-kpi">
               <div class="detail-head">
                 <span class="detail-icon icon-role">
-                  <iconify-icon icon="material-symbols:shield-person-outline-rounded" width="16" height="16"></iconify-icon>
+                  <iconify-icon icon="material-symbols:shield-person-outline-rounded" width="24" height="24"></iconify-icon>
                 </span>
               </div>
               <p class="detail-label">Department Role</p>
               <p class="detail-value">{{ worker.department_role }}</p>
             </div>
           </div>
-          <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div class="grid grid-cols-1 gap-2 md:grid-cols-3">
             <div class="detail-kpi">
               <div class="detail-head">
                 <span class="detail-icon icon-posting">
-                  <iconify-icon icon="material-symbols:work-outline-rounded" width="16" height="16"></iconify-icon>
+                  <iconify-icon icon="fluent:reward-24-filled" width="24" height="24"></iconify-icon>
                 </span>
               </div>
               <p class="detail-label">Posting</p>
@@ -83,7 +83,7 @@
             <div class="detail-kpi">
               <div class="detail-head">
                 <span class="detail-icon icon-date">
-                  <iconify-icon icon="material-symbols:calendar-month-outline-rounded" width="16" height="16"></iconify-icon>
+                  <iconify-icon icon="material-symbols:calendar-month-outline-rounded" width="24" height="24"></iconify-icon>
                 </span>
               </div>
               <p class="detail-label">Date Of Join</p>
@@ -92,7 +92,7 @@
             <div class="detail-kpi">
               <div class="detail-head">
                 <span class="detail-icon icon-status">
-                  <iconify-icon icon="material-symbols:flag-circle-outline-rounded" width="16" height="16"></iconify-icon>
+                  <iconify-icon icon="material-symbols:flag-circle-outline-rounded" width="24" height="24"></iconify-icon>
                 </span>
               </div>
               <p class="detail-label">Working Status</p>
@@ -104,15 +104,25 @@
 
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <div class="theme-panel rounded-2xl border p-4 sm:p-5 lg:col-span-3">
-          <h3 class="theme-text mb-3 text-base font-semibold">Worker Performance Scorecard</h3>
+          <div class="section-title mb-3">
+            <span class="section-icon section-icon-score">
+              <iconify-icon icon="streamline-ultimate:performance-increase-bold" width="24" height="24"></iconify-icon>
+            </span>
+            <h3 class="theme-text text-base font-semibold">Worker Performance Scorecard</h3>
+          </div>
           <div class="radar-wrap">
-            <div class="relative h-[420px] w-full max-w-[560px]">
+            <div class="relative h-[500px] w-full">
               <canvas id="workerScoreRadarChart"></canvas>
             </div>
           </div>
         </div>
         <div class="theme-panel rounded-2xl border p-4 sm:p-5 lg:col-span-2">
-          <h3 class="theme-text mb-3 text-base font-semibold">Ranks</h3>
+          <div class="section-title mb-3">
+            <span class="section-icon section-icon-rank">
+              <iconify-icon icon="solar:ranking-bold-duotone" width="24" height="24"></iconify-icon>
+            </span>
+            <h3 class="theme-text text-base font-semibold">Ranks</h3>
+          </div>
           <div class="space-y-3">
             {% for metric in metric_rows %}
               <div class="rank-row">
@@ -121,12 +131,63 @@
                   <span class="rank-score">{{ metric.stars_out_of_5|floatformat:1 }}/5</span>
                 </div>
                 <div class="star-meter stars-5" style="--fill: {{ metric.fill_pct|floatformat:2 }}%;">
-                  <span class="star-meter-base">★★★★★</span>
-                  <span class="star-meter-fill">★★★★★</span>
+                  <span class="star-meter-base">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                  <span class="star-meter-fill">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
                 </div>
-                <p class="theme-muted text-xs">{{ metric.display_value }}</p>
+                <p class="theme-muted text-l font-semibold">{{ metric.display_value }}</p>
               </div>
             {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-5">
+        <div class="theme-panel rounded-2xl border p-4 sm:p-5 lg:col-span-2">
+          <div class="section-title mb-3">
+            <span class="section-icon section-icon-rank">
+              <iconify-icon icon="material-symbols:work-history-rounded" width="18" height="18"></iconify-icon>
+            </span>
+            <h3 class="theme-text text-base font-semibold">Working Projects</h3>
+          </div>
+          <div class="project-list-wrap">
+            {% for item in worker_project_rows %}
+              <div class="project-row">
+                <div>
+                  <p class="project-title">{{ item.title }}</p>
+                  <p class="project-meta">
+                    <span class="project-meta-label">Category</span>
+                    <span class="project-meta-value project-category-pill {% if item.category_label|lower == 'client' %}cat-client{% elif item.category_label|lower == 'company' %}cat-company{% elif item.category_label|lower == 'academy' %}cat-academy{% elif item.category_label|lower == 'internship' %}cat-internship{% endif %}">{{ item.category_label }}</span>
+                  </p>
+                  <p class="project-meta">
+                    <span class="project-meta-label">Amount</span>
+                    <span class="project-meta-value project-amount-pill">{% if item.amount is not None %}Rs {{ item.amount|floatformat:2 }}{% else %}-{% endif %}</span>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="action-btn action-btn-view project-view-btn"
+                  hx-get="{{ item.view_url }}"
+                  hx-target="#content"
+                  hx-swap="innerHTML"
+                >
+                  <iconify-icon icon="rivet-icons:arrow-up-right" width="20" height="20"></iconify-icon>
+                </button>
+              </div>
+            {% empty %}
+              <p class="theme-muted text-sm">No projects assigned.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="theme-panel rounded-2xl border p-4 sm:p-5 lg:col-span-3">
+          <div class="section-title mb-3">
+            <span class="section-icon section-icon-score">
+              <iconify-icon icon="material-symbols:donut-large-rounded" width="18" height="18"></iconify-icon>
+            </span>
+            <h3 class="theme-text text-base font-semibold">Project Count By Category</h3>
+          </div>
+          <div class="relative h-[360px] w-full">
+            <canvas id="workerCategoryPolarChart"></canvas>
           </div>
         </div>
       </div>
@@ -136,6 +197,8 @@
 
 {{ radar_labels|json_script:"worker-radar-labels" }}
 {{ radar_values|json_script:"worker-radar-values" }}
+{{ category_chart_labels|json_script:"worker-category-chart-labels" }}
+{{ category_chart_values|json_script:"worker-category-chart-values" }}
 
 <style>
   .profile-card {
@@ -146,6 +209,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
   }
   .profile-avatar-img,
   .profile-avatar-fallback {
@@ -170,7 +235,24 @@
     border-radius: 0.9rem;
     background: var(--panel-bg);
     padding: 0.85rem;
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+  }
+  .profile-card:hover,
+  .detail-kpi:hover {
+    transform: translateY(-2px);
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
+  }
+  body.dark-theme .profile-card,
+  body.dark-theme .detail-kpi {
+    box-shadow: 0 8px 24px rgba(255, 255, 255, 0.12);
+  }
+  body.dark-theme .profile-card:hover,
+  body.dark-theme .detail-kpi:hover {
+   box-shadow: 
+rgba(0, 0, 0, 0.05) 0px 20px 40px -10px,
+rgba(0, 0, 0, 0.04) 0px 10px 20px -15px,
+rgba(255, 255, 255, 0.8) 0px -2px 6px 0px inset;
   }
   .detail-head { display: flex; justify-content: flex-end; margin-bottom: 0.35rem; }
   .detail-icon {
@@ -189,6 +271,11 @@
   .icon-status { background: rgba(236, 72, 153, 0.15); color: #be185d; }
   .detail-label { color: var(--panel-muted); font-size: 0.72rem; font-weight: 600; }
   .detail-value { color: var(--panel-text); font-size: 1rem; font-weight: 800; margin-top: 0.2rem; }
+  .detail-email {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.25;
+  }
   .status-pill {
     margin-top: 0.3rem;
     display: inline-flex;
@@ -201,6 +288,23 @@
   .status-joined { background: #fef3c7; color: #92400e; }
   .status-onboard { background: #dcfce7; color: #166534; }
   .status-relived { background: #fee2e2; color: #991b1b; }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+  .section-icon {
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .section-icon-score { background: rgba(112, 114, 255, 0.18); color: #4f46e5; }
+  .section-icon-rank { background: rgba(51, 196, 148, 0.2); color: #15803d; }
+  body.dark-theme .section-icon-score { background: rgba(112, 114, 255, 0.3); color: #a5b4fc; }
+  body.dark-theme .section-icon-rank { background: rgba(51, 196, 148, 0.28); color: #6ee7b7; }
 
   .star-meter {
     position: relative;
@@ -208,8 +312,8 @@
     line-height: 1;
     letter-spacing: 2px;
   }
-  .stars-6 { font-size: 1.45rem; }
-  .stars-5 { font-size: 1.15rem; }
+  .stars-6 { font-size: 1.75rem; }
+  .stars-5 { font-size: 1.45rem; }
   .star-meter-base { color: #dbe4f0; }
   .star-meter-fill {
     position: absolute;
@@ -234,17 +338,97 @@
   .radar-wrap {
     width: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: stretch;
     align-items: center;
+  }
+  .project-list-wrap {
+    max-height: 330px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-right: 0.2rem;
+  }
+  .project-row {
+    border: 1px solid var(--panel-border);
+    border-radius: 0.8rem;
+    background: linear-gradient(120deg, color-mix(in srgb, var(--panel-bg) 88%, #ffffff 12%), var(--panel-bg));
+    padding: 0.72rem 0.78rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+  }
+  .project-title {
+    color: var(--panel-text);
+    font-size: 0.9rem;
+    font-weight: 800;
+    line-height: 1.25;
+    margin-bottom: 0.28rem;
+  }
+  .project-meta {
+    color: var(--panel-text);
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 0.15rem;
+    margin-top: 0.15rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .project-meta-label {
+    color: var(--panel-muted);
+    min-width: 4.2rem;
+    font-weight: 700;
+  }
+  .project-meta-value {
+    color: var(--panel-text);
+    font-weight: 800;
+    border-radius: 999px;
+    padding: 0.14rem 0.48rem;
+    display: inline-flex;
+    align-items: center;
+  }
+  .project-category-pill { color: #0f172a; }
+  .cat-client { background: #9D9EFF; }
+  .cat-company { background: #f9a8d4; }
+  .cat-academy { background: #89B7FF; }
+  .cat-internship { background: #F3C980; }
+  .project-amount-pill { background: #8FDFC4; color: #0f172a; }
+  .project-view-btn {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  }
+  .project-view-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+    background: #dbeafe;
+  }
+  body.dark-theme .project-view-btn:hover {
+    box-shadow: 0 10px 20px rgba(2, 6, 23, 0.38);
+    background: rgba(59, 130, 246, 0.28);
+  }
+  body.dark-theme .project-row {
+    background: linear-gradient(120deg, rgba(30, 41, 59, 0.86), rgba(15, 23, 42, 0.92));
   }
 </style>
 
 <script>
   (function () {
+    if (window.workerDetailCleanup) window.workerDetailCleanup();
+
     const labels = JSON.parse(document.getElementById("worker-radar-labels").textContent || "[]");
     const values = JSON.parse(document.getElementById("worker-radar-values").textContent || "[]");
+    const categoryLabels = JSON.parse(document.getElementById("worker-category-chart-labels").textContent || "[]");
+    const categoryValues = JSON.parse(document.getElementById("worker-category-chart-values").textContent || "[]");
     const canvas = document.getElementById("workerScoreRadarChart");
-    if (!canvas) return;
+    const polarCanvas = document.getElementById("workerCategoryPolarChart");
+    if (!canvas || !polarCanvas) return;
+    let radarChart = null;
+    let polarChart = null;
+    let themeObserver = null;
+    let themeFrame = null;
+    let polarAnimTimers = [];
 
     function loadScript(src) {
       return new Promise((resolve, reject) => {
@@ -262,14 +446,30 @@
       });
     }
 
+    function detectDarkMode() {
+      const root = document.documentElement;
+      const body = document.body;
+      return root.classList.contains("dark-theme")
+        || body.classList.contains("dark-theme")
+        || root.classList.contains("dark")
+        || body.classList.contains("dark")
+        || root.getAttribute("data-theme") === "dark"
+        || body.getAttribute("data-theme") === "dark";
+    }
+
     function drawChart() {
-      if (window.workerScoreRadar) window.workerScoreRadar.destroy();
-      const isDark = document.body.classList.contains("dark-theme");
+      if (radarChart) radarChart.destroy();
+      if (polarChart) polarChart.destroy();
+      if (polarAnimTimers.length) {
+        polarAnimTimers.forEach((timerId) => clearTimeout(timerId));
+        polarAnimTimers = [];
+      }
+      const isDark = detectDarkMode();
       const textColor = isDark ? "#ffffff" : "#334155";
       const gridColor = isDark ? "rgba(255,255,255,0.2)" : "rgba(148,163,184,0.25)";
 
       let delayed;
-      window.workerScoreRadar = new Chart(canvas, {
+      radarChart = new Chart(canvas, {
         type: "radar",
         data: {
           labels,
@@ -283,22 +483,55 @@
               pointBorderColor: "#ffffff",
               pointRadius: 4,
               borderWidth: 2,
+              clip: false,
             },
           ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: {
+            padding: {
+              top: 24,
+              right: 24,
+              bottom: 24,
+              left: 24,
+            },
+          },
           animation: {
+            duration: 1400,
+            easing: "easeInOutElastic",
             onComplete: () => {
               delayed = true;
             },
             delay: (context) => {
               let delay = 0;
               if (context.type === "data" && context.mode === "default" && !delayed) {
-                delay = context.dataIndex * 180 + context.datasetIndex * 120;
+                delay = context.dataIndex * 300 + context.datasetIndex * 100;
               }
               return delay;
+            },
+          },
+          animations: {
+            x: {
+              from: (ctx) => ctx.chart.scales.r.xCenter,
+              delay: (context) => {
+                let delay = 0;
+                if (context.type === "data" && context.mode === "default" && !delayed) {
+                  delay = context.dataIndex * 300 + context.datasetIndex * 100;
+                }
+                return delay;
+              },
+            },
+            y: {
+              from: (ctx) => ctx.chart.scales.r.yCenter,
+              delay: (context) => {
+                let delay = 0;
+                if (context.type === "data" && context.mode === "default" && !delayed) {
+                  delay = context.dataIndex * 300 + context.datasetIndex * 100;
+                }
+                return delay;
+              },
             },
           },
           plugins: {
@@ -313,19 +546,128 @@
                 color: textColor,
                 backdropColor: "transparent",
               },
-              pointLabels: { color: textColor, font: { size: 12, weight: "600" } },
+              pointLabels: {
+                color: textColor,
+                font: { size: 12, weight: "600" },
+                padding: 14,
+              },
               grid: { color: gridColor },
               angleLines: { color: gridColor },
             },
           },
         },
       });
+
+      const polarSeedValues = categoryValues.map(() => 0);
+      polarChart = new Chart(polarCanvas, {
+        type: "polarArea",
+        data: {
+          labels: categoryLabels,
+          datasets: [
+            {
+              data: polarSeedValues,
+              backgroundColor: [
+                "rgba(112, 114, 255, 0.55)",
+                "rgba(51, 196, 148, 0.55)",
+                "rgba(59, 130, 246, 0.5)",
+                "rgba(245, 158, 11, 0.5)",
+              ],
+              borderColor: ["#7072FF", "#33C494", "#3b82f6", "#f59e0b"],
+              borderWidth: 1.5,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: {
+            duration: 1300,
+            easing: "easeInOutElastic",
+          },
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { color: textColor, boxWidth: 14, padding: 12 },
+            },
+          },
+          scales: {
+            r: {
+              beginAtZero: true,
+              ticks: { color: textColor, backdropColor: "transparent" },
+              grid: { color: gridColor },
+              angleLines: { color: gridColor },
+            },
+          },
+        },
+      });
+
+      // Guaranteed staggered reveal for polar slices.
+      categoryValues.forEach((value, index) => {
+        const timerId = setTimeout(() => {
+          if (!polarChart) return;
+          polarChart.data.datasets[0].data[index] = value;
+          polarChart.update();
+        }, (index * 300) + 120);
+        polarAnimTimers.push(timerId);
+      });
+    }
+
+    function installThemeWatcher() {
+      const scheduleDraw = () => {
+        if (themeFrame) cancelAnimationFrame(themeFrame);
+        themeFrame = requestAnimationFrame(() => {
+          themeFrame = null;
+          drawChart();
+        });
+      };
+
+      if (themeObserver) themeObserver.disconnect();
+      themeObserver = new MutationObserver(scheduleDraw);
+      themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class", "data-theme"],
+      });
+      themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ["class", "data-theme"],
+      });
+      window.addEventListener("themechange", scheduleDraw);
+      window.addEventListener("storage", scheduleDraw);
+
+      window.workerDetailCleanup = function () {
+        window.removeEventListener("themechange", scheduleDraw);
+        window.removeEventListener("storage", scheduleDraw);
+        if (themeObserver) {
+          themeObserver.disconnect();
+          themeObserver = null;
+        }
+        if (themeFrame) {
+          cancelAnimationFrame(themeFrame);
+          themeFrame = null;
+        }
+        if (polarAnimTimers.length) {
+          polarAnimTimers.forEach((timerId) => clearTimeout(timerId));
+          polarAnimTimers = [];
+        }
+        if (radarChart) {
+          radarChart.destroy();
+          radarChart = null;
+        }
+        if (polarChart) {
+          polarChart.destroy();
+          polarChart = null;
+        }
+      };
     }
 
     if (window.Chart) {
       drawChart();
+      installThemeWatcher();
       return;
     }
-    loadScript("https://cdn.jsdelivr.net/npm/chart.js").then(drawChart).catch(() => {});
+    loadScript("https://cdn.jsdelivr.net/npm/chart.js").then(() => {
+      drawChart();
+      installThemeWatcher();
+    }).catch(() => {});
   })();
 </script>
