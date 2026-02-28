@@ -105,6 +105,7 @@ def team(request):
     intern_count = all_workers.filter(worker_type="intern").count()
     total_workers = staff_count + intern_count
     total_projects = all_projects.count()
+    finished_projects = all_projects.filter(status="finished").count()
     total_income = (
         all_projects.aggregate(
             total=Coalesce(
@@ -116,8 +117,20 @@ def team(request):
         or Decimal("0.00")
     )
 
-    workers_project_avg_pct = (total_workers / total_projects) * 100 if total_projects > 0 else 0
-    workers_income_avg_pct = (Decimal(total_workers) / total_income) * Decimal("100") if total_income > 0 else Decimal("0")
+    completion_rate_pct = (finished_projects / total_projects) * 100 if total_projects > 0 else 0.0
+    revenue_per_worker = (
+        (total_income / Decimal(total_workers))
+        if total_workers > 0
+        else Decimal("0.00")
+    )
+    revenue_per_worker_share_pct = (
+        ((revenue_per_worker / total_income) * Decimal("100"))
+        if total_income > 0
+        else Decimal("0")
+    )
+    revenue_per_worker_completion_value = revenue_per_worker * (
+        Decimal(str(completion_rate_pct)) / Decimal("100")
+    )
 
     worker_project_count_map = defaultdict(int)
     membership_rows = (
@@ -208,8 +221,10 @@ def team(request):
         "intern_count": intern_count,
         "total_workers": total_workers,
         "total_projects": total_projects,
-        "workers_project_avg_pct": round(workers_project_avg_pct, 2),
-        "workers_income_avg_pct": round(float(workers_income_avg_pct), 6),
+        "completion_rate_pct": round(completion_rate_pct, 2),
+        "revenue_per_worker": round(float(revenue_per_worker), 2),
+        "revenue_per_worker_share_pct": round(float(revenue_per_worker_share_pct), 2),
+        "revenue_per_worker_completion_value": round(float(revenue_per_worker_completion_value), 2),
         "worker_labels": worker_labels,
         "worker_income_values": worker_income_values,
         "worker_project_values": worker_project_values,
