@@ -1,31 +1,177 @@
 <!DOCTYPE html>
-<html>
+{% load static %}
+<html lang="en" dir="ltr">
 <head>
-    <title>Department Login</title>
-</head>
-<body style="font-family:Arial; background:#f2f2f2;">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Department Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css?family=Poppins:400,500,600,700&display=swap');
 
-<div style="width:350px;margin:120px auto;padding:30px;background:white;border-radius:8px;">
-    <h2 style="text-align:center;">Department Login</h2>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      background: #dde1e7;
+      text-align: center;
+      padding: 16px;
+    }
+
+    .content {
+      width: min(100%, 450px);
+      padding: 62px 30px 40px;
+      background: #dde1e7;
+      border-radius: 10px;
+      box-shadow: -3px -3px 7px #ffffff73, 2px 2px 5px rgba(94, 104, 121, 0.288);
+      position: relative;
+      margin-top: 40px;
+    }
+
+    .content .text {
+      font-size: 25px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      color: #595959;
+    }
+    .logo-wrap {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+    }
+    .login-logo {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border: 4px solid #dde1e7;
+      box-shadow: -3px -3px 7px #ffffff73, 2px 2px 5px rgba(94, 104, 121, 0.288);
+      background: #dde1e7;
+    }
+
+    .error-text {
+      margin-bottom: 14px;
+      color: #d14343;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: left;
+    }
+
+    .field {
+      height: 50px;
+      width: 100%;
+      display: flex;
+      position: relative;
+    }
+
+    .field + .field {
+      margin-top: 20px;
+    }
+
+    .field input {
+      height: 100%;
+      width: 100%;
+      padding-left: 45px;
+      outline: none;
+      border: none;
+      font-size: 16px;
+      background: #dde1e7;
+      color: #595959;
+      border-radius: 25px;
+      box-shadow: inset 2px 2px 5px #babecc, inset -5px -5px 10px #ffffff73;
+    }
+
+    .field input:focus {
+      box-shadow: inset 1px 1px 2px #babecc, inset -1px -1px 2px #ffffff73;
+    }
+
+    .field span {
+      position: absolute;
+      color: #595959;
+      width: 50px;
+      line-height: 50px;
+    }
+
+    .field label {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      left: 45px;
+      pointer-events: none;
+      color: #666666;
+      font-size: 14px;
+    }
+
+    .field input:valid ~ label,
+    .field input:focus ~ label {
+      opacity: 0;
+    }
+
+    button {
+      margin: 18px 0 0;
+      width: 100%;
+      height: 50px;
+      font-size: 18px;
+      line-height: 50px;
+      font-weight: 600;
+      background: #dde1e7;
+      border-radius: 25px;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      color: #595959;
+      box-shadow: 2px 2px 5px #babecc, -5px -5px 10px #ffffff73;
+      transition: color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    button:focus,
+    button:hover {
+      color: #3498db;
+      box-shadow: inset 2px 2px 5px #babecc, inset -5px -5px 10px #ffffff73;
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <div class="logo-wrap">
+      <img
+        class="login-logo"
+        src="{% static 'img/log01.png' %}"
+        alt="Department Logo"
+        onerror="this.style.display='none';"
+      >
+    </div>
+    <div class="text">Department Login</div>
 
     {% if error %}
-        <p style="color:red;text-align:center;">{{ error }}</p>
+      <p class="error-text">{{ error }}</p>
     {% endif %}
 
-    <form method="POST">
-        {% csrf_token %}
-
+    <form method="post">
+      {% csrf_token %}
+      <div class="field">
+        <input type="email" name="email" required>
+        <span class="fas fa-user"></span>
         <label>Email</label>
-        <input type="email" name="email" required style="width:100%;padding:10px;margin:10px 0;">
-
+      </div>
+      <div class="field">
+        <input type="password" name="password" required>
+        <span class="fas fa-lock"></span>
         <label>Password</label>
-        <input type="password" name="password" required style="width:100%;padding:10px;margin:10px 0;">
-
-        <button type="submit" style="width:100%;padding:10px;background:#2563eb;color:white;border:none;">
-            Login
-        </button>
+      </div>
+      <button type="submit">Sign in</button>
     </form>
-</div>
-
+  </div>
 </body>
 </html>
