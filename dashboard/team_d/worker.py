@@ -283,7 +283,7 @@ def generate_worker_pdf_report(dept, worker):
 
     header_table = Table(
         [[
-            Paragraph(f"{report['worker_name']} Report", s_report_title),
+            Paragraph(f"{report['worker_name']}", s_report_title),
             Paragraph(report["department_name"], s_report_subtitle),
         ]],
         colWidths=[page_w * 0.7, page_w * 0.3],
