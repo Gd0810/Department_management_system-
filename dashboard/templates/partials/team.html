@@ -120,12 +120,26 @@
       <div class="theme-panel rounded-2xl border p-4 sm:p-5">
         <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div class="section-title mb-3">
-            <span class="section-icon section-icon-score">
-              <iconify-icon icon="streamline-ultimate:performance-increase-bold" width="24" height="24"></iconify-icon>
+            <span class="section-icon section-icon-dect">
+              <iconify-icon icon="icon-park-solid:list-one" width="24" height="24"></iconify-icon>
             </span>
-            <h3 class="theme-text text-base font-semibold">Worker Listing</h3>
+            <h3 class="theme-text text-base font-semibold">Team Members Listing</h3>
           </div>
-          <div class="grid w-full grid-cols-1 gap-2 md:grid-cols-3 lg:w-auto">
+          
+          <div class="flex w-full flex-col gap-2 lg:w-auto">
+            <div class="flex justify-end">
+              <button
+                type="button"
+                class="theme-btn-secondary inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium"
+                hx-get="{% url 'add_team' %}"
+                hx-target="#content"
+                hx-swap="innerHTML"
+              >
+                <iconify-icon icon="material-symbols:person-add-rounded" width="18" height="18"></iconify-icon>
+                <span>Add New Team Member</span>
+              </button>
+            </div>
+            <div class="grid w-full grid-cols-1 gap-2 md:grid-cols-3">
             <input
               id="workerSearch"
               type="search"
@@ -143,6 +157,7 @@
               <option value="on board">On Board</option>
               <option value="relived">Relived</option>
             </select>
+            </div>
           </div>
         </div>
         <div class="overflow-auto" id="workerListingScroll" style="max-height: 430px;">
@@ -338,9 +353,12 @@
   .section-icon-score { background: rgba(112, 114, 255, 0.18); color: #4f46e5; }
   .section-icon-rank { background: rgba(51, 196, 148, 0.2); color: #15803d; }
   .section-icon-project { background: rgba(6, 182, 212, 0.18); color: #0891b2; }
+  .section-icon-dect {background: rgba(251, 146, 60, 0.18); color:  #f97316; }
+
   body.dark-theme .section-icon-score { background: rgba(112, 114, 255, 0.3); color: #a5b4fc; }
   body.dark-theme .section-icon-rank { background: rgba(51, 196, 148, 0.28); color: #6ee7b7; }
   body.dark-theme .section-icon-project { background: rgba(6, 182, 212, 0.3); color: #22d3ee; }
+  body.dark-theme .section-icon-dect { background: rgba(251, 146, 60, 0.3); color: #fb923c; }
 
   .avatar-status-dot {
     position: absolute;

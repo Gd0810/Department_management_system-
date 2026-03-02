@@ -36,6 +36,16 @@
           <button
             type="button"
             class="theme-btn-secondary inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium"
+            hx-get="{% url 'edit_worker' worker.id %}"
+            hx-target="#content"
+            hx-swap="innerHTML"
+          >
+            <iconify-icon icon="material-symbols:edit-rounded" width="18" height="18"></iconify-icon>
+            <span>Edit Worker</span>
+          </button>
+          <button
+            type="button"
+            class="theme-btn-secondary inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium"
             hx-get="{% url 'team' %}"
             hx-target="#content"
             hx-swap="innerHTML"
