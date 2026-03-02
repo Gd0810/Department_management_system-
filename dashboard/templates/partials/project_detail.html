@@ -6,16 +6,28 @@
           <h2 class="theme-text text-xl font-semibold tracking-tight">Project Details</h2>
           <p class="theme-muted text-sm">{{ project.title }} overview and performance</p>
         </div>
-        <button
-          type="button"
-          class="theme-btn-secondary inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium"
-          hx-get="{{ back_url }}"
-          hx-target="#content"
-          hx-swap="innerHTML"
-        >
-          <span class="material-symbols-rounded text-base">arrow_back</span>
-          Back To Listing
-        </button>
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            class="theme-btn-secondary inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium"
+            hx-get="{% url 'edit_project' project.id %}"
+            hx-target="#content"
+            hx-swap="innerHTML"
+          >
+            <span class="material-symbols-rounded text-base">edit</span>
+            Edit Project
+          </button>
+          <button
+            type="button"
+            class="theme-btn-secondary inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium"
+            hx-get="{{ back_url }}"
+            hx-target="#content"
+            hx-swap="innerHTML"
+          >
+            <span class="material-symbols-rounded text-base">arrow_back</span>
+            Back To Listing
+          </button>
+        </div>
       </div>
     </div>
 
