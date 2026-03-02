@@ -14,6 +14,7 @@ from django.contrib import messages
 from django.urls import reverse
 from .project_d.overall import generate_category_csv_report, generate_category_pdf_report
 from .project_d.listing import generate_project_listing_excel_report, generate_project_listing_pdf_report
+from .team_d.overall import generate_team_csv_report, generate_team_pdf_report
 
 
 
@@ -759,6 +760,21 @@ def project_listing_report(request, category_key, file_format):
         return generate_project_listing_excel_report(dept, category_key, request.GET)
     if file_format == "pdf":
         return generate_project_listing_pdf_report(dept, category_key, request.GET)
+
+    return JsonResponse({"detail": "Unsupported format"}, status=400)
+
+
+@require_http_methods(["GET"])
+def team_overall_report(request, file_format):
+    if not request.session.get("department_id"):
+        return redirect("login")
+
+    dept = get_department(request)
+    fmt = (file_format or "").lower()
+    if fmt == "csv":
+        return generate_team_csv_report(dept)
+    if fmt == "pdf":
+        return generate_team_pdf_report(dept)
 
     return JsonResponse({"detail": "Unsupported format"}, status=400)
 

@@ -2,8 +2,36 @@
 <section class="w-full space-y-6 p-4 sm:p-6">
   <div class="theme-panel overflow-hidden rounded-2xl border shadow-sm">
     <div class="theme-panel-soft border-b px-4 py-5 sm:px-6">
-      <h2 class="theme-text text-xl font-semibold tracking-tight">Team Dashboard</h2>
-      <p class="theme-muted text-sm">Active team analytics and worker performance overview.</p>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="theme-text text-xl font-semibold tracking-tight">Team Dashboard</h2>
+          <p class="theme-muted text-sm">Active team analytics and worker performance overview.</p>
+        </div>
+        <div class="relative inline-block text-left">
+          <button
+            type="button"
+            id="teamReportDropdownBtn"
+            class="action-btn action-btn-view inline-flex items-center gap-2"
+          >
+            <iconify-icon icon="material-symbols:download-rounded" width="18" height="18"></iconify-icon>
+            <span>Download Report</span>
+            <iconify-icon icon="material-symbols:arrow-drop-down-rounded" width="18" height="18"></iconify-icon>
+          </button>
+          <div
+            id="teamReportDropdownMenu"
+            class="theme-panel absolute right-0 z-20 mt-2 hidden min-w-[160px] rounded-xl border p-1 shadow-lg"
+          >
+            <a href="{% url 'team_overall_report' 'csv' %}" class="report-menu-item">
+              <iconify-icon class="report-menu-icon" icon="vscode-icons:file-type-excel" width="20" height="20"></iconify-icon>
+              <span>EXCEL Report</span>
+            </a>
+            <a href="{% url 'team_overall_report' 'pdf' %}" class="report-menu-item">
+              <iconify-icon class="report-menu-icon" icon="material-icon-theme:pdf" width="20" height="20"></iconify-icon>
+              <span>PDF Report</span>
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="space-y-6 p-4 sm:p-6">
@@ -303,6 +331,26 @@
   .action-btn-view { background: #e0edff; border-color: #bfdbfe; color: #1d4ed8; }
   .action-btn-update { background: #e7f9ef; border-color: #bbf7d0; color: #15803d; }
   .action-btn-delete { background: #fee2e2; border-color: #fecaca; color: #b91c1c; }
+  .report-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    line-height: 1;
+    border-radius: 0.6rem;
+    padding: 0.45rem 0.65rem;
+    color: var(--panel-text);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color .15s ease;
+  }
+  .report-menu-item:hover { background: var(--panel-soft-bg); }
+  .report-menu-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+    flex-shrink: 0;
+  }
 </style>
 
 <script>
@@ -336,6 +384,9 @@
     let workerTypeFilter = null;
     let workerStatusFilter = null;
     let workerFilterHandler = null;
+    let teamReportDropdownBtn = null;
+    let teamReportDropdownMenu = null;
+    let teamReportDocHandler = null;
 
     function loadScript(src) {
       return new Promise((resolve, reject) => {
@@ -764,6 +815,15 @@
       window.addEventListener("storage", scheduleThemeApply);
 
       window.teamDashboardCleanup = function () {
+        if (teamReportDropdownBtn) {
+          teamReportDropdownBtn.removeEventListener("click", toggleTeamReportDropdown);
+        }
+        if (teamReportDocHandler) {
+          document.removeEventListener("click", teamReportDocHandler, true);
+          teamReportDocHandler = null;
+        }
+        teamReportDropdownBtn = null;
+        teamReportDropdownMenu = null;
         window.removeEventListener("themechange", scheduleThemeApply);
         window.removeEventListener("storage", scheduleThemeApply);
         if (workerScrollWrap && workerScrollHandler) {
@@ -801,6 +861,32 @@
           teamChart3 = null;
         }
       };
+    }
+
+    function closeTeamReportDropdown() {
+      if (!teamReportDropdownMenu) return;
+      teamReportDropdownMenu.classList.add("hidden");
+    }
+
+    function toggleTeamReportDropdown(event) {
+      if (!teamReportDropdownMenu) return;
+      if (event) event.stopPropagation();
+      teamReportDropdownMenu.classList.toggle("hidden");
+    }
+
+    function initTeamReportDropdown() {
+      teamReportDropdownBtn = document.getElementById("teamReportDropdownBtn");
+      teamReportDropdownMenu = document.getElementById("teamReportDropdownMenu");
+      if (!teamReportDropdownBtn || !teamReportDropdownMenu) return;
+
+      teamReportDropdownBtn.addEventListener("click", toggleTeamReportDropdown);
+      teamReportDocHandler = function (event) {
+        const target = event.target;
+        if (!teamReportDropdownMenu.contains(target) && !teamReportDropdownBtn.contains(target)) {
+          closeTeamReportDropdown();
+        }
+      };
+      document.addEventListener("click", teamReportDocHandler, true);
     }
 
     function initWorkerListingLazyScroll() {
@@ -874,6 +960,8 @@
 
       applyWorkerFilters();
     }
+
+    initTeamReportDropdown();
 
     if (window.Chart) {
       initWorkerListingLazyScroll();
