@@ -85,7 +85,13 @@
 
       <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <div class="theme-panel rounded-2xl border p-4 sm:p-5">
-          <h3 class="theme-text mb-3 text-base font-semibold">Project Income</h3>
+          <div class="section-title mb-3">
+            <span class="section-icon section-icon-rank">
+              <iconify-icon icon="fluent:receipt-money-24-filled" width="24" height="24"></iconify-icon>
+            </span>
+            <h3 class="theme-text text-base font-semibold">Project Income</h3>
+          </div>
+          <h3 class="theme-text mb-3 text-base font-semibold"></h3>
           <div class="relative h-[320px] w-full">
             <canvas id="projectIncomeChart"></canvas>
           </div>
@@ -202,6 +208,29 @@
     border-color: #f87171;
     color: #fecaca;
   }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+   .section-icon {
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .section-icon-score { background: rgba(112, 114, 255, 0.18); color: #4f46e5; }
+  .section-icon-rank { background: rgba(51, 196, 148, 0.2); color: #15803d; }
+  .section-icon-project { background: rgba(6, 182, 212, 0.18); color: #0891b2; }
+  .section-icon-dect {background: rgba(251, 146, 60, 0.18); color:  #f97316; }
+
+  body.dark-theme .section-icon-score { background: rgba(112, 114, 255, 0.3); color: #a5b4fc; }
+  body.dark-theme .section-icon-rank { background: rgba(51, 196, 148, 0.28); color: #6ee7b7; }
+  body.dark-theme .section-icon-project { background: rgba(6, 182, 212, 0.3); color: #22d3ee; }
+  body.dark-theme .section-icon-dect { background: rgba(251, 146, 60, 0.3); color: #fb923c; }
+  
   .status-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: .3rem .75rem; font-size: .78rem; font-weight: 700; margin-top: 10px; }
   .status-started { background: #dbeafe; color: #1d4ed8; }
   .status-ongoing { background: #dcfce7; color: #166534; }
