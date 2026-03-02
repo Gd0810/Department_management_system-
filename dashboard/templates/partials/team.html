@@ -81,7 +81,12 @@
       </div>
 
       <div class="theme-panel rounded-2xl border p-4 sm:p-5">
-        <h3 class="theme-text mb-3 text-base font-semibold">Per Person Income vs Project Count</h3>
+         <div class="section-title mb-3">
+            <span class="section-icon section-icon-rank">
+              <iconify-icon icon="fluent:people-money-20-filled" width="24" height="24"></iconify-icon>
+            </span>
+            <h3 class="theme-text text-base font-semibold">Per Person Income vs Project Count</h3>
+          </div>
         <div class="relative h-[350px] w-full">
           <canvas id="workerIncomeProjectsChart"></canvas>
         </div>
@@ -89,13 +94,23 @@
 
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div class="theme-panel rounded-2xl border p-4 sm:p-5">
-          <h3 class="theme-text mb-3 text-base font-semibold">Project Status Responsibility</h3>
+          <div class="section-title mb-3">
+            <span class="section-icon section-icon-project">
+              <iconify-icon icon="ph:projector-screen-chart-fill" width="24" height="24"></iconify-icon>
+            </span>
+            <h3 class="theme-text text-base font-semibold">Project Status Responsibility</h3>
+          </div>
           <div class="relative h-[320px] w-full">
             <canvas id="workerStatusChart"></canvas>
           </div>
         </div>
         <div class="theme-panel rounded-2xl border p-4 sm:p-5">
-          <h3 class="theme-text mb-3 text-base font-semibold">Productivity vs Income vs Experience</h3>
+          <div class="section-title mb-3">
+            <span class="section-icon section-icon-score">
+              <iconify-icon icon="hugeicons:chart-bar-line" width="24" height="24"></iconify-icon>
+            </span>
+            <h3 class="theme-text text-base font-semibold">Productivity vs Income vs Experience</h3>
+          </div>
           <div class="relative h-[320px] w-full">
             <canvas id="workerBubbleChart"></canvas>
           </div>
@@ -104,7 +119,12 @@
 
       <div class="theme-panel rounded-2xl border p-4 sm:p-5">
         <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <h3 class="theme-text text-base font-semibold">Worker Listing</h3>
+          <div class="section-title mb-3">
+            <span class="section-icon section-icon-score">
+              <iconify-icon icon="streamline-ultimate:performance-increase-bold" width="24" height="24"></iconify-icon>
+            </span>
+            <h3 class="theme-text text-base font-semibold">Worker Listing</h3>
+          </div>
           <div class="grid w-full grid-cols-1 gap-2 md:grid-cols-3 lg:w-auto">
             <input
               id="workerSearch"
@@ -302,6 +322,26 @@
     border: 1px solid #bfdbfe;
     text-transform: uppercase;
   }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+   .section-icon {
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .section-icon-score { background: rgba(112, 114, 255, 0.18); color: #4f46e5; }
+  .section-icon-rank { background: rgba(51, 196, 148, 0.2); color: #15803d; }
+  .section-icon-project { background: rgba(6, 182, 212, 0.18); color: #0891b2; }
+  body.dark-theme .section-icon-score { background: rgba(112, 114, 255, 0.3); color: #a5b4fc; }
+  body.dark-theme .section-icon-rank { background: rgba(51, 196, 148, 0.28); color: #6ee7b7; }
+  body.dark-theme .section-icon-project { background: rgba(6, 182, 212, 0.3); color: #22d3ee; }
+
   .avatar-status-dot {
     position: absolute;
     right: -1px;
