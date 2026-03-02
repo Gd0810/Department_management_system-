@@ -1,6 +1,12 @@
 <div class="theme-panel rounded-2xl border p-4 sm:p-5">
   <div class="mb-4 flex items-center justify-between gap-3">
-    <h3 class="theme-text text-base font-semibold">Top 5 Team Members ({{ category_label }} Performance)</h3>
+    <div class="section-title mb-3">
+            <span class="section-icon section-icon-dect">
+              <iconify-icon icon="mdi:account-group" width="22" height="22"></iconify-icon>
+            </span>
+            <h3 class="theme-text text-base font-semibold">Top 5 Team Members ({{ category_label }} Performance)</h3>
+          </div>
+    <h3 class="theme-text text-base font-semibold"></h3>
     <div class="inline-flex rounded-xl border p-1 category-toggle-shell">
       <button type="button" class="category-toggle-btn is-active" data-category="{{ category_key }}" data-mode="projects">Project Count</button>
       <button type="button" class="category-toggle-btn" data-category="{{ category_key }}" data-mode="income">Income Earned</button>
