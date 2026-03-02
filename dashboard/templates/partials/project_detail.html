@@ -97,7 +97,13 @@
           </div>
         </div>
         <div class="theme-panel rounded-2xl border p-4 sm:p-5">
-          <h3 class="theme-text mb-3 text-base font-semibold">This Project Income  vs Other {{ category_label }} Projects Income </h3>
+          <div class="section-title mb-3">
+            <span class="section-icon section-icon-project">
+              <iconify-icon icon="teenyicons:pie-chart-solid" width="22" height="22"></iconify-icon>
+            </span>
+            <h3 class="theme-text text-base font-semibold">This Project Income  vs Other {{ category_label }} Projects Income </h3>
+          </div>
+          <h3 class="theme-text mb-3 text-base font-semibold"></h3>
           <div class="relative h-[320px] w-full">
             <canvas id="projectIncomeShareChart"></canvas>
           </div>
@@ -105,7 +111,12 @@
       </div>
 
       <div class="theme-panel rounded-2xl border p-4 sm:p-5"> 
-        <h3 class="theme-text mb-3 text-base font-semibold">User Details Associated with Project Work</h3>
+        <div class="section-title mb-3">
+            <span class="section-icon section-icon-score">
+             <iconify-icon icon="bxs:user-detail" width="24" height="24"></iconify-icon>
+            </span>
+            <h3 class="theme-text text-base font-semibold">User Details Associated with Project Work</h3>
+          </div>
         {% if project.work_type == "solo" %}
           {% if member_rows %}
             {% with member=member_rows|first %}
