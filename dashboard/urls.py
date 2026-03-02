@@ -25,6 +25,7 @@ urlpatterns = [
     path('reports/projects/<str:category_key>/<str:file_format>/', views.project_category_report, name="project_category_report"),
     path('reports/projects/listing/<str:category_key>/<str:file_format>/', views.project_listing_report, name="project_listing_report"),
     path('reports/team/<str:file_format>/', views.team_overall_report, name="team_overall_report"),
+    path('reports/team/worker/<int:worker_id>/<str:file_format>/', views.worker_detail_report, name="worker_detail_report"),
     path('logout/', views.logout_view, name="logout"),
     path('test/', TemplateView.as_view(template_name='test.html'), name="test"),
  ]

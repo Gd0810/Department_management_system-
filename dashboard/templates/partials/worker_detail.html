@@ -8,16 +8,42 @@
           <h2 class="theme-text text-xl font-semibold tracking-tight">Worker Detail</h2>
           <p class="theme-muted text-sm">Performance and profile overview.</p>
         </div>
-         <button
-          type="button"
-          class="theme-btn-secondary inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium"
-          hx-get="{% url 'team' %}"
-          hx-target="#content"
-          hx-swap="innerHTML"
-        >
-          <span class="material-symbols-rounded text-base">arrow_back</span>
-          Back To Team
-        </button>
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          <div class="relative inline-block text-left">
+            <button
+              type="button"
+              id="workerReportDropdownBtn"
+              class="action-btn action-btn-view inline-flex items-center gap-2"
+            >
+              <iconify-icon icon="material-symbols:download-rounded" width="18" height="18"></iconify-icon>
+              <span>Download Report</span>
+              <iconify-icon icon="material-symbols:arrow-drop-down-rounded" width="18" height="18"></iconify-icon>
+            </button>
+            <div
+              id="workerReportDropdownMenu"
+              class="theme-panel absolute right-0 z-20 mt-2 hidden min-w-[160px] rounded-xl border p-1 shadow-lg"
+            >
+              <a href="{% url 'worker_detail_report' worker.id 'csv' %}" class="report-menu-item">
+                <iconify-icon class="report-menu-icon" icon="vscode-icons:file-type-excel" width="20" height="20"></iconify-icon>
+                <span>EXCEL Report</span>
+              </a>
+              <a href="{% url 'worker_detail_report' worker.id 'pdf' %}" class="report-menu-item">
+                <iconify-icon class="report-menu-icon" icon="material-icon-theme:pdf" width="20" height="20"></iconify-icon>
+                <span>PDF Report</span>
+              </a>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="theme-btn-secondary inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium"
+            hx-get="{% url 'team' %}"
+            hx-target="#content"
+            hx-swap="innerHTML"
+          >
+            <span class="material-symbols-rounded text-base">arrow_back</span>
+            Back To Team
+          </button>
+        </div>
       </div>
     </div>
 
@@ -411,6 +437,26 @@ rgba(255, 255, 255, 0.8) 0px -2px 6px 0px inset;
   body.dark-theme .project-row {
     background: linear-gradient(120deg, rgba(30, 41, 59, 0.86), rgba(15, 23, 42, 0.92));
   }
+  .report-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    line-height: 1;
+    border-radius: 0.6rem;
+    padding: 0.45rem 0.65rem;
+    color: var(--panel-text);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color .15s ease;
+  }
+  .report-menu-item:hover { background: var(--panel-soft-bg); }
+  .report-menu-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+    flex-shrink: 0;
+  }
 </style>
 
 <script>
@@ -440,6 +486,9 @@ rgba(255, 255, 255, 0.8) 0px -2px 6px 0px inset;
     let themeObserver = null;
     let themeFrame = null;
     let polarAnimTimers = [];
+    let workerReportDropdownBtn = null;
+    let workerReportDropdownMenu = null;
+    let workerReportDocHandler = null;
 
     function loadScript(src) {
       return new Promise((resolve, reject) => {
@@ -623,6 +672,32 @@ rgba(255, 255, 255, 0.8) 0px -2px 6px 0px inset;
       });
     }
 
+    function closeWorkerReportDropdown() {
+      if (!workerReportDropdownMenu) return;
+      workerReportDropdownMenu.classList.add("hidden");
+    }
+
+    function toggleWorkerReportDropdown(event) {
+      if (!workerReportDropdownMenu) return;
+      if (event) event.stopPropagation();
+      workerReportDropdownMenu.classList.toggle("hidden");
+    }
+
+    function initWorkerReportDropdown() {
+      workerReportDropdownBtn = document.getElementById("workerReportDropdownBtn");
+      workerReportDropdownMenu = document.getElementById("workerReportDropdownMenu");
+      if (!workerReportDropdownBtn || !workerReportDropdownMenu) return;
+
+      workerReportDropdownBtn.addEventListener("click", toggleWorkerReportDropdown);
+      workerReportDocHandler = function (event) {
+        const target = event.target;
+        if (!workerReportDropdownMenu.contains(target) && !workerReportDropdownBtn.contains(target)) {
+          closeWorkerReportDropdown();
+        }
+      };
+      document.addEventListener("click", workerReportDocHandler, true);
+    }
+
     function installThemeWatcher() {
       const scheduleDraw = () => {
         if (themeFrame) cancelAnimationFrame(themeFrame);
@@ -646,6 +721,15 @@ rgba(255, 255, 255, 0.8) 0px -2px 6px 0px inset;
       window.addEventListener("storage", scheduleDraw);
 
       window.workerDetailCleanup = function () {
+        if (workerReportDropdownBtn) {
+          workerReportDropdownBtn.removeEventListener("click", toggleWorkerReportDropdown);
+        }
+        if (workerReportDocHandler) {
+          document.removeEventListener("click", workerReportDocHandler, true);
+          workerReportDocHandler = null;
+        }
+        workerReportDropdownBtn = null;
+        workerReportDropdownMenu = null;
         window.removeEventListener("themechange", scheduleDraw);
         window.removeEventListener("storage", scheduleDraw);
         if (themeObserver) {
@@ -670,6 +754,8 @@ rgba(255, 255, 255, 0.8) 0px -2px 6px 0px inset;
         }
       };
     }
+
+    initWorkerReportDropdown();
 
     if (window.Chart) {
       drawChart();

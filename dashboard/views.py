@@ -15,6 +15,7 @@ from django.urls import reverse
 from .project_d.overall import generate_category_csv_report, generate_category_pdf_report
 from .project_d.listing import generate_project_listing_excel_report, generate_project_listing_pdf_report
 from .team_d.overall import generate_team_csv_report, generate_team_pdf_report
+from .team_d.worker import generate_worker_csv_report, generate_worker_pdf_report
 
 
 
@@ -775,6 +776,25 @@ def team_overall_report(request, file_format):
         return generate_team_csv_report(dept)
     if fmt == "pdf":
         return generate_team_pdf_report(dept)
+
+    return JsonResponse({"detail": "Unsupported format"}, status=400)
+
+
+@require_http_methods(["GET"])
+def worker_detail_report(request, worker_id, file_format):
+    if not request.session.get("department_id"):
+        return redirect("login")
+
+    dept = get_department(request)
+    worker = dept.workers.filter(id=worker_id).first()
+    if not worker:
+        return JsonResponse({"detail": "Worker not found"}, status=404)
+
+    fmt = (file_format or "").lower()
+    if fmt == "csv":
+        return generate_worker_csv_report(dept, worker)
+    if fmt == "pdf":
+        return generate_worker_pdf_report(dept, worker)
 
     return JsonResponse({"detail": "Unsupported format"}, status=400)
 
