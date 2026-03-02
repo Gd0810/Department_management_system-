@@ -1,5 +1,10 @@
 <div class="theme-panel rounded-2xl border p-4 sm:p-5">
-  <h3 class="theme-text mb-4 text-base font-semibold">Top 5 {{ category_label }} Projects (Income Wise)</h3>
+   <div class="section-title mb-3">
+            <span class="section-icon section-icon-project">
+              <iconify-icon icon="memory:chart-bar" width="22" height="22"></iconify-icon>
+            </span>
+            <h3 class="theme-text text-base font-semibold">Top 5 {{ category_label }} Projects (Income Wise)</h3>
+          </div>
   <div class="relative h-[320px] w-full">
     <canvas id="topProjectsChart-{{ category_key }}"></canvas>
   </div>
