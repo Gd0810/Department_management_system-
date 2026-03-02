@@ -169,12 +169,12 @@ def generate_team_pdf_report(dept):
     try:
         from reportlab.lib.pagesizes import A4
         from reportlab.lib import colors
-        from reportlab.lib.styles import ParagraphStyle
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
         from reportlab.lib.units import mm
         from reportlab.pdfbase import pdfmetrics
         from reportlab.pdfbase.ttfonts import TTFont
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-        from reportlab.lib.enums import TA_LEFT
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+        from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
     except ImportError:
         return HttpResponse(
             "PDF generation dependency is missing. Install reportlab.",
@@ -185,6 +185,7 @@ def generate_team_pdf_report(dept):
     report = build_team_report_data(dept)
 
     font_name = "Helvetica"
+    bold_font_name = "Helvetica-Bold"
     for path in [
         "C:/Windows/Fonts/arial.ttf",
         "C:/Windows/Fonts/calibri.ttf",
@@ -192,11 +193,20 @@ def generate_team_pdf_report(dept):
     ]:
         if os.path.exists(path):
             try:
-                pdfmetrics.registerFont(TTFont("TeamSans", path))
-                font_name = "TeamSans"
+                pdfmetrics.registerFont(TTFont("ReportSans", path))
+                font_name = "ReportSans"
+                bold_font_name = "ReportSans"
                 break
             except Exception:
                 pass
+
+    BRAND_DARK = colors.HexColor("#1A2B4A")
+    BRAND_MID = colors.HexColor("#2E5FA3")
+    BRAND_LIGHT = colors.HexColor("#E8F0FB")
+    ACCENT = colors.HexColor("#F0A500")
+    WHITE = colors.white
+    GREY_TEXT = colors.HexColor("#4A4A4A")
+    ROW_ALT = colors.HexColor("#EEF3FB")
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -204,81 +214,209 @@ def generate_team_pdf_report(dept):
         pagesize=A4,
         leftMargin=10 * mm,
         rightMargin=10 * mm,
-        topMargin=10 * mm,
-        bottomMargin=10 * mm,
+        topMargin=12 * mm,
+        bottomMargin=12 * mm,
         title="Team Overall Report",
         author=report["department_name"],
     )
+    page_w = A4[0] - 20 * mm
 
-    title_style = ParagraphStyle("title", fontName=font_name, fontSize=16, textColor=colors.HexColor("#1A2B4A"))
-    text_style = ParagraphStyle("text", fontName=font_name, fontSize=9, textColor=colors.HexColor("#334155"), alignment=TA_LEFT)
-    header_style = ParagraphStyle("th", fontName=font_name, fontSize=9, textColor=colors.white, alignment=TA_LEFT)
-    cell_style = ParagraphStyle("td", fontName=font_name, fontSize=8.5, textColor=colors.HexColor("#1f2937"), alignment=TA_LEFT)
+    def style(name, **kwargs):
+        return ParagraphStyle(name, **kwargs)
+
+    getSampleStyleSheet()
+
+    S_REPORT_TITLE = style(
+        "ReportTitle",
+        fontName=bold_font_name, fontSize=22,
+        textColor=WHITE, alignment=TA_LEFT,
+        spaceAfter=0, spaceBefore=0, leading=24,
+    )
+    S_REPORT_SUBTITLE = style(
+        "ReportSubtitle",
+        fontName=bold_font_name, fontSize=16,
+        textColor=ACCENT, alignment=TA_RIGHT,
+        spaceAfter=0, spaceBefore=0, leading=18,
+    )
+    S_SECTION_HEADING = style(
+        "SectionHeading",
+        fontName=bold_font_name, fontSize=11,
+        textColor=BRAND_DARK, spaceBefore=14, spaceAfter=4,
+    )
+    S_LABEL = style(
+        "Label",
+        fontName=bold_font_name, fontSize=9,
+        textColor=BRAND_DARK,
+    )
+    S_TABLE_HEADER = style(
+        "TableHeader",
+        fontName=bold_font_name, fontSize=9,
+        textColor=WHITE, alignment=TA_LEFT,
+    )
+    S_TABLE_CELL = style(
+        "TableCell",
+        fontName=bold_font_name, fontSize=9,
+        textColor=GREY_TEXT, leading=12,
+    )
+    S_TABLE_CELL_BOLD = style(
+        "TableCellBold",
+        fontName=bold_font_name, fontSize=8.5,
+        textColor=BRAND_DARK, leading=12,
+    )
+
+    header_table = Table(
+        [[
+            Paragraph("Team Overall Report", S_REPORT_TITLE),
+            Paragraph(report["department_name"], S_REPORT_SUBTITLE),
+        ]],
+        colWidths=[page_w * 0.7, page_w * 0.3],
+    )
+    header_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), BRAND_DARK),
+        ("TOPPADDING", (0, 0), (-1, -1), 14),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 14),
+        ("LEFTPADDING", (0, 0), (-1, -1), 16),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 16),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("ALIGN", (0, 0), (0, 0), "LEFT"),
+        ("ALIGN", (1, 0), (1, 0), "RIGHT"),
+    ]))
+
+    accent_bar = Table([[""]], colWidths=[page_w], rowHeights=[4])
+    accent_bar.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), ACCENT),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+
+    def summary_card(label, value):
+        return [
+            Paragraph(label, S_LABEL),
+            Paragraph(
+                str(value),
+                style(
+                    "CardVal",
+                    fontName=bold_font_name,
+                    fontSize=16,
+                    textColor=BRAND_MID,
+                    spaceAfter=0,
+                ),
+            ),
+        ]
 
     summary_table = Table(
         [[
-            Paragraph("<b>Total Staff Count</b>", text_style), Paragraph(str(report["total_staff_count"]), text_style),
-            Paragraph("<b>Total Intern Count</b>", text_style), Paragraph(str(report["total_intern_count"]), text_style),
-            Paragraph("<b>Revenue per Worker</b>", text_style), Paragraph(f"Rs {report['revenue_per_worker']:,.2f}", text_style),
+            summary_card("Total Staff Count", str(report["total_staff_count"])),
+            summary_card("Total Intern Count", str(report["total_intern_count"])),
+            summary_card("Revenue per Worker", f"₹{report['revenue_per_worker']:,.2f}"),
         ]],
-        colWidths=[34 * mm, 18 * mm, 34 * mm, 18 * mm, 40 * mm, 30 * mm],
+        colWidths=[page_w / 3] * 3,
     )
     summary_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#E8F0FB")),
-        ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#d1d5db")),
+        ("BACKGROUND", (0, 0), (-1, -1), BRAND_LIGHT),
+        ("TOPPADDING", (0, 0), (-1, -1), 12),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
+        ("LEFTPADDING", (0, 0), (-1, -1), 14),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 14),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 6),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-        ("TOPPADDING", (0, 0), (-1, -1), 6),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("LINEAFTER", (0, 0), (1, 0), 0.5, colors.HexColor("#B0C4E8")),
     ]))
 
-    data = [[
-        Paragraph("Name", header_style),
-        Paragraph("Email", header_style),
-        Paragraph("Date Of Join", header_style),
-        Paragraph("Posting", header_style),
-        Paragraph("Income By User", header_style),
+    rows = [[
+        Paragraph("#", S_TABLE_HEADER),
+        Paragraph("Name", S_TABLE_HEADER),
+        Paragraph("Email", S_TABLE_HEADER),
+        Paragraph("Date Of Join", S_TABLE_HEADER),
+        Paragraph("Posting", S_TABLE_HEADER),
+        Paragraph("Income By User", S_TABLE_HEADER),
     ]]
     for item in report["rows"]:
-        data.append([
-            Paragraph(item["name"], cell_style),
-            Paragraph(item["email"], cell_style),
-            Paragraph(item["date_of_join"], cell_style),
-            Paragraph(item["posting"], cell_style),
-            Paragraph(f"Rs {Decimal(item['income_by_user']):,.2f}", cell_style),
+        rows.append([
+            Paragraph(str(len(rows)), S_TABLE_CELL),
+            Paragraph(item["name"], S_TABLE_CELL_BOLD),
+            Paragraph(item["email"], S_TABLE_CELL),
+            Paragraph(item["date_of_join"], S_TABLE_CELL),
+            Paragraph(item["posting"], S_TABLE_CELL),
+            Paragraph(f"₹{Decimal(item['income_by_user']):,.2f}", S_TABLE_CELL),
         ])
 
-    usable_width = A4[0] - (20 * mm)
+    row_bg_cmds = []
+    for r in range(1, len(rows)):
+        row_bg_cmds.append(("BACKGROUND", (0, r), (-1, r), ROW_ALT if r % 2 == 0 else WHITE))
+
     table = Table(
-        data,
+        rows,
         colWidths=[
-            usable_width * 0.19,
-            usable_width * 0.29,
-            usable_width * 0.14,
-            usable_width * 0.20,
-            usable_width * 0.18,
+            page_w * 0.05,
+            page_w * 0.20,
+            page_w * 0.28,
+            page_w * 0.13,
+            page_w * 0.16,
+            page_w * 0.18,
         ],
         repeatRows=1,
     )
     table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2E5FA3")),
-        ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#d1d5db")),
+        ("BACKGROUND", (0, 0), (-1, 0), BRAND_MID),
+        ("TOPPADDING", (0, 0), (-1, 0), 9),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 9),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ("TOPPADDING", (0, 1), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 1), (-1, -1), 7),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 6),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-        ("TOPPADDING", (0, 0), (-1, -1), 5),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("LINEBELOW", (0, 0), (-1, -1), 0.3, colors.HexColor("#D0DCF0")),
+        ("LINEBELOW", (0, 0), (-1, 0), 0, WHITE),
+        ("BOX", (0, 0), (-1, -1), 0.8, BRAND_MID),
+        *row_bg_cmds,
     ]))
 
+    footer_note = Paragraph(
+        f"This report was automatically generated for the "
+        f"<b>{report['department_name']}</b> department. "
+        f"All figures are indicative and subject to change.",
+        style(
+            "Footer",
+            fontName=font_name,
+            fontSize=8,
+            textColor=colors.HexColor("#888888"),
+            alignment=TA_CENTER,
+        ),
+    )
+
+    def add_page_footer(canvas_obj, doc_obj):
+        canvas_obj.saveState()
+        canvas_obj.setFont(font_name, 8)
+        canvas_obj.setFillColor(colors.HexColor("#AAAAAA"))
+        canvas_obj.drawString(
+            10 * mm, 10 * mm,
+            f"Team Overall Report  |  {report['department_name']}"
+        )
+        canvas_obj.drawRightString(
+            A4[0] - 10 * mm, 10 * mm,
+            f"Page {doc_obj.page}"
+        )
+        canvas_obj.setStrokeColor(colors.HexColor("#DDDDDD"))
+        canvas_obj.line(10 * mm, 13 * mm, A4[0] - 10 * mm, 13 * mm)
+        canvas_obj.restoreState()
+
     story = [
-        Paragraph(f"<b>{report['department_name']} Team Report</b>", title_style),
-        Spacer(1, 6),
-        summary_table,
+        header_table,
+        accent_bar,
         Spacer(1, 10),
+        Paragraph("Summary Overview", S_SECTION_HEADING),
+        summary_table,
+        Spacer(1, 14),
+        HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#D0DCF0")),
+        Spacer(1, 6),
+        Paragraph("Team Details", S_SECTION_HEADING),
         table,
+        Spacer(1, 20),
+        HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#DDDDDD")),
+        Spacer(1, 6),
+        footer_note,
     ]
-    doc.build(story)
+    doc.build(story, onFirstPage=add_page_footer, onLaterPages=add_page_footer)
 
     payload = buffer.getvalue()
     buffer.close()
