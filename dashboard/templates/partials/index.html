@@ -12,7 +12,7 @@
           {% endif %}
           
         </div>
-        <div class="text-left sm:text-right grand-id">
+        <div class="text-left sm:text-right">
           <p class="theme-text text-base font-semibold text-lg">{{ department.name }}</p>
           <p class="theme-muted text-sm">{{ department.email }}</p>
         </div>
@@ -85,6 +85,15 @@
       hx-swap="innerHTML"
     ></div>
 
+     <div
+      id="teambar-landing-slot"
+      class="px-4 pb-4 sm:px-6 sm:pb-6"
+      hx-get="{% url 'landing_teambar' %}"
+      hx-trigger="load"
+      hx-target="#teambar-landing-slot"
+      hx-swap="innerHTML"
+    ></div>
+
     <div
       id="plot-landing-slot"
       class="px-4 pb-4 sm:px-6 sm:pb-6"
@@ -94,14 +103,7 @@
       hx-swap="innerHTML"
     ></div>
 
-    <div
-      id="teambar-landing-slot"
-      class="px-4 pb-4 sm:px-6 sm:pb-6"
-      hx-get="{% url 'landing_teambar' %}"
-      hx-trigger="load"
-      hx-target="#teambar-landing-slot"
-      hx-swap="innerHTML"
-    ></div>
+   
   </div>
 </section>
 
@@ -122,12 +124,7 @@
     font-size: 0.68rem;
     font-weight: 800;
   }
-  .grand-id {
-    border: 1px solid var(--panel-border);
-    padding: 0.55rem 0.8rem;
-    border-radius: 0.85rem;
-    background: var(--panel-bg);
-  }
+
   .dept-avatar-img,
   .dept-avatar-fallback {
     width: auto;
