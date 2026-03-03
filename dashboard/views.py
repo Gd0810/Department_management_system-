@@ -365,6 +365,77 @@ def landing_plot(request):
     return render(request, "partials/landing/plot.html", context)
 
 
+def landing_teambar(request):
+    if not request.session.get("department_id"):
+        return redirect("login")
+
+    dept = get_department(request)
+    all_workers = list(dept.workers.all().order_by("name"))
+    all_projects = dept.projects.all().prefetch_related("members__worker")
+
+    worker_project_count_map = defaultdict(int)
+    membership_rows = (
+        ProjectMember.objects
+        .filter(worker__in=all_workers, project__department=dept)
+        .values("worker_id")
+        .annotate(project_count=Count("project_id", distinct=True))
+    )
+    for row in membership_rows:
+        worker_project_count_map[row["worker_id"]] = int(row["project_count"] or 0)
+
+    worker_income_map = defaultdict(Decimal)
+    worker_ids = {worker.id for worker in all_workers}
+    for project in all_projects:
+        payments = calculate_project_payments(project)
+        for member in project.members.all():
+            if member.worker_id in worker_ids:
+                worker_income_map[member.worker_id] += payments.get(member.id, Decimal("0.00"))
+
+    max_project_count = max((worker_project_count_map.get(worker.id, 0) for worker in all_workers), default=1)
+    if max_project_count <= 0:
+        max_project_count = 1
+    max_income = max((worker_income_map.get(worker.id, Decimal("0.00")) for worker in all_workers), default=Decimal("1.00"))
+    if max_income <= 0:
+        max_income = Decimal("1.00")
+
+    worker_rows = []
+    for worker in all_workers:
+        parts = [part for part in worker.name.split() if part]
+        if len(parts) >= 2:
+            initials = (parts[0][0] + parts[1][0]).upper()
+        elif parts:
+            initials = parts[0][:2].upper()
+        else:
+            initials = "NA"
+
+        project_count = int(worker_project_count_map.get(worker.id, 0))
+        income_value = worker_income_map.get(worker.id, Decimal("0.00"))
+        project_pct = (project_count / max_project_count) * 100 if max_project_count > 0 else 0.0
+        income_pct = float((income_value / max_income) * Decimal("100")) if max_income > 0 else 0.0
+        combined_score = project_pct + income_pct
+
+        worker_rows.append(
+            {
+                "id": worker.id,
+                "name": worker.name,
+                "image_url": worker.image.url if worker.image else "",
+                "initials": initials,
+                "project_count": project_count,
+                "income_value": float(income_value),
+                "project_pct": round(project_pct, 2),
+                "income_pct": round(income_pct, 2),
+                "combined_score": round(combined_score, 2),
+            }
+        )
+
+    worker_rows.sort(key=lambda item: (-item["combined_score"], -item["income_value"], -item["project_count"], item["name"].lower()))
+
+    context = {
+        "worker_rows": worker_rows,
+    }
+    return render(request, "partials/landing/teambar.html", context)
+
+
 def team(request):
     if not request.session.get("department_id"):
         return redirect("login")

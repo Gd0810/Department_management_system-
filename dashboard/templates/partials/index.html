@@ -93,6 +93,15 @@
       hx-target="#plot-landing-slot"
       hx-swap="innerHTML"
     ></div>
+
+    <div
+      id="teambar-landing-slot"
+      class="px-4 pb-4 sm:px-6 sm:pb-6"
+      hx-get="{% url 'landing_teambar' %}"
+      hx-trigger="load"
+      hx-target="#teambar-landing-slot"
+      hx-swap="innerHTML"
+    ></div>
   </div>
 </section>
 
