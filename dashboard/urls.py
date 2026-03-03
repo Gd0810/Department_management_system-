@@ -7,6 +7,7 @@ urlpatterns = [
     path('dashboard/', views.base, name="base"),       # dashboard layout
 
     path('index/', views.index, name="index"),
+    path('landing/overall/', views.landing_overall, name="landing_overall"),
     path('team/', views.team, name="team"),
     path('worker/<int:worker_id>/', views.worker_detail, name="worker_detail"),
     path('worker/<int:worker_id>/edit/', views.edit_worker, name="edit_worker"),

@@ -75,6 +75,15 @@
         </div>
       </article>
     </div>
+
+    <div
+      id="overall-landing-slot"
+      class="px-4 pb-4 sm:px-6 sm:pb-6"
+      hx-get="{% url 'landing_overall' %}"
+      hx-trigger="load"
+      hx-target="#overall-landing-slot"
+      hx-swap="innerHTML"
+    ></div>
   </div>
 </section>
 

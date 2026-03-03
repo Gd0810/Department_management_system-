@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import check_password
 from django.views.decorators.http import require_http_methods
 from collections import defaultdict
 from decimal import Decimal
-from datetime import date
+from datetime import date, datetime, timedelta
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db.models import Count, Sum, Value, DecimalField, Avg, Min
@@ -172,6 +172,135 @@ def index(request):
         "filter_days": total_days,
     }
     return render(request, "partials/index.html", context)
+
+
+def _build_overall_time_series(projects_qs, start_date, end_date, range_key):
+    total_days = (end_date - start_date).days + 1
+    use_monthly = range_key == "year" or total_days > 62
+
+    if use_monthly:
+        month_starts = []
+        cursor = start_date.replace(day=1)
+        while cursor <= end_date:
+            month_starts.append(cursor)
+            if cursor.month == 12:
+                cursor = cursor.replace(year=cursor.year + 1, month=1, day=1)
+            else:
+                cursor = cursor.replace(month=cursor.month + 1, day=1)
+
+        rows = (
+            projects_qs.annotate(bucket=TruncMonth("start_date"))
+            .values("bucket")
+            .annotate(
+                project_count=Count("id"),
+                total_income=Coalesce(
+                    Sum("amount"),
+                    Value(Decimal("0.00")),
+                    output_field=DecimalField(max_digits=12, decimal_places=2),
+                ),
+            )
+            .order_by("bucket")
+        )
+        row_map = {
+            (row["bucket"].year, row["bucket"].month): row for row in rows if row["bucket"]
+        }
+
+        labels = []
+        project_counts = []
+        incomes = []
+        for item in month_starts:
+            labels.append(item.strftime("%b %Y"))
+            row = row_map.get((item.year, item.month))
+            project_counts.append(int(row["project_count"] or 0) if row else 0)
+            incomes.append(float(row["total_income"] or 0) if row else 0.0)
+        return labels, project_counts, incomes
+
+    rows = (
+        projects_qs.values("start_date")
+        .annotate(
+            project_count=Count("id"),
+            total_income=Coalesce(
+                Sum("amount"),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            ),
+        )
+        .order_by("start_date")
+    )
+    row_map = {row["start_date"]: row for row in rows}
+
+    labels = []
+    project_counts = []
+    incomes = []
+    cursor = start_date
+    while cursor <= end_date:
+        labels.append(cursor.strftime("%d %b"))
+        row = row_map.get(cursor)
+        project_counts.append(int(row["project_count"] or 0) if row else 0)
+        incomes.append(float(row["total_income"] or 0) if row else 0.0)
+        cursor += timedelta(days=1)
+    return labels, project_counts, incomes
+
+
+def landing_overall(request):
+    if not request.session.get("department_id"):
+        return redirect("login")
+
+    dept = get_department(request)
+    today = date.today()
+    range_key = (request.GET.get("range") or "month").strip().lower()
+    custom_start_raw = (request.GET.get("start_date") or "").strip()
+    custom_end_raw = (request.GET.get("end_date") or "").strip()
+
+    if range_key == "today":
+        start_date = today
+        end_date = today
+    elif range_key == "year":
+        start_date = date(today.year, 1, 1)
+        end_date = today
+    elif range_key == "custom":
+        try:
+            start_date = datetime.strptime(custom_start_raw, "%Y-%m-%d").date()
+            end_date = datetime.strptime(custom_end_raw, "%Y-%m-%d").date()
+        except ValueError:
+            start_date = today.replace(day=1)
+            end_date = today
+            range_key = "month"
+        if start_date > end_date:
+            start_date, end_date = end_date, start_date
+    else:
+        range_key = "month"
+        start_date = today.replace(day=1)
+        end_date = today
+
+    filtered_projects = dept.projects.filter(start_date__gte=start_date, start_date__lte=end_date)
+    overall_project_count = filtered_projects.count()
+    overall_income = (
+        filtered_projects.aggregate(
+            total=Coalesce(
+                Sum("amount"),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )
+        )["total"]
+        or Decimal("0.00")
+    )
+
+    chart_labels, chart_project_counts, chart_income_values = _build_overall_time_series(
+        filtered_projects, start_date, end_date, range_key
+    )
+
+    context = {
+        "overall_project_count": overall_project_count,
+        "overall_income": overall_income,
+        "selected_range": range_key,
+        "custom_start": custom_start_raw,
+        "custom_end": custom_end_raw,
+        "chart_labels": chart_labels,
+        "chart_project_counts": chart_project_counts,
+        "chart_income_values": chart_income_values,
+    }
+    return render(request, "partials/landing/overall.html", context)
 
 
 def team(request):

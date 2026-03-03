@@ -1,0 +1,284 @@
+<div id="overall-chart-widget" class="theme-panel rounded-2xl border p-4 sm:p-5">
+  <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+    <div>
+      <h3 class="theme-text text-base font-semibold">Overall Projects And Income</h3>
+      <p class="theme-muted text-sm">Mixed chart (bar + line) by selected date range.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        class="overall-filter-btn {% if selected_range == 'today' %}is-active{% endif %}"
+        hx-get="{% url 'landing_overall' %}?range=today"
+        hx-target="#overall-chart-widget"
+        hx-swap="outerHTML"
+      >
+        Today
+      </button>
+      <button
+        type="button"
+        class="overall-filter-btn {% if selected_range == 'month' %}is-active{% endif %}"
+        hx-get="{% url 'landing_overall' %}?range=month"
+        hx-target="#overall-chart-widget"
+        hx-swap="outerHTML"
+      >
+        This Month
+      </button>
+      <button
+        type="button"
+        class="overall-filter-btn {% if selected_range == 'year' %}is-active{% endif %}"
+        hx-get="{% url 'landing_overall' %}?range=year"
+        hx-target="#overall-chart-widget"
+        hx-swap="outerHTML"
+      >
+        This Year
+      </button>
+      <button
+        type="button"
+        id="overall-custom-range-toggle"
+        class="overall-filter-btn {% if selected_range == 'custom' %}is-active{% endif %}"
+      >
+        Custom Range
+        <span aria-hidden="true">📅</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="overall-custom-range-panel" class="mb-4 rounded-xl border p-3 {% if selected_range != 'custom' %}hidden{% endif %}">
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <input
+        id="overall-custom-start"
+        name="start_date"
+        type="text"
+        value="{{ custom_start }}"
+        class="overall-input"
+        placeholder="Start date"
+      >
+      <input
+        id="overall-custom-end"
+        name="end_date"
+        type="text"
+        value="{{ custom_end }}"
+        class="overall-input"
+        placeholder="End date"
+      >
+      <button
+        type="button"
+        class="overall-filter-btn is-active"
+        hx-get="{% url 'landing_overall' %}"
+        hx-vals='{"range":"custom"}'
+        hx-include="#overall-custom-start,#overall-custom-end"
+        hx-target="#overall-chart-widget"
+        hx-swap="outerHTML"
+      >
+        Apply
+      </button>
+    </div>
+  </div>
+
+  <div class="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+    <div class="overall-kpi">
+      <p class="overall-kpi-label">Overall Project Count</p>
+      <p class="overall-kpi-value">{{ overall_project_count }}</p>
+    </div>
+    <div class="overall-kpi">
+      <p class="overall-kpi-label">Overall Income</p>
+      <p class="overall-kpi-value">Rs {{ overall_income|floatformat:2 }}</p>
+    </div>
+  </div>
+
+  <div class="relative h-[360px] w-full">
+    <canvas id="overallMixedChartCanvas"></canvas>
+  </div>
+</div>
+
+{{ chart_labels|json_script:"overall-chart-labels" }}
+{{ chart_project_counts|json_script:"overall-chart-project-counts" }}
+{{ chart_income_values|json_script:"overall-chart-income-values" }}
+
+<style>
+  .overall-filter-btn {
+    border: 1px solid var(--panel-border);
+    border-radius: 0.7rem;
+    padding: 0.42rem 0.68rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--panel-text);
+    background: var(--panel-bg);
+  }
+  .overall-filter-btn.is-active {
+    border-color: #4f46e5;
+    background: rgba(79, 70, 229, 0.1);
+    color: #4338ca;
+  }
+  .overall-input {
+    border: 1px solid var(--panel-border);
+    border-radius: 0.7rem;
+    padding: 0.45rem 0.6rem;
+    background: var(--panel-bg);
+    color: var(--panel-text);
+    font-size: 0.84rem;
+    outline: none;
+  }
+  .overall-kpi {
+    border: 1px solid var(--panel-border);
+    border-radius: 0.8rem;
+    padding: 0.65rem 0.75rem;
+    background: var(--panel-bg);
+  }
+  .overall-kpi-label {
+    color: var(--panel-muted);
+    font-size: 0.74rem;
+    font-weight: 700;
+  }
+  .overall-kpi-value {
+    color: var(--panel-text);
+    font-size: 1.05rem;
+    font-weight: 800;
+    margin-top: 0.2rem;
+  }
+  body.dark-theme .overall-filter-btn.is-active {
+    background: rgba(165, 180, 252, 0.2);
+    border-color: #a5b4fc;
+    color: #c7d2fe;
+  }
+</style>
+
+<script>
+  (function () {
+    const widget = document.getElementById("overall-chart-widget");
+    const labelsNode = document.getElementById("overall-chart-labels");
+    const projectCountsNode = document.getElementById("overall-chart-project-counts");
+    const incomeValuesNode = document.getElementById("overall-chart-income-values");
+    const canvas = document.getElementById("overallMixedChartCanvas");
+    const customToggle = document.getElementById("overall-custom-range-toggle");
+    const customPanel = document.getElementById("overall-custom-range-panel");
+    if (!widget || !labelsNode || !projectCountsNode || !incomeValuesNode || !canvas) return;
+
+    const labels = JSON.parse(labelsNode.textContent || "[]");
+    const projectCounts = JSON.parse(projectCountsNode.textContent || "[]");
+    const incomeValues = JSON.parse(incomeValuesNode.textContent || "[]");
+
+    if (customToggle && customPanel) {
+      customToggle.addEventListener("click", function () {
+        customPanel.classList.toggle("hidden");
+      });
+    }
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const existing = document.querySelector(`script[src="${src}"]`);
+        if (existing) {
+          if (existing.dataset.loaded === "true") resolve();
+          else existing.addEventListener("load", () => resolve(), { once: true });
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = () => { script.dataset.loaded = "true"; resolve(); };
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    function loadStyle(href, id) {
+      if (document.getElementById(id)) return;
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href = href;
+      document.head.appendChild(link);
+    }
+
+    function setupDatePicker() {
+      loadStyle("https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css", "flatpickr-css");
+      return loadScript("https://cdn.jsdelivr.net/npm/flatpickr").then(() => {
+        const startInput = document.getElementById("overall-custom-start");
+        const endInput = document.getElementById("overall-custom-end");
+        if (startInput) flatpickr(startInput, { dateFormat: "Y-m-d" });
+        if (endInput) flatpickr(endInput, { dateFormat: "Y-m-d" });
+      });
+    }
+
+    function drawChart() {
+      if (window.overallMixedChartInstance) {
+        window.overallMixedChartInstance.destroy();
+      }
+
+      const isDark = document.body.classList.contains("dark-theme");
+      const textColor = isDark ? "#e2e8f0" : "#334155";
+      const gridColor = isDark ? "rgba(148, 163, 184, 0.25)" : "rgba(148, 163, 184, 0.2)";
+
+      window.overallMixedChartInstance = new Chart(canvas, {
+        data: {
+          labels,
+          datasets: [
+            {
+              type: "bar",
+              label: "Project Count",
+              data: projectCounts,
+              yAxisID: "yCount",
+              backgroundColor: isDark ? "rgba(34, 211, 238, 0.50)" : "rgba(8, 145, 178, 0.45)",
+              borderColor: isDark ? "#22d3ee" : "#0891b2",
+              borderWidth: 1.4,
+              borderRadius: 6,
+              barThickness: 18,
+            },
+            {
+              type: "line",
+              label: "Overall Income",
+              data: incomeValues,
+              yAxisID: "yIncome",
+              borderColor: isDark ? "#a5b4fc" : "#4f46e5",
+              backgroundColor: isDark ? "rgba(165, 180, 252, 0.28)" : "rgba(79, 70, 229, 0.2)",
+              tension: 0.35,
+              fill: true,
+              pointRadius: 3.2,
+              pointBackgroundColor: isDark ? "#fb923c" : "#f97316",
+              pointBorderColor: "#ffffff",
+              borderWidth: 2.2,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: {
+              labels: { color: textColor, usePointStyle: true, boxWidth: 10 },
+            },
+          },
+          scales: {
+            x: {
+              ticks: { color: textColor, maxRotation: 0, autoSkip: true },
+              grid: { color: gridColor },
+            },
+            yCount: {
+              type: "linear",
+              position: "left",
+              beginAtZero: true,
+              ticks: { color: textColor, precision: 0 },
+              grid: { color: gridColor },
+              title: { display: true, text: "Projects", color: textColor },
+            },
+            yIncome: {
+              type: "linear",
+              position: "right",
+              beginAtZero: true,
+              ticks: { color: textColor },
+              grid: { drawOnChartArea: false },
+              title: { display: true, text: "Income (Rs)", color: textColor },
+            },
+          },
+        },
+      });
+    }
+
+    setupDatePicker().catch(() => {});
+    if (window.Chart) {
+      drawChart();
+      return;
+    }
+    loadScript("https://cdn.jsdelivr.net/npm/chart.js").then(drawChart).catch(() => {});
+  })();
+</script>
