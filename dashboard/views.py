@@ -144,41 +144,17 @@ def index(request):
     total_days = max((today - first_project_date).days + 1, 1)
     avg_daily_revenue = total_revenue / Decimal(total_days)
 
-    month_keys = []
-    year, month = today.year, today.month
-    for _ in range(12):
-        month_keys.append((year, month))
-        month -= 1
-        if month == 0:
-            month = 12
-            year -= 1
-    month_keys.reverse()
-
-    monthly_labels = [date(y, m, 1).strftime("%b %Y") for y, m in month_keys]
-    monthly_revenue_values = [0.0] * len(month_keys)
-    monthly_rows = (
-        projects_qs.annotate(month_bucket=TruncMonth("start_date"))
-        .values("month_bucket")
-        .annotate(
-            total_income=Coalesce(
-                Sum("amount"),
-                Value(Decimal("0.00")),
-                output_field=DecimalField(max_digits=12, decimal_places=2),
-            )
-        )
-        .order_by("month_bucket")
+    last_five_projects = list(
+        projects_qs.order_by("-start_date", "-id").values("amount")[:5]
     )
-    monthly_lookup = {
-        (row["month_bucket"].year, row["month_bucket"].month): row for row in monthly_rows if row["month_bucket"]
-    }
-    for idx, key in enumerate(month_keys):
-        row = monthly_lookup.get(key)
-        if row:
-            monthly_revenue_values[idx] = float(row["total_income"] or 0)
+    last_project_revenue_values = [float(item["amount"] or 0) for item in reversed(last_five_projects)]
+    if len(last_project_revenue_values) < 5:
+        last_project_revenue_values = ([0.0] * (5 - len(last_project_revenue_values))) + last_project_revenue_values
 
     growth_gauge_pct = max(0.0, min(100.0, growth_pct))
     avg_daily_target = max(float(total_revenue) / 30.0, 1.0)
     avg_daily_gauge_pct = max(0.0, min(100.0, (float(avg_daily_revenue) / avg_daily_target) * 100.0))
+    growth_delta_text = f"{growth_pct:+.1f}%"
     dept_initials = "".join([part[0] for part in dept.name.split()[:2]]).upper() if dept.name else "D"
 
     context = {
@@ -188,11 +164,11 @@ def index(request):
         "department_initials": dept_initials,
         "total_revenue": total_revenue,
         "growth_pct": round(growth_pct, 2),
+        "growth_delta_text": growth_delta_text,
         "growth_gauge_pct": round(growth_gauge_pct, 2),
         "avg_daily_revenue": avg_daily_revenue,
         "avg_daily_gauge_pct": round(avg_daily_gauge_pct, 2),
-        "monthly_revenue_labels": monthly_labels,
-        "monthly_revenue_values": monthly_revenue_values,
+        "last_project_revenue_values": last_project_revenue_values,
         "filter_days": total_days,
     }
     return render(request, "partials/index.html", context)

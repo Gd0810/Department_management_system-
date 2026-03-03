@@ -23,11 +23,12 @@
       <article class="kpi-card revenue-card">
         <p class="kpi-title">Total Revenue</p>
         <p class="kpi-value">Rs {{ total_revenue|floatformat:2 }}</p>
-        <p class="kpi-sub">All projects revenue</p>
+        <p class="kpi-sub">Last 5 projects trend</p>
         <div class="sparkline-wrap">
           <svg viewBox="0 0 320 120" class="sparkline-svg" preserveAspectRatio="none">
             <path id="revenueAreaPath" class="spark-area" d=""></path>
             <path id="revenueLinePath" class="spark-line" d=""></path>
+            <g id="revenuePointsLayer"></g>
           </svg>
         </div>
       </article>
@@ -35,8 +36,12 @@
       <article class="kpi-card">
         <p class="kpi-title">Growth %</p>
         <p class="kpi-value">{{ growth_pct|floatformat:2 }}%</p>
-        <p class="kpi-sub">Compare previous period</p>
+        <p class="kpi-sub">Compare previous period ({{ growth_delta_text }} vs last month)</p>
         <div class="semi-gauge" style="--gauge: {{ growth_gauge_pct|floatformat:2 }};">
+          <svg viewBox="0 0 220 120" class="semi-gauge-svg" aria-hidden="true">
+            <path class="semi-track" pathLength="100" d="M 20 100 A 90 90 0 0 1 200 100"></path>
+            <path class="semi-progress" pathLength="100" d="M 20 100 A 90 90 0 0 1 200 100"></path>
+          </svg>
           <div class="semi-gauge-inner">
             <span>{{ growth_gauge_pct|floatformat:1 }}%</span>
           </div>
@@ -48,6 +53,10 @@
         <p class="kpi-value">Rs {{ avg_daily_revenue|floatformat:2 }}</p>
         <p class="kpi-sub">Total / days in filter range ({{ filter_days }} days)</p>
         <div class="semi-gauge" style="--gauge: {{ avg_daily_gauge_pct|floatformat:2 }};">
+          <svg viewBox="0 0 220 120" class="semi-gauge-svg" aria-hidden="true">
+            <path class="semi-track" pathLength="100" d="M 20 100 A 90 90 0 0 1 200 100"></path>
+            <path class="semi-progress" pathLength="100" d="M 20 100 A 90 90 0 0 1 200 100"></path>
+          </svg>
           <div class="semi-gauge-inner">
             <span>{{ avg_daily_gauge_pct|floatformat:1 }}%</span>
           </div>
@@ -57,7 +66,7 @@
   </div>
 </section>
 
-{{ monthly_revenue_values|json_script:"index-monthly-revenue-values" }}
+{{ last_project_revenue_values|json_script:"index-last-project-revenue-values" }}
 
 <style>
   .dept-avatar-img,
@@ -124,51 +133,73 @@
     fill: rgba(22, 138, 232, 0.16);
     stroke: none;
   }
+  .spark-point {
+    fill: #168ae8;
+    stroke: #ffffff;
+    stroke-width: 1.8;
+  }
+  .spark-label {
+    fill: #0f172a;
+    font-size: 8px;
+    font-weight: 700;
+    text-anchor: middle;
+  }
+  body.dark-theme .spark-label {
+    fill: #e2e8f0;
+  }
   .semi-gauge {
-    width: 170px;
-    height: 90px;
-    margin: 0.9rem auto 0;
-    border-radius: 170px 170px 0 0;
+    width: 220px;
+    height: 118px;
+    margin: 0.9rem auto 0.1rem;
     position: relative;
     overflow: hidden;
-    background:
-      conic-gradient(
-        from 180deg,
-        #16a34a 0deg,
-        #16a34a calc(var(--gauge) * 1.8deg),
-        #e2e8f0 calc(var(--gauge) * 1.8deg),
-        #e2e8f0 180deg,
-        transparent 180deg
-      );
   }
-  .semi-gauge::before {
-    content: "";
-    position: absolute;
-    left: 13px;
-    right: 13px;
-    top: 13px;
-    height: 74px;
-    border-radius: 140px 140px 0 0;
-    background: var(--panel-bg);
+  .semi-gauge-svg {
+    width: 220px;
+    height: 118px;
+    display: block;
+  }
+  .semi-track,
+  .semi-progress {
+    fill: none;
+    stroke-linecap: butt;
+    stroke-width: 22;
+  }
+  .semi-track {
+    stroke: #d1d5db;
+    filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.2));
+  }
+  .semi-progress {
+    stroke: #168ae8;
+    stroke-dasharray: var(--gauge) 100;
+    transition: stroke-dasharray 0.35s ease;
   }
   .semi-gauge-inner {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 8px;
+    bottom: 10px;
     text-align: center;
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--panel-text);
+    font-size: 2rem;
+    font-weight: 400;
+    color: #111827;
+    z-index: 1;
+  }
+  body.dark-theme .semi-track {
+    stroke: #64748b;
+  }
+  body.dark-theme .semi-gauge-inner {
+    color: #e5e7eb;
   }
 </style>
 
 <script>
   (function () {
-    const values = JSON.parse(document.getElementById("index-monthly-revenue-values").textContent || "[]");
+    const values = JSON.parse(document.getElementById("index-last-project-revenue-values").textContent || "[]").slice(-5);
     const linePath = document.getElementById("revenueLinePath");
     const areaPath = document.getElementById("revenueAreaPath");
-    if (!linePath || !areaPath || !values.length) return;
+    const pointsLayer = document.getElementById("revenuePointsLayer");
+    if (!linePath || !areaPath || !pointsLayer || !values.length) return;
 
     const width = 320;
     const height = 120;
@@ -189,5 +220,22 @@
 
     linePath.setAttribute("d", lineD);
     areaPath.setAttribute("d", areaD);
+
+    pointsLayer.innerHTML = "";
+    points.forEach((point, index) => {
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", point.x.toFixed(2));
+      circle.setAttribute("cy", point.y.toFixed(2));
+      circle.setAttribute("r", "3.8");
+      circle.setAttribute("class", "spark-point");
+      pointsLayer.appendChild(circle);
+
+      const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      label.setAttribute("x", point.x.toFixed(2));
+      label.setAttribute("y", Math.max(point.y - 6, 9).toFixed(2));
+      label.setAttribute("class", "spark-label");
+      label.textContent = `Rs ${Number(values[index] || 0).toFixed(0)}`;
+      pointsLayer.appendChild(label);
+    });
   })();
 </script>
