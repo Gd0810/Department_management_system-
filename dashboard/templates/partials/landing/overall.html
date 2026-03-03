@@ -342,16 +342,39 @@
       const gridColor = isDark ? "rgba(148, 163, 184, 0.25)" : "rgba(148, 163, 184, 0.2)";
 
       const coinPointStyle = createCoinPointStyle();
+      const incomeBarTopIconPlugin = {
+        id: "incomeBarTopIcon",
+        afterDatasetsDraw(chart, _args, pluginOptions) {
+          const datasetIndex = pluginOptions && typeof pluginOptions.datasetIndex === "number"
+            ? pluginOptions.datasetIndex
+            : 0;
+          const meta = chart.getDatasetMeta(datasetIndex);
+          if (!meta || !meta.data || !meta.data.length) return;
+
+          const ctx = chart.ctx;
+          const icon = pluginOptions && pluginOptions.icon ? pluginOptions.icon : null;
+          if (!icon) return;
+
+          ctx.save();
+          meta.data.forEach((barEl) => {
+            const x = barEl.x;
+            const y = barEl.y - 14;
+            ctx.drawImage(icon, x - 12, y - 12, 24, 24);
+          });
+          ctx.restore();
+        },
+      };
 
       window.overallMixedChartInstance = new Chart(canvas, {
+        plugins: [incomeBarTopIconPlugin],
         data: {
           labels,
           datasets: [
             {
               type: "bar",
-              label: "Project Count",
-              data: projectCounts,
-              yAxisID: "yCount",
+              label: "Overall Income",
+              data: incomeValues,
+              yAxisID: "yIncome",
               backgroundColor: isDark ? "rgba(167, 139, 250, 0.62)" : "rgba(124, 58, 237, 0.62)",
               borderColor: isDark ? "#c4b5fd" : "#A1A3F7",
               borderWidth: 1.4,
@@ -361,18 +384,17 @@
             },
             {
               type: "line",
-              label: "Overall Income",
-              data: incomeValues,
-              yAxisID: "yIncome",
-              borderColor: isDark ? "#6ee7b7" : "#15803d",
-              backgroundColor: isDark ? "rgba(51, 196, 148, 0.28)" : "rgba(51, 196, 148, 0.2)",
+              label: "Project Count",
+              data: projectCounts,
+              yAxisID: "yCount",
+              borderColor: isDark ? "#f9a8d4" : "#ec4899",
+              backgroundColor: isDark ? "rgba(249, 168, 212, 0.24)" : "rgba(236, 72, 153, 0.2)",
               tension: 0.35,
               fill: true,
-              pointStyle: coinPointStyle,
-              pointRadius: 9,
-              pointHoverRadius: 10,
-              pointBackgroundColor: "#FFD700",
-              pointBorderColor: "#D4AF37",
+              pointRadius: 4,
+              pointHoverRadius: 5,
+              pointBackgroundColor: isDark ? "#f9a8d4" : "#ec4899",
+              pointBorderColor: "#ffffff",
               borderWidth: 2.2,
             },
           ],
@@ -385,27 +407,31 @@
             legend: {
               labels: { color: textColor, usePointStyle: true, boxWidth: 10 },
             },
+            incomeBarTopIcon: {
+              datasetIndex: 0,
+              icon: coinPointStyle,
+            },
           },
           scales: {
             x: {
               ticks: { color: textColor, maxRotation: 0, autoSkip: true },
               grid: { color: gridColor },
             },
-            yCount: {
+            yIncome: {
               type: "linear",
               position: "left",
               beginAtZero: true,
-              ticks: { color: textColor, precision: 0 },
+              ticks: { color: textColor },
               grid: { color: gridColor },
-              title: { display: true, text: "Projects", color: textColor },
+              title: { display: true, text: "Income (Rs)", color: textColor },
             },
-            yIncome: {
+            yCount: {
               type: "linear",
               position: "right",
               beginAtZero: true,
-              ticks: { color: textColor },
+              ticks: { color: textColor, precision: 0 },
               grid: { drawOnChartArea: false },
-              title: { display: true, text: "Income (Rs)", color: textColor },
+              title: { display: true, text: "Projects", color: textColor },
             },
           },
         },
