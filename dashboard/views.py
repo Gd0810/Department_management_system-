@@ -249,15 +249,27 @@ def landing_overall(request):
     dept = get_department(request)
     today = date.today()
     range_key = (request.GET.get("range") or "month").strip().lower()
+    day_date_raw = (request.GET.get("day_date") or "").strip()
+    month_value_raw = (request.GET.get("month_value") or "").strip()
+    year_value_raw = (request.GET.get("year_value") or "").strip()
     custom_start_raw = (request.GET.get("start_date") or "").strip()
     custom_end_raw = (request.GET.get("end_date") or "").strip()
 
     if range_key == "today":
-        start_date = today
-        end_date = today
+        try:
+            selected_day = datetime.strptime(day_date_raw, "%Y-%m-%d").date() if day_date_raw else today
+        except ValueError:
+            selected_day = today
+        start_date = selected_day
+        end_date = selected_day
     elif range_key == "year":
-        start_date = date(today.year, 1, 1)
-        end_date = today
+        try:
+            selected_year = int(year_value_raw) if year_value_raw else today.year
+        except ValueError:
+            selected_year = today.year
+        selected_year = max(2000, min(selected_year, today.year))
+        start_date = date(selected_year, 1, 1)
+        end_date = date(selected_year, 12, 31)
     elif range_key == "custom":
         try:
             start_date = datetime.strptime(custom_start_raw, "%Y-%m-%d").date()
@@ -270,8 +282,18 @@ def landing_overall(request):
             start_date, end_date = end_date, start_date
     else:
         range_key = "month"
-        start_date = today.replace(day=1)
-        end_date = today
+        try:
+            if month_value_raw:
+                selected_month_date = datetime.strptime(month_value_raw, "%Y-%m").date()
+            else:
+                selected_month_date = today.replace(day=1)
+        except ValueError:
+            selected_month_date = today.replace(day=1)
+        start_date = selected_month_date.replace(day=1)
+        if start_date.month == 12:
+            end_date = date(start_date.year + 1, 1, 1) - timedelta(days=1)
+        else:
+            end_date = date(start_date.year, start_date.month + 1, 1) - timedelta(days=1)
 
     filtered_projects = dept.projects.filter(start_date__gte=start_date, start_date__lte=end_date)
     overall_project_count = filtered_projects.count()
@@ -294,6 +316,9 @@ def landing_overall(request):
         "overall_project_count": overall_project_count,
         "overall_income": overall_income,
         "selected_range": range_key,
+        "selected_day": start_date.strftime("%Y-%m-%d") if range_key == "today" else today.strftime("%Y-%m-%d"),
+        "selected_month": start_date.strftime("%Y-%m") if range_key == "month" else today.strftime("%Y-%m"),
+        "selected_year": str(start_date.year if range_key == "year" else today.year),
         "custom_start": custom_start_raw,
         "custom_end": custom_end_raw,
         "chart_labels": chart_labels,

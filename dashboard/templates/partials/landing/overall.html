@@ -10,7 +10,7 @@
       <button
         type="button"
         class="overall-filter-btn {% if selected_range == 'today' %}is-active{% endif %}"
-        hx-get="{% url 'landing_overall' %}?range=today"
+        hx-get="{% url 'landing_overall' %}?range=today&day_date={{ selected_day }}"
         hx-target="#overall-chart-widget"
         hx-swap="outerHTML"
       >
@@ -19,7 +19,7 @@
       <button
         type="button"
         class="overall-filter-btn {% if selected_range == 'month' %}is-active{% endif %}"
-        hx-get="{% url 'landing_overall' %}?range=month"
+        hx-get="{% url 'landing_overall' %}?range=month&month_value={{ selected_month }}"
         hx-target="#overall-chart-widget"
         hx-swap="outerHTML"
       >
@@ -28,7 +28,7 @@
       <button
         type="button"
         class="overall-filter-btn {% if selected_range == 'year' %}is-active{% endif %}"
-        hx-get="{% url 'landing_overall' %}?range=year"
+        hx-get="{% url 'landing_overall' %}?range=year&year_value={{ selected_year }}"
         hx-target="#overall-chart-widget"
         hx-swap="outerHTML"
       >
@@ -41,6 +41,79 @@
       >
         Custom Range
         <span aria-hidden="true">📅</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="overall-today-panel" class="mb-4 rounded-xl border p-3 {% if selected_range != 'today' %}hidden{% endif %}">
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <input
+        id="overall-day-picker"
+        name="day_date"
+        type="text"
+        value="{{ selected_day }}"
+        class="overall-input"
+        placeholder="Select day"
+      >
+      <button
+        type="button"
+        class="overall-filter-btn is-active"
+        hx-get="{% url 'landing_overall' %}"
+        hx-vals='{"range":"today"}'
+        hx-include="#overall-day-picker"
+        hx-target="#overall-chart-widget"
+        hx-swap="outerHTML"
+      >
+        Apply Day
+      </button>
+    </div>
+  </div>
+
+  <div id="overall-month-panel" class="mb-4 rounded-xl border p-3 {% if selected_range != 'month' %}hidden{% endif %}">
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <input
+        id="overall-month-picker"
+        name="month_value"
+        type="month"
+        value="{{ selected_month }}"
+        class="overall-input"
+      >
+      <button
+        type="button"
+        class="overall-filter-btn is-active"
+        hx-get="{% url 'landing_overall' %}"
+        hx-vals='{"range":"month"}'
+        hx-include="#overall-month-picker"
+        hx-target="#overall-chart-widget"
+        hx-swap="outerHTML"
+      >
+        Apply Month
+      </button>
+    </div>
+  </div>
+
+  <div id="overall-year-panel" class="mb-4 rounded-xl border p-3 {% if selected_range != 'year' %}hidden{% endif %}">
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <input
+        id="overall-year-picker"
+        name="year_value"
+        type="number"
+        min="2000"
+        max="2100"
+        value="{{ selected_year }}"
+        class="overall-input"
+        placeholder="YYYY"
+      >
+      <button
+        type="button"
+        class="overall-filter-btn is-active"
+        hx-get="{% url 'landing_overall' %}"
+        hx-vals='{"range":"year"}'
+        hx-include="#overall-year-picker"
+        hx-target="#overall-chart-widget"
+        hx-swap="outerHTML"
+      >
+        Apply Year
       </button>
     </div>
   </div>
@@ -178,6 +251,9 @@
     const canvas = document.getElementById("overallMixedChartCanvas");
     const customToggle = document.getElementById("overall-custom-range-toggle");
     const customPanel = document.getElementById("overall-custom-range-panel");
+    const todayPanel = document.getElementById("overall-today-panel");
+    const monthPanel = document.getElementById("overall-month-panel");
+    const yearPanel = document.getElementById("overall-year-panel");
     if (!widget || !labelsNode || !projectCountsNode || !incomeValuesNode || !canvas) return;
 
     const labels = JSON.parse(labelsNode.textContent || "[]");
@@ -187,6 +263,9 @@
     if (customToggle && customPanel) {
       customToggle.addEventListener("click", function () {
         customPanel.classList.toggle("hidden");
+        if (todayPanel) todayPanel.classList.add("hidden");
+        if (monthPanel) monthPanel.classList.add("hidden");
+        if (yearPanel) yearPanel.classList.add("hidden");
       });
     }
 
@@ -218,8 +297,10 @@
     function setupDatePicker() {
       loadStyle("https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css", "flatpickr-css");
       return loadScript("https://cdn.jsdelivr.net/npm/flatpickr").then(() => {
+        const dayInput = document.getElementById("overall-day-picker");
         const startInput = document.getElementById("overall-custom-start");
         const endInput = document.getElementById("overall-custom-end");
+        if (dayInput) flatpickr(dayInput, { dateFormat: "Y-m-d" });
         if (startInput) flatpickr(startInput, { dateFormat: "Y-m-d" });
         if (endInput) flatpickr(endInput, { dateFormat: "Y-m-d" });
       });
@@ -272,7 +353,7 @@
               data: projectCounts,
               yAxisID: "yCount",
               backgroundColor: isDark ? "rgba(167, 139, 250, 0.62)" : "rgba(124, 58, 237, 0.62)",
-              borderColor: isDark ? "#c4b5fd" : "#7c3aed",
+              borderColor: isDark ? "#c4b5fd" : "#A1A3F7",
               borderWidth: 1.4,
               borderRadius: 6,
               barThickness: 32,
