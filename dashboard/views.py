@@ -328,6 +328,43 @@ def landing_overall(request):
     return render(request, "partials/landing/overall.html", context)
 
 
+def landing_plot(request):
+    if not request.session.get("department_id"):
+        return redirect("login")
+
+    dept = get_department(request)
+    category_lookup = dict(Project.PROJECT_CATEGORY)
+    category_keys = [key for key, _label in Project.PROJECT_CATEGORY]
+
+    rows = (
+        dept.projects.values("category")
+        .annotate(
+            income_total=Coalesce(
+                Sum("amount"),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            ),
+            project_count=Count("id"),
+        )
+    )
+    row_map = {row["category"]: row for row in rows}
+
+    chart_labels = [category_lookup.get(key, key.title()) for key in category_keys]
+    chart_income_values = []
+    chart_project_count_values = []
+    for key in category_keys:
+        row = row_map.get(key)
+        chart_income_values.append(float(row["income_total"] or 0) if row else 0.0)
+        chart_project_count_values.append(int(row["project_count"] or 0) if row else 0)
+
+    context = {
+        "chart_labels": chart_labels,
+        "chart_income_values": chart_income_values,
+        "chart_project_count_values": chart_project_count_values,
+    }
+    return render(request, "partials/landing/plot.html", context)
+
+
 def team(request):
     if not request.session.get("department_id"):
         return redirect("login")

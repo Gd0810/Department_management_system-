@@ -84,6 +84,15 @@
       hx-target="#overall-landing-slot"
       hx-swap="innerHTML"
     ></div>
+
+    <div
+      id="plot-landing-slot"
+      class="px-4 pb-4 sm:px-6 sm:pb-6"
+      hx-get="{% url 'landing_plot' %}"
+      hx-trigger="load"
+      hx-target="#plot-landing-slot"
+      hx-swap="innerHTML"
+    ></div>
   </div>
 </section>
 

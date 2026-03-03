@@ -1,0 +1,300 @@
+<section class="theme-panel rounded-2xl border p-4 sm:p-5">
+  <div class="mb-3">
+    <h3 class="theme-text text-base font-semibold">Project Distribution</h3>
+    <p class="theme-muted text-sm">Grouped bar chart: Income and Project Count by department.</p>
+  </div>
+  <div class="relative h-[380px] w-full">
+    <canvas id="projectGroupedBarCanvas"></canvas>
+  </div>
+</section>
+
+{{ chart_labels|json_script:"plot-chart-labels" }}
+{{ chart_income_values|json_script:"plot-chart-income-values" }}
+{{ chart_project_count_values|json_script:"plot-chart-project-count-values" }}
+
+<script>
+  (function () {
+    if (window.projectGroupedBarCleanup) window.projectGroupedBarCleanup();
+
+    const canvas = document.getElementById("projectGroupedBarCanvas");
+    const labelsNode = document.getElementById("plot-chart-labels");
+    const incomeNode = document.getElementById("plot-chart-income-values");
+    const countNode = document.getElementById("plot-chart-project-count-values");
+    if (!canvas || !labelsNode || !incomeNode || !countNode) return;
+
+    const labels = JSON.parse(labelsNode.textContent || "[]");
+    const incomeValues = JSON.parse(incomeNode.textContent || "[]");
+    const projectCountValues = JSON.parse(countNode.textContent || "[]");
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const existing = document.querySelector(`script[src="${src}"]`);
+        if (existing) {
+          if (existing.dataset.loaded === "true") resolve();
+          else existing.addEventListener("load", () => resolve(), { once: true });
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = () => { script.dataset.loaded = "true"; resolve(); };
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    function drawChart() {
+      if (window.projectGroupedBarInstance) {
+        window.projectGroupedBarInstance.destroy();
+      }
+
+      const isDark = document.body.classList.contains("dark-theme");
+      const textColor = isDark ? "#e2e8f0" : "#334155";
+      const gridColor = isDark ? "rgba(148, 163, 184, 0.25)" : "rgba(148, 163, 184, 0.2)";
+      const rupeeIcon = (function createRupeeOctagonIcon() {
+        const iconCanvas = document.createElement("canvas");
+        iconCanvas.width = 24;
+        iconCanvas.height = 24;
+        const ctx = iconCanvas.getContext("2d");
+        if (!ctx) return iconCanvas;
+
+        const cx = 12;
+        const cy = 12;
+        const r = 9;
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const angle = ((Math.PI * 2) / 8) * i - (Math.PI / 8);
+          const x = cx + r * Math.cos(angle);
+          const y = cy + r * Math.sin(angle);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = "#FFD700";
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = "#D4AF37";
+        ctx.stroke();
+
+        ctx.fillStyle = "#7C2D12";
+        ctx.font = "bold 12px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("\u20B9", cx, cy + 0.5);
+        return iconCanvas;
+      })();
+      const projectIcon = (function createProjectScreenSparkleIcon() {
+        const iconCanvas = document.createElement("canvas");
+        iconCanvas.width = 24;
+        iconCanvas.height = 24;
+        const ctx = iconCanvas.getContext("2d");
+        if (!ctx) return iconCanvas;
+
+        // Screen frame
+        ctx.fillStyle = "#60a5fa";
+        ctx.strokeStyle = "#2563eb";
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        if (typeof ctx.roundRect === "function") {
+          ctx.roundRect(3.5, 4.5, 17, 12, 2);
+        } else {
+          ctx.rect(3.5, 4.5, 17, 12);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        // Stand
+        ctx.fillStyle = "#1e3a8a";
+        ctx.fillRect(10.4, 16.7, 3.2, 2.8);
+        ctx.fillRect(7.8, 19.3, 8.4, 1.4);
+
+        // Text line on screen
+        ctx.fillStyle = "#e0f2fe";
+        ctx.fillRect(6.3, 8, 7.5, 1.4);
+        ctx.fillRect(6.3, 10.5, 5.2, 1.4);
+
+        // Sparkle
+        ctx.strokeStyle = "#facc15";
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(15.8, 7.2);
+        ctx.lineTo(15.8, 10.2);
+        ctx.moveTo(14.3, 8.7);
+        ctx.lineTo(17.3, 8.7);
+        ctx.stroke();
+
+        return iconCanvas;
+      })();
+
+      const barTopIconPlugin = {
+        id: "barTopIcon",
+        afterDatasetsDraw(chart, _args, pluginOptions) {
+          const iconMap = (pluginOptions && pluginOptions.iconMap) || {};
+
+          const ctx = chart.ctx;
+          ctx.save();
+          Object.keys(iconMap).forEach((indexKey) => {
+            const datasetIndex = Number(indexKey);
+            const icon = iconMap[indexKey];
+            if (!icon && icon !== 0) return;
+            const meta = chart.getDatasetMeta(datasetIndex);
+            if (!meta || !meta.data) return;
+            meta.data.forEach((bar) => {
+              const x = bar.x;
+              const y = bar.y - 14;
+              ctx.drawImage(icon, x - 12, y - 12, 24, 24);
+            });
+          });
+          ctx.restore();
+        },
+      };
+
+      window.projectGroupedBarInstance = new Chart(canvas, {
+        plugins: [barTopIconPlugin],
+        type: "bar",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Income",
+              data: incomeValues,
+              yAxisID: "yIncome",
+              backgroundColor: isDark ? "rgba(165, 180, 252, 0.65)" : "rgba(79, 70, 229, 0.65)",
+              borderColor: isDark ? "#a5b4fc" : "#4f46e5",
+              borderWidth: 1.4,
+              borderRadius: 6,
+              categoryPercentage: 0.64,
+              barPercentage: 0.85,
+            },
+            {
+              label: "Project Count",
+              data: projectCountValues,
+              yAxisID: "yCount",
+              backgroundColor: isDark ? "rgba(110, 231, 183, 0.65)" : "rgba(21, 128, 61, 0.65)",
+              borderColor: isDark ? "#6ee7b7" : "#15803d",
+              borderWidth: 1.4,
+              borderRadius: 6,
+              categoryPercentage: 0.64,
+              barPercentage: 0.85,
+            },
+            {
+              type: "line",
+              label: "Income Line",
+              data: incomeValues,
+              yAxisID: "yIncome",
+              borderColor: isDark ? "#c7d2fe" : "#4338ca",
+              backgroundColor: "transparent",
+              tension: 0.3,
+              pointRadius: 3,
+              pointHoverRadius: 4,
+              pointBackgroundColor: isDark ? "#c7d2fe" : "#4338ca",
+              pointBorderColor: "#ffffff",
+              borderWidth: 2,
+              order: 0,
+              pointHitRadius: 0,
+              pointHoverRadius: 0,
+            },
+            {
+              type: "line",
+              label: "Project Count Line",
+              data: projectCountValues,
+              yAxisID: "yCount",
+              borderColor: isDark ? "#86efac" : "#166534",
+              backgroundColor: "transparent",
+              tension: 0.3,
+              pointRadius: 3,
+              pointHoverRadius: 4,
+              pointBackgroundColor: isDark ? "#86efac" : "#166534",
+              pointBorderColor: "#ffffff",
+              borderWidth: 2,
+              order: 0,
+              pointHitRadius: 0,
+              pointHoverRadius: 0,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: {
+              labels: {
+                color: textColor,
+                boxWidth: 12,
+                filter: (item) => !String(item.text || "").toLowerCase().includes("line"),
+              },
+            },
+            tooltip: {
+              filter: (ctx) => !String(ctx.dataset.label || "").toLowerCase().includes("line"),
+            },
+            barTopIcon: {
+              iconMap: {
+                0: rupeeIcon,
+                1: projectIcon,
+              },
+            },
+          },
+          scales: {
+            x: {
+              ticks: { color: textColor },
+              grid: { color: gridColor },
+            },
+            yIncome: {
+              type: "linear",
+              position: "left",
+              beginAtZero: true,
+              ticks: { color: textColor },
+              grid: { color: gridColor },
+              title: { display: true, text: "Income (Rs)", color: textColor },
+            },
+            yCount: {
+              type: "linear",
+              position: "right",
+              beginAtZero: true,
+              ticks: { color: textColor, precision: 0 },
+              grid: { drawOnChartArea: false },
+              title: { display: true, text: "Project Count", color: textColor },
+            },
+          },
+        },
+      });
+    }
+
+    function installThemeWatcher() {
+      const scheduleDraw = () => {
+        if (window.projectGroupedBarRaf) cancelAnimationFrame(window.projectGroupedBarRaf);
+        window.projectGroupedBarRaf = requestAnimationFrame(() => {
+          window.projectGroupedBarRaf = null;
+          drawChart();
+        });
+      };
+      const observer = new MutationObserver(scheduleDraw);
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "data-theme"] });
+      observer.observe(document.body, { attributes: true, attributeFilter: ["class", "data-theme"] });
+      window.addEventListener("themechange", scheduleDraw);
+
+      window.projectGroupedBarCleanup = function () {
+        window.removeEventListener("themechange", scheduleDraw);
+        observer.disconnect();
+        if (window.projectGroupedBarRaf) {
+          cancelAnimationFrame(window.projectGroupedBarRaf);
+          window.projectGroupedBarRaf = null;
+        }
+        if (window.projectGroupedBarInstance) {
+          window.projectGroupedBarInstance.destroy();
+          window.projectGroupedBarInstance = null;
+        }
+      };
+    }
+
+    if (window.Chart) {
+      drawChart();
+      installThemeWatcher();
+      return;
+    }
+    loadScript("https://cdn.jsdelivr.net/npm/chart.js").then(() => {
+      drawChart();
+      installThemeWatcher();
+    }).catch(() => {});
+  })();
+</script>
