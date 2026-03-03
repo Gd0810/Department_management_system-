@@ -1,8 +1,8 @@
 {% include "tost.html" %}
 
-<section class="w-full space-y-6 p-4 sm:p-6">
-  <div class="theme-panel overflow-hidden rounded-2xl border shadow-sm">
-    <div class="theme-panel-soft border-b px-4 py-5 sm:px-6">
+<section class="dashboard-grand w-full space-y-6 p-4 sm:p-6">
+  <div class="theme-panel grand-shell overflow-hidden rounded-2xl border shadow-sm">
+    <div class="theme-panel-soft grand-header border-b px-4 py-5 sm:px-6">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-center gap-3">
           {% if department.image %}
@@ -10,9 +10,9 @@
           {% else %}
             <div class="dept-avatar-fallback">{{ department_initials }}</div>
           {% endif %}
-        
+          
         </div>
-        <div class="text-left sm:text-right">
+        <div class="text-left sm:text-right grand-id">
           <p class="theme-text text-base font-semibold text-lg">{{ department.name }}</p>
           <p class="theme-muted text-sm">{{ department.email }}</p>
         </div>
@@ -20,12 +20,24 @@
     </div>
 
     <div class="grid grid-cols-1 gap-4 p-4 sm:p-6 lg:grid-cols-3">
-      <article class="kpi-card revenue-card">
+      <article class="kpi-card kpi-card--revenue">
         <p class="kpi-title">Total Revenue</p>
         <p class="kpi-value">Rs {{ total_revenue|floatformat:2 }}</p>
         <p class="kpi-sub">Last 5 projects trend</p>
         <div class="sparkline-wrap">
           <svg viewBox="0 0 320 120" class="sparkline-svg" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="sparkLineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#4f46e5"></stop>
+                <stop offset="35%" stop-color="#0891b2"></stop>
+                <stop offset="70%" stop-color="#15803d"></stop>
+                <stop offset="100%" stop-color="#f97316"></stop>
+              </linearGradient>
+              <linearGradient id="sparkAreaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.30"></stop>
+                <stop offset="100%" stop-color="#0891b2" stop-opacity="0.03"></stop>
+              </linearGradient>
+            </defs>
             <path id="revenueAreaPath" class="spark-area" d=""></path>
             <path id="revenueLinePath" class="spark-line" d=""></path>
             <g id="revenuePointsLayer"></g>
@@ -33,7 +45,7 @@
         </div>
       </article>
 
-      <article class="kpi-card">
+      <article class="kpi-card kpi-card--growth">
         <p class="kpi-title">Growth %</p>
         <p class="kpi-value">{{ growth_pct|floatformat:2 }}%</p>
         <p class="kpi-sub">Compare previous period ({{ growth_delta_text }} vs last month)</p>
@@ -48,7 +60,7 @@
         </div>
       </article>
 
-      <article class="kpi-card">
+      <article class="kpi-card kpi-card--avg">
         <p class="kpi-title">Average Daily Revenue</p>
         <p class="kpi-value">Rs {{ avg_daily_revenue|floatformat:2 }}</p>
         <p class="kpi-sub">Total / days in filter range ({{ filter_days }} days)</p>
@@ -69,10 +81,31 @@
 {{ last_project_revenue_values|json_script:"index-last-project-revenue-values" }}
 
 <style>
+  .dashboard-grand {
+    position: relative;
+  }
+  .dashboard-grand::before {
+    content: none;
+  }
+
+  .dept-kicker {
+    color: #4f46e5;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    font-weight: 800;
+  }
+  .grand-id {
+    border: 1px solid var(--panel-border);
+    padding: 0.55rem 0.8rem;
+    border-radius: 0.85rem;
+    background: var(--panel-bg);
+  }
   .dept-avatar-img,
   .dept-avatar-fallback {
     width: auto;
     height: 56px;
+   
     object-fit: cover;
     flex-shrink: 0;
   }
@@ -86,11 +119,31 @@
     border: 1px solid #bfdbfe;
   }
   .kpi-card {
+    --card-accent: #4f46e5;
+    --card-accent-soft: rgba(79, 70, 229, 0.12);
+    --card-accent-2: #0891b2;
     border: 1px solid var(--panel-border);
     border-radius: 1rem;
     background: var(--panel-bg);
     padding: 1rem;
     box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::after {
+    content: none;
+  }
+  .kpi-card--revenue {
+    --card-accent: #4f46e5;
+    --card-accent-2: #0891b2;
+  }
+  .kpi-card--growth {
+    --card-accent: #15803d;
+    --card-accent-2: #0891b2;
+  }
+  .kpi-card--avg {
+    --card-accent: #f97316;
+    --card-accent-2: #4f46e5;
   }
   .kpi-title {
     color: var(--panel-muted);
@@ -99,7 +152,7 @@
   }
   .kpi-value {
     color: var(--panel-text);
-    font-size: 1.7rem;
+    font-size: 1.72rem;
     line-height: 1.2;
     margin-top: 0.2rem;
     font-weight: 800;
@@ -108,9 +161,6 @@
     color: var(--panel-muted);
     font-size: 0.76rem;
     margin-top: 0.2rem;
-  }
-  .revenue-card {
-    background: linear-gradient(180deg, rgba(203, 213, 225, 0.24), rgba(148, 163, 184, 0.12));
   }
   .sparkline-wrap {
     margin-top: 0.6rem;
@@ -124,17 +174,17 @@
   }
   .spark-line {
     fill: none;
-    stroke: #168ae8;
+    stroke: url(#sparkLineGradient);
     stroke-width: 3;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
   .spark-area {
-    fill: rgba(22, 138, 232, 0.16);
+    fill: url(#sparkAreaGradient);
     stroke: none;
   }
   .spark-point {
-    fill: #168ae8;
+    fill: #4f46e5;
     stroke: #ffffff;
     stroke-width: 1.8;
   }
@@ -170,7 +220,7 @@
     filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.2));
   }
   .semi-progress {
-    stroke: #168ae8;
+    stroke: var(--card-accent);
     stroke-dasharray: var(--gauge) 100;
     transition: stroke-dasharray 0.35s ease;
   }
@@ -186,10 +236,39 @@
     z-index: 1;
   }
   body.dark-theme .semi-track {
-    stroke: #64748b;
+    stroke: #475569;
   }
   body.dark-theme .semi-gauge-inner {
     color: #e5e7eb;
+  }
+  body.dark-theme .grand-shell {
+    background: var(--panel-bg);
+    border-color: var(--panel-border);
+  }
+  body.dark-theme .grand-header {
+    background: var(--panel-soft-bg);
+  }
+  body.dark-theme .dept-kicker {
+    color: #a5b4fc;
+  }
+  body.dark-theme .grand-id {
+    border-color: var(--panel-border);
+    background: var(--panel-bg);
+  }
+  body.dark-theme .kpi-card--revenue {
+    --card-accent: #a5b4fc;
+    --card-accent-2: #22d3ee;
+  }
+  body.dark-theme .kpi-card--growth {
+    --card-accent: #6ee7b7;
+    --card-accent-2: #22d3ee;
+  }
+  body.dark-theme .kpi-card--avg {
+    --card-accent: #fb923c;
+    --card-accent-2: #a5b4fc;
+  }
+  body.dark-theme .spark-point {
+    stroke: #0f172a;
   }
 </style>
 
@@ -228,6 +307,10 @@
       circle.setAttribute("cy", point.y.toFixed(2));
       circle.setAttribute("r", "3.8");
       circle.setAttribute("class", "spark-point");
+      const pointColors = ["#4f46e5", "#15803d", "#0891b2", "#f97316", "#4f46e5"];
+      const darkPointColors = ["#a5b4fc", "#6ee7b7", "#22d3ee", "#fb923c", "#a5b4fc"];
+      const isDark = document.body.classList.contains("dark-theme");
+      circle.setAttribute("fill", (isDark ? darkPointColors : pointColors)[index % 5]);
       pointsLayer.appendChild(circle);
 
       const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
