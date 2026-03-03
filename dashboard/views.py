@@ -8,7 +8,7 @@ from decimal import Decimal
 from datetime import date
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-from django.db.models import Count, Sum, Value, DecimalField, Avg
+from django.db.models import Count, Sum, Value, DecimalField, Avg, Min
 from django.db.models.functions import Coalesce, TruncMonth
 from django.contrib import messages
 from django.urls import reverse
@@ -87,11 +87,113 @@ def index(request):
     if not request.session.get("department_id"):
         return redirect("login")
     dept = get_department(request)
+    projects_qs = dept.projects.all()
+    today = date.today()
+
+    total_revenue = (
+        projects_qs.aggregate(
+            total=Coalesce(
+                Sum("amount"),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )
+        )["total"]
+        or Decimal("0.00")
+    )
+
+    this_month_start = today.replace(day=1)
+    if this_month_start.month == 1:
+        prev_month_start = this_month_start.replace(year=this_month_start.year - 1, month=12)
+    else:
+        prev_month_start = this_month_start.replace(month=this_month_start.month - 1)
+
+    if this_month_start.month == 12:
+        next_month_start = this_month_start.replace(year=this_month_start.year + 1, month=1)
+    else:
+        next_month_start = this_month_start.replace(month=this_month_start.month + 1)
+
+    this_month_revenue = (
+        projects_qs.filter(start_date__gte=this_month_start, start_date__lt=next_month_start).aggregate(
+            total=Coalesce(
+                Sum("amount"),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )
+        )["total"]
+        or Decimal("0.00")
+    )
+    prev_month_revenue = (
+        projects_qs.filter(start_date__gte=prev_month_start, start_date__lt=this_month_start).aggregate(
+            total=Coalesce(
+                Sum("amount"),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )
+        )["total"]
+        or Decimal("0.00")
+    )
+
+    if prev_month_revenue > 0:
+        growth_pct = float(((this_month_revenue - prev_month_revenue) / prev_month_revenue) * Decimal("100"))
+    elif this_month_revenue > 0:
+        growth_pct = 100.0
+    else:
+        growth_pct = 0.0
+
+    first_project_date = projects_qs.aggregate(first_date=Min("start_date"))["first_date"] or today
+    total_days = max((today - first_project_date).days + 1, 1)
+    avg_daily_revenue = total_revenue / Decimal(total_days)
+
+    month_keys = []
+    year, month = today.year, today.month
+    for _ in range(12):
+        month_keys.append((year, month))
+        month -= 1
+        if month == 0:
+            month = 12
+            year -= 1
+    month_keys.reverse()
+
+    monthly_labels = [date(y, m, 1).strftime("%b %Y") for y, m in month_keys]
+    monthly_revenue_values = [0.0] * len(month_keys)
+    monthly_rows = (
+        projects_qs.annotate(month_bucket=TruncMonth("start_date"))
+        .values("month_bucket")
+        .annotate(
+            total_income=Coalesce(
+                Sum("amount"),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )
+        )
+        .order_by("month_bucket")
+    )
+    monthly_lookup = {
+        (row["month_bucket"].year, row["month_bucket"].month): row for row in monthly_rows if row["month_bucket"]
+    }
+    for idx, key in enumerate(month_keys):
+        row = monthly_lookup.get(key)
+        if row:
+            monthly_revenue_values[idx] = float(row["total_income"] or 0)
+
+    growth_gauge_pct = max(0.0, min(100.0, growth_pct))
+    avg_daily_target = max(float(total_revenue) / 30.0, 1.0)
+    avg_daily_gauge_pct = max(0.0, min(100.0, (float(avg_daily_revenue) / avg_daily_target) * 100.0))
+    dept_initials = "".join([part[0] for part in dept.name.split()[:2]]).upper() if dept.name else "D"
 
     context = {
         "department": dept,
         "workers": dept.workers.count(),
         "projects": dept.projects.count(),
+        "department_initials": dept_initials,
+        "total_revenue": total_revenue,
+        "growth_pct": round(growth_pct, 2),
+        "growth_gauge_pct": round(growth_gauge_pct, 2),
+        "avg_daily_revenue": avg_daily_revenue,
+        "avg_daily_gauge_pct": round(avg_daily_gauge_pct, 2),
+        "monthly_revenue_labels": monthly_labels,
+        "monthly_revenue_values": monthly_revenue_values,
+        "filter_days": total_days,
     }
     return render(request, "partials/index.html", context)
 

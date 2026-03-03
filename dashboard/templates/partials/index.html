@@ -1,119 +1,193 @@
-<h2>Dashboard Overview</h2>
+{% include "tost.html" %}
 
-<div class="row">
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h4>Total Workers</h4>
-            <h2>{{ workers }}</h2>
+<section class="w-full space-y-6 p-4 sm:p-6">
+  <div class="theme-panel overflow-hidden rounded-2xl border shadow-sm">
+    <div class="theme-panel-soft border-b px-4 py-5 sm:px-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-3">
+          {% if department.image %}
+            <img src="{{ department.image.url }}" alt="{{ department.name }}" class="dept-avatar-img">
+          {% else %}
+            <div class="dept-avatar-fallback">{{ department_initials }}</div>
+          {% endif %}
+        
         </div>
+        <div class="text-left sm:text-right">
+          <p class="theme-text text-base font-semibold text-lg">{{ department.name }}</p>
+          <p class="theme-muted text-sm">{{ department.email }}</p>
+        </div>
+      </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h4>Total Projects</h4>
-            <h2>{{ projects }}</h2>
+    <div class="grid grid-cols-1 gap-4 p-4 sm:p-6 lg:grid-cols-3">
+      <article class="kpi-card revenue-card">
+        <p class="kpi-title">Total Revenue</p>
+        <p class="kpi-value">Rs {{ total_revenue|floatformat:2 }}</p>
+        <p class="kpi-sub">All projects revenue</p>
+        <div class="sparkline-wrap">
+          <svg viewBox="0 0 320 120" class="sparkline-svg" preserveAspectRatio="none">
+            <path id="revenueAreaPath" class="spark-area" d=""></path>
+            <path id="revenueLinePath" class="spark-line" d=""></path>
+          </svg>
         </div>
-    </div>
-</div>
-<h2>Dashboard Overview</h2>
+      </article>
 
-<div class="row">
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h4>Total Workers</h4>
-            <h2>{{ workers }}</h2>
+      <article class="kpi-card">
+        <p class="kpi-title">Growth %</p>
+        <p class="kpi-value">{{ growth_pct|floatformat:2 }}%</p>
+        <p class="kpi-sub">Compare previous period</p>
+        <div class="semi-gauge" style="--gauge: {{ growth_gauge_pct|floatformat:2 }};">
+          <div class="semi-gauge-inner">
+            <span>{{ growth_gauge_pct|floatformat:1 }}%</span>
+          </div>
         </div>
-    </div>
+      </article>
 
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h4>Total Projects</h4>
-            <h2>{{ projects }}</h2>
+      <article class="kpi-card">
+        <p class="kpi-title">Average Daily Revenue</p>
+        <p class="kpi-value">Rs {{ avg_daily_revenue|floatformat:2 }}</p>
+        <p class="kpi-sub">Total / days in filter range ({{ filter_days }} days)</p>
+        <div class="semi-gauge" style="--gauge: {{ avg_daily_gauge_pct|floatformat:2 }};">
+          <div class="semi-gauge-inner">
+            <span>{{ avg_daily_gauge_pct|floatformat:1 }}%</span>
+          </div>
         </div>
+      </article>
     </div>
-</div>
-<h2>Dashboard Overview</h2>
+  </div>
+</section>
 
-<div class="row">
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h4>Total Workers</h4>
-            <h2>{{ workers }}</h2>
-        </div>
-    </div>
+{{ monthly_revenue_values|json_script:"index-monthly-revenue-values" }}
 
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h4>Total Projects</h4>
-            <h2>{{ projects }}</h2>
-        </div>
-    </div>
-</div>
-<h2>Dashboard Overview</h2>
+<style>
+  .dept-avatar-img,
+  .dept-avatar-fallback {
+    width: auto;
+    height: 56px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .dept-avatar-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #1d4ed8;
+    background: #dbeafe;
+    border: 1px solid #bfdbfe;
+  }
+  .kpi-card {
+    border: 1px solid var(--panel-border);
+    border-radius: 1rem;
+    background: var(--panel-bg);
+    padding: 1rem;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  }
+  .kpi-title {
+    color: var(--panel-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  .kpi-value {
+    color: var(--panel-text);
+    font-size: 1.7rem;
+    line-height: 1.2;
+    margin-top: 0.2rem;
+    font-weight: 800;
+  }
+  .kpi-sub {
+    color: var(--panel-muted);
+    font-size: 0.76rem;
+    margin-top: 0.2rem;
+  }
+  .revenue-card {
+    background: linear-gradient(180deg, rgba(203, 213, 225, 0.24), rgba(148, 163, 184, 0.12));
+  }
+  .sparkline-wrap {
+    margin-top: 0.6rem;
+    height: 120px;
+    width: 100%;
+  }
+  .sparkline-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .spark-line {
+    fill: none;
+    stroke: #168ae8;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .spark-area {
+    fill: rgba(22, 138, 232, 0.16);
+    stroke: none;
+  }
+  .semi-gauge {
+    width: 170px;
+    height: 90px;
+    margin: 0.9rem auto 0;
+    border-radius: 170px 170px 0 0;
+    position: relative;
+    overflow: hidden;
+    background:
+      conic-gradient(
+        from 180deg,
+        #16a34a 0deg,
+        #16a34a calc(var(--gauge) * 1.8deg),
+        #e2e8f0 calc(var(--gauge) * 1.8deg),
+        #e2e8f0 180deg,
+        transparent 180deg
+      );
+  }
+  .semi-gauge::before {
+    content: "";
+    position: absolute;
+    left: 13px;
+    right: 13px;
+    top: 13px;
+    height: 74px;
+    border-radius: 140px 140px 0 0;
+    background: var(--panel-bg);
+  }
+  .semi-gauge-inner {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 8px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--panel-text);
+  }
+</style>
 
-<div class="row">
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h4>Total Workers</h4>
-            <h2>{{ workers }}</h2>
-        </div>
-    </div>
+<script>
+  (function () {
+    const values = JSON.parse(document.getElementById("index-monthly-revenue-values").textContent || "[]");
+    const linePath = document.getElementById("revenueLinePath");
+    const areaPath = document.getElementById("revenueAreaPath");
+    if (!linePath || !areaPath || !values.length) return;
 
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h4>Total Projects</h4>
-            <h2>{{ projects }}</h2>
-        </div>
-    </div>
-</div>
-<h2>Dashboard Overview</h2>
+    const width = 320;
+    const height = 120;
+    const topPad = 12;
+    const bottomPad = 18;
+    const usableHeight = height - topPad - bottomPad;
+    const maxValue = Math.max(...values, 1);
+    const stepX = width / Math.max(values.length - 1, 1);
 
-<div class="row">
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h4>Total Workers</h4>
-            <h2>{{ workers }}</h2>
-        </div>
-    </div>
+    const points = values.map((value, index) => {
+      const x = index * stepX;
+      const y = topPad + ((maxValue - value) / maxValue) * usableHeight;
+      return { x, y };
+    });
 
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h4>Total Projects</h4>
-            <h2>{{ projects }}</h2>
-        </div>
-    </div>
-</div>
-<h2>Dashboard Overview</h2>
+    const lineD = points.map((p, idx) => `${idx === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" ");
+    const areaD = `${lineD} L ${width} ${height} L 0 ${height} Z`;
 
-<div class="row">
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h4>Total Workers</h4>
-            <h2>{{ workers }}</h2>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h4>Total Projects</h4>
-            <h2>{{ projects }}</h2>
-        </div>
-    </div>
-</div>
-<h2>Dashboard Overview</h2>
-
-<div class="row">
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h4>Total Workers</h4>
-            <h2>{{ workers }}</h2>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h4>Total Projects</h4>
-            <h2>{{ projects }}</h2>
-        </div>
-    </div>
-</div>
+    linePath.setAttribute("d", lineD);
+    areaPath.setAttribute("d", areaD);
+  })();
+</script>
