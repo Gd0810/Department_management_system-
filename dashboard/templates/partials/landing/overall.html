@@ -1,9 +1,11 @@
 <div id="overall-chart-widget" class="theme-panel rounded-2xl border p-4 sm:p-5">
   <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-    <div>
-      <h3 class="theme-text text-base font-semibold">Overall Projects And Income</h3>
-      <p class="theme-muted text-sm">Mixed chart (bar + line) by selected date range.</p>
-    </div>
+     <div class="section-title mb-3">
+            <span class="section-icon section-icon-score">
+              <iconify-icon icon="streamline:bag-rupee-solid" width="20" height="20"></iconify-icon>
+            </span>
+            <h3 class="theme-text text-base font-semibold">Overall Projects And Income</h3>
+          </div>
     <div class="flex flex-wrap items-center gap-2">
       <button
         type="button"
@@ -141,10 +143,34 @@
     border-color: #a5b4fc;
     color: #c7d2fe;
   }
+    .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+   .section-icon {
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .section-icon-score { background: rgba(112, 114, 255, 0.18); color: #4f46e5; }
+  .section-icon-rank { background: rgba(51, 196, 148, 0.2); color: #15803d; }
+  .section-icon-project { background: rgba(6, 182, 212, 0.18); color: #0891b2; }
+  .section-icon-dect {background: rgba(251, 146, 60, 0.18); color:  #f97316; }
+
+  body.dark-theme .section-icon-score { background: rgba(112, 114, 255, 0.3); color: #a5b4fc; }
+  body.dark-theme .section-icon-rank { background: rgba(51, 196, 148, 0.28); color: #6ee7b7; }
+  body.dark-theme .section-icon-project { background: rgba(6, 182, 212, 0.3); color: #22d3ee; }
+  body.dark-theme .section-icon-dect { background: rgba(251, 146, 60, 0.3); color: #fb923c; }
 </style>
 
 <script>
   (function () {
+    if (window.overallChartCleanup) window.overallChartCleanup();
+
     const widget = document.getElementById("overall-chart-widget");
     const labelsNode = document.getElementById("overall-chart-labels");
     const projectCountsNode = document.getElementById("overall-chart-project-counts");
@@ -199,6 +225,32 @@
       });
     }
 
+    function createCoinPointStyle() {
+      const coinCanvas = document.createElement("canvas");
+      coinCanvas.width = 28;
+      coinCanvas.height = 28;
+      const ctx = coinCanvas.getContext("2d");
+      if (!ctx) return coinCanvas;
+
+      const cx = 14;
+      const cy = 14;
+      const r = 10;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = "#FFD700";
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#D4AF37";
+      ctx.stroke();
+
+      ctx.fillStyle = "#7C2D12";
+      ctx.font = "bold 14px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("\u20B9", cx, cy + 0.5);
+      return coinCanvas;
+    }
+
     function drawChart() {
       if (window.overallMixedChartInstance) {
         window.overallMixedChartInstance.destroy();
@@ -207,6 +259,8 @@
       const isDark = document.body.classList.contains("dark-theme");
       const textColor = isDark ? "#e2e8f0" : "#334155";
       const gridColor = isDark ? "rgba(148, 163, 184, 0.25)" : "rgba(148, 163, 184, 0.2)";
+
+      const coinPointStyle = createCoinPointStyle();
 
       window.overallMixedChartInstance = new Chart(canvas, {
         data: {
@@ -217,24 +271,27 @@
               label: "Project Count",
               data: projectCounts,
               yAxisID: "yCount",
-              backgroundColor: isDark ? "rgba(34, 211, 238, 0.50)" : "rgba(8, 145, 178, 0.45)",
-              borderColor: isDark ? "#22d3ee" : "#0891b2",
+              backgroundColor: isDark ? "rgba(167, 139, 250, 0.62)" : "rgba(124, 58, 237, 0.62)",
+              borderColor: isDark ? "#c4b5fd" : "#7c3aed",
               borderWidth: 1.4,
               borderRadius: 6,
-              barThickness: 18,
+              barThickness: 32,
+              maxBarThickness: 38,
             },
             {
               type: "line",
               label: "Overall Income",
               data: incomeValues,
               yAxisID: "yIncome",
-              borderColor: isDark ? "#a5b4fc" : "#4f46e5",
-              backgroundColor: isDark ? "rgba(165, 180, 252, 0.28)" : "rgba(79, 70, 229, 0.2)",
+              borderColor: isDark ? "#6ee7b7" : "#15803d",
+              backgroundColor: isDark ? "rgba(51, 196, 148, 0.28)" : "rgba(51, 196, 148, 0.2)",
               tension: 0.35,
               fill: true,
-              pointRadius: 3.2,
-              pointBackgroundColor: isDark ? "#fb923c" : "#f97316",
-              pointBorderColor: "#ffffff",
+              pointStyle: coinPointStyle,
+              pointRadius: 9,
+              pointHoverRadius: 10,
+              pointBackgroundColor: "#FFD700",
+              pointBorderColor: "#D4AF37",
               borderWidth: 2.2,
             },
           ],
@@ -274,11 +331,51 @@
       });
     }
 
+    function installThemeWatcher() {
+      const scheduleDraw = () => {
+        if (window.overallMixedChartRaf) cancelAnimationFrame(window.overallMixedChartRaf);
+        window.overallMixedChartRaf = requestAnimationFrame(() => {
+          window.overallMixedChartRaf = null;
+          drawChart();
+        });
+      };
+
+      const observer = new MutationObserver(scheduleDraw);
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class", "data-theme"],
+      });
+      observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ["class", "data-theme"],
+      });
+      window.addEventListener("themechange", scheduleDraw);
+      window.addEventListener("storage", scheduleDraw);
+
+      window.overallChartCleanup = function () {
+        window.removeEventListener("themechange", scheduleDraw);
+        window.removeEventListener("storage", scheduleDraw);
+        observer.disconnect();
+        if (window.overallMixedChartRaf) {
+          cancelAnimationFrame(window.overallMixedChartRaf);
+          window.overallMixedChartRaf = null;
+        }
+        if (window.overallMixedChartInstance) {
+          window.overallMixedChartInstance.destroy();
+          window.overallMixedChartInstance = null;
+        }
+      };
+    }
+
     setupDatePicker().catch(() => {});
     if (window.Chart) {
       drawChart();
+      installThemeWatcher();
       return;
     }
-    loadScript("https://cdn.jsdelivr.net/npm/chart.js").then(drawChart).catch(() => {});
+    loadScript("https://cdn.jsdelivr.net/npm/chart.js").then(() => {
+      drawChart();
+      installThemeWatcher();
+    }).catch(() => {});
   })();
 </script>
