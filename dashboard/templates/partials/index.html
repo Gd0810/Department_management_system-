@@ -206,17 +206,20 @@
   .spark-area {
     fill: url(#sparkAreaGradient);
     stroke: none;
+    opacity: 0;
   }
   .spark-point {
     fill: #4f46e5;
     stroke: #ffffff;
     stroke-width: 1.8;
+    opacity: 0;
   }
   .spark-label {
     fill: #0f172a;
     font-size: 8px;
     font-weight: 700;
     text-anchor: middle;
+    opacity: 0;
   }
   body.dark-theme .spark-label {
     fill: #e2e8f0;
@@ -245,8 +248,8 @@
   }
   .semi-progress {
     stroke: var(--card-accent);
-    stroke-dasharray: var(--gauge) 100;
-    transition: stroke-dasharray 0.35s ease;
+    stroke-dasharray: 0 100;
+    transition: stroke-dasharray 0.95s cubic-bezier(0.22, 1, 0.36, 1);
   }
   .semi-gauge-inner {
     position: absolute;
@@ -324,6 +327,14 @@
     linePath.setAttribute("d", lineD);
     areaPath.setAttribute("d", areaD);
 
+    const lineLength = linePath.getTotalLength();
+    linePath.style.strokeDasharray = `${lineLength}`;
+    linePath.style.strokeDashoffset = `${lineLength}`;
+    linePath.style.transition = "none";
+
+    areaPath.style.transition = "opacity 650ms ease";
+    areaPath.style.opacity = "0";
+
     pointsLayer.innerHTML = "";
     points.forEach((point, index) => {
       const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -335,6 +346,10 @@
       const darkPointColors = ["#a5b4fc", "#6ee7b7", "#22d3ee", "#fb923c", "#a5b4fc"];
       const isDark = document.body.classList.contains("dark-theme");
       circle.setAttribute("fill", (isDark ? darkPointColors : pointColors)[index % 5]);
+      circle.style.transition = "opacity 360ms ease, transform 360ms ease";
+      circle.style.transform = "translateY(6px)";
+      circle.style.transformBox = "fill-box";
+      circle.style.transformOrigin = "center";
       pointsLayer.appendChild(circle);
 
       const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -342,7 +357,47 @@
       label.setAttribute("y", Math.max(point.y - 6, 9).toFixed(2));
       label.setAttribute("class", "spark-label");
       label.textContent = `Rs ${Number(values[index] || 0).toFixed(0)}`;
+      label.style.transition = "opacity 360ms ease";
       pointsLayer.appendChild(label);
+
+      setTimeout(() => {
+        circle.style.opacity = "1";
+        circle.style.transform = "translateY(0)";
+        label.style.opacity = "1";
+      }, 520 + (index * 180));
+    });
+
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        linePath.style.transition = "stroke-dashoffset 900ms cubic-bezier(0.22, 1, 0.36, 1)";
+        linePath.style.strokeDashoffset = "0";
+        areaPath.style.opacity = "1";
+      }, 140);
+    });
+
+    const gaugeProgressNodes = document.querySelectorAll(".semi-gauge .semi-progress");
+    gaugeProgressNodes.forEach((node, index) => {
+      const gaugeRoot = node.closest(".semi-gauge");
+      const targetPct = Math.max(0, Math.min(100, parseFloat(gaugeRoot ? getComputedStyle(gaugeRoot).getPropertyValue("--gauge") : "0") || 0));
+      const valueNode = gaugeRoot ? gaugeRoot.querySelector(".semi-gauge-inner span") : null;
+
+      if (valueNode) valueNode.textContent = "0.0%";
+
+      setTimeout(() => {
+        node.style.strokeDasharray = `${targetPct} 100`;
+
+        if (valueNode) {
+          const start = performance.now();
+          const duration = 900;
+          const animateValue = (now) => {
+            const t = Math.min(1, (now - start) / duration);
+            const eased = 1 - Math.pow(1 - t, 3);
+            valueNode.textContent = `${(targetPct * eased).toFixed(1)}%`;
+            if (t < 1) requestAnimationFrame(animateValue);
+          };
+          requestAnimationFrame(animateValue);
+        }
+      }, 420 + (index * 240));
     });
   })();
 </script>
