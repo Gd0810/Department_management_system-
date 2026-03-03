@@ -4,6 +4,9 @@ import os
 
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
+from django.db.models import Count, Avg, Value, DecimalField
+from django.db.models.functions import Coalesce
+from ..models import ProjectMember
 
 def _calculate_project_payments(project):
     if not project.amount:
@@ -54,6 +57,7 @@ def build_worker_report_data(dept, worker):
 
     total_income = Decimal("0.00")
     finished_count = 0
+    group_count = 0
     project_amount_sum = Decimal("0.00")
     amount_count = 0
 
@@ -65,13 +69,67 @@ def build_worker_report_data(dept, worker):
                 break
         if project.status == "finished":
             finished_count += 1
+        if project.work_type == "group":
+            group_count += 1
         if project.amount is not None:
             project_amount_sum += Decimal(project.amount)
             amount_count += 1
 
     project_count = len(assigned_projects)
-    performance_score_pct = (Decimal(finished_count) / Decimal(project_count) * Decimal("100")) if project_count else Decimal("0.00")
-    performance_score_out_of_5 = (performance_score_pct / Decimal("100")) * Decimal("5")
+    avg_project_amount = (
+        (project_amount_sum / Decimal(amount_count))
+        if amount_count > 0
+        else Decimal("0.00")
+    )
+
+    project_count_rows = (
+        ProjectMember.objects.filter(project__department=dept)
+        .values("worker_id")
+        .annotate(total=Count("project_id", distinct=True))
+    )
+    max_project_count = max((int(row["total"] or 0) for row in project_count_rows), default=1)
+
+    income_map = {}
+    all_projects = dept.projects.all().prefetch_related("members__worker")
+    for project in all_projects:
+        payments = _calculate_project_payments(project)
+        for member in project.members.all():
+            income_map[member.worker_id] = income_map.get(member.worker_id, Decimal("0.00")) + payments.get(member.id, Decimal("0.00"))
+    max_worker_income = max((value for value in income_map.values()), default=Decimal("1.00"))
+    if max_worker_income <= 0:
+        max_worker_income = Decimal("1.00")
+
+    avg_amount_rows = (
+        ProjectMember.objects.filter(project__department=dept)
+        .values("worker_id")
+        .annotate(
+            avg_amount=Coalesce(
+                Avg("project__amount"),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )
+        )
+    )
+    max_avg_project_amount = max((Decimal(row["avg_amount"] or Decimal("0.00")) for row in avg_amount_rows), default=Decimal("1.00"))
+    if max_avg_project_amount <= 0:
+        max_avg_project_amount = Decimal("1.00")
+
+    completion_rate = (finished_count / project_count) * 100 if project_count > 0 else 0.0
+    team_participation = (group_count / project_count) * 100 if project_count > 0 else 0.0
+
+    project_count_score = min(100.0, (project_count / max_project_count) * 100 if max_project_count > 0 else 0.0)
+    total_income_score = min(100.0, float((total_income / max_worker_income) * Decimal("100")))
+    avg_project_amount_score = min(100.0, float((avg_project_amount / max_avg_project_amount) * Decimal("100")))
+
+    radar_values = [
+        round(float(project_count_score), 2),
+        round(float(total_income_score), 2),
+        round(float(completion_rate), 2),
+        round(float(avg_project_amount_score), 2),
+        round(float(team_participation), 2),
+    ]
+    performance_score_pct = round(sum(radar_values) / len(radar_values), 2) if radar_values else 0.0
+    performance_score_out_of_5 = (Decimal(str(performance_score_pct)) / Decimal("100")) * Decimal("5")
 
     project_rows = []
     for item in assigned_projects:
@@ -97,6 +155,7 @@ def build_worker_report_data(dept, worker):
         "working_status": worker.get_working_status_display(),
         "project_count": project_count,
         "total_income": total_income,
+        "performance_score_pct": Decimal(str(performance_score_pct)),
         "performance_score_out_of_5": performance_score_out_of_5,
         "project_rows": project_rows,
     }
