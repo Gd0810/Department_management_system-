@@ -110,7 +110,7 @@ def build_main_report_data(dept):
 def generate_main_csv_report(dept):
     try:
         from openpyxl import Workbook
-        from openpyxl.styles import Font, Alignment
+        from openpyxl.styles import Font, Alignment, PatternFill
         has_openpyxl = True
     except ImportError:
         has_openpyxl = False
@@ -126,12 +126,14 @@ def generate_main_csv_report(dept):
     ws = wb.active
     ws.title = "Main Report"
 
-    ws.column_dimensions["A"].width = 6
+    ws.column_dimensions["A"].width = 12
     ws.column_dimensions["B"].width = 32
-    ws.column_dimensions["C"].width = 16
+    ws.column_dimensions["C"].width = 40
     ws.column_dimensions["D"].width = 18
     ws.column_dimensions["E"].width = 16
     ws.column_dimensions["F"].width = 44
+    header_fill = PatternFill("solid", fgColor="2E5FA3")
+    header_font = Font(bold=True, color="FFFFFF")
 
     summary_rows = [
         ("Department", report["department_name"]),
@@ -142,9 +144,20 @@ def generate_main_csv_report(dept):
     ]
 
     row_idx = 1
-    for label, value in summary_rows:
+    ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+    dept_key_cell = ws.cell(row=row_idx, column=1, value=summary_rows[0][0])
+    dept_key_cell.font = Font(bold=True)
+    dept_key_cell.alignment = Alignment(horizontal="left", vertical="center")
+    row_idx += 1
+    ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+    dept_val_cell = ws.cell(row=row_idx, column=1, value=summary_rows[0][1])
+    dept_val_cell.alignment = Alignment(horizontal="left", vertical="center")
+    row_idx += 2
+
+    for label, value in summary_rows[1:]:
         ws.cell(row=row_idx, column=1, value=label).font = Font(bold=True)
-        ws.cell(row=row_idx, column=2, value=value)
+        ws.merge_cells(start_row=row_idx, start_column=2, end_row=row_idx, end_column=6)
+        ws.cell(row=row_idx, column=2, value=value).alignment = Alignment(horizontal="left", vertical="center")
         row_idx += 1
 
     row_idx += 1
@@ -153,7 +166,8 @@ def generate_main_csv_report(dept):
     headers_1 = ["#", "Project Name", "Start Date", "Status", "Amount", "Assigned Workers"]
     for col_idx, header in enumerate(headers_1, start=1):
         cell = ws.cell(row=row_idx, column=col_idx, value=header)
-        cell.font = Font(bold=True)
+        cell.font = header_font
+        cell.fill = header_fill
         cell.alignment = Alignment(horizontal="left", vertical="center")
     row_idx += 1
 
@@ -176,7 +190,8 @@ def generate_main_csv_report(dept):
     headers_2 = ["#", "Name", "Email", "Date Of Join", "Posting", "Income By User"]
     for col_idx, header in enumerate(headers_2, start=1):
         cell = ws.cell(row=row_idx, column=col_idx, value=header)
-        cell.font = Font(bold=True)
+        cell.font = header_font
+        cell.fill = header_fill
         cell.alignment = Alignment(horizontal="left", vertical="center")
     row_idx += 1
 
@@ -189,11 +204,11 @@ def generate_main_csv_report(dept):
         ws.cell(row=row_idx, column=6, value=f"Rs {Decimal(item['income_by_user']):,.2f}")
         for col_idx in range(1, 7):
             ws.cell(row=row_idx, column=col_idx).alignment = Alignment(
-                horizontal="left", vertical="center", wrap_text=(col_idx in [2, 3, 5])
+                horizontal="left", vertical="center", wrap_text=(col_idx in [2, 5])
             )
         row_idx += 1
 
-    ws.freeze_panes = "A9"
+    ws.freeze_panes = "A11"
 
     output = BytesIO()
     wb.save(output)
@@ -308,7 +323,7 @@ def generate_main_pdf_report(dept):
     header_table = Table(
         [[
             Paragraph(f"{report['department_name']} report", s_report_title),
-            Paragraph("Main Overall", s_report_subtitle),
+            Paragraph("Redback", s_report_subtitle),
         ]],
         colWidths=[page_w * 0.7, page_w * 0.3],
     )
@@ -388,12 +403,12 @@ def generate_main_pdf_report(dept):
     project_table = Table(
         project_table_rows,
         colWidths=[
-            page_w * 0.04,
-            page_w * 0.25,
+            page_w * 0.06,
+            page_w * 0.24,
             page_w * 0.13,
             page_w * 0.12,
             page_w * 0.14,
-            page_w * 0.32,
+            page_w * 0.31,
         ],
         repeatRows=1,
     )
@@ -437,12 +452,12 @@ def generate_main_pdf_report(dept):
     worker_table = Table(
         worker_table_rows,
         colWidths=[
-            page_w * 0.04,
-            page_w * 0.18,
+            page_w * 0.06,
+            page_w * 0.17,
             page_w * 0.30,
             page_w * 0.14,
             page_w * 0.16,
-            page_w * 0.18,
+            page_w * 0.17,
         ],
         repeatRows=1,
     )
