@@ -431,8 +431,19 @@ def landing_teambar(request):
 
     worker_rows.sort(key=lambda item: (-item["combined_score"], -item["income_value"], -item["project_count"], item["name"].lower()))
 
+    chart_labels = [item["name"] for item in worker_rows]
+    chart_income_values = [float(item["income_pct"]) for item in worker_rows]
+    chart_project_values = [float(item["project_pct"]) * -1.0 for item in worker_rows]
+    chart_worker_images = [item["image_url"] for item in worker_rows]
+    chart_worker_initials = [item["initials"] for item in worker_rows]
+
     context = {
         "worker_rows": worker_rows,
+        "chart_labels": chart_labels,
+        "chart_income_values": chart_income_values,
+        "chart_project_values": chart_project_values,
+        "chart_worker_images": chart_worker_images,
+        "chart_worker_initials": chart_worker_initials,
     }
     return render(request, "partials/landing/teambar.html", context)
 
