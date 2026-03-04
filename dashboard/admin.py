@@ -55,3 +55,8 @@ class ProjectAdmin(admin.ModelAdmin):
 class ProjectMemberAdmin(admin.ModelAdmin):
     list_display = ("project", "worker", "contribution")
     list_filter = ("contribution",)
+
+
+admin.site.site_header = "Income Management Admin"
+admin.site.site_title = "Income Management Admin Area"
+admin.site.index_title = "Welcome to the Income Management Admin Area"
