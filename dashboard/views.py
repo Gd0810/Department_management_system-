@@ -56,7 +56,7 @@ def login_page(request):
                 request.session.flush()  # remove old session
                 request.session["department_id"] = dept.id
                 request.session.set_expiry(60 * 60 * 8)  # 8 hours login
-
+                messages.success(request, "welcome back, " + dept.name + " - Income Management system!")
                 return redirect("base")
 
     return render(request, "login.html", {"error": error})
