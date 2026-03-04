@@ -265,6 +265,17 @@
 
 <script>
   (function () {
+
+    requestAnimationFrame(() => {
+      const content = document.getElementById("content");
+      if (content && typeof content.scrollTo === "function") {
+        content.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }
+      if (typeof window.scrollTo === "function") {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }
+    });
+
     const categoryKey = "{{ category_key }}";
     const root = document.body;
     const monthlyLabels = JSON.parse(document.getElementById("monthly-labels").textContent || "[]");
