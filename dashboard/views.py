@@ -16,6 +16,7 @@ from .project_d.overall import generate_category_csv_report, generate_category_p
 from .project_d.listing import generate_project_listing_excel_report, generate_project_listing_pdf_report
 from .team_d.overall import generate_team_csv_report, generate_team_pdf_report
 from .team_d.worker import generate_worker_csv_report, generate_worker_pdf_report
+from .main_d.overall import generate_main_csv_report, generate_main_pdf_report
 
 
 
@@ -1116,6 +1117,21 @@ def team_overall_report(request, file_format):
         return generate_team_csv_report(dept)
     if fmt == "pdf":
         return generate_team_pdf_report(dept)
+
+    return JsonResponse({"detail": "Unsupported format"}, status=400)
+
+
+@require_http_methods(["GET"])
+def main_overall_report(request, file_format):
+    if not request.session.get("department_id"):
+        return redirect("login")
+
+    dept = get_department(request)
+    file_format = (file_format or "").lower()
+    if file_format == "csv":
+        return generate_main_csv_report(dept)
+    if file_format == "pdf":
+        return generate_main_pdf_report(dept)
 
     return JsonResponse({"detail": "Unsupported format"}, status=400)
 
