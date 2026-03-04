@@ -1,7 +1,7 @@
 <section class="theme-panel rounded-2xl border p-4 sm:p-5">
   <div class="mb-3">
     <h3 class="theme-text text-base font-semibold">Team Contribution Bar Chart</h3>
-    <p class="theme-muted text-sm">Top bars: Income contribution | Bottom bars: Project count contribution</p>
+    <p class="theme-muted text-sm">Top bars: Income amount | Bottom bars: Project count</p>
   </div>
   <div class="relative h-[430px] w-full">
     <canvas id="teamCenterBarChart"></canvas>
@@ -69,6 +69,13 @@
       const isDark = document.body.classList.contains("dark-theme");
       const textColor = isDark ? "#e2e8f0" : "#334155";
       const gridColor = isDark ? "rgba(148, 163, 184, 0.24)" : "rgba(148, 163, 184, 0.18)";
+      const maxIncome = Math.max(...incomeValues.map((v) => Number(v || 0)), 1);
+      const projectCountActual = projectValues.map((v) => Math.abs(Number(v || 0)));
+      const maxProjectAbs = Math.max(...projectCountActual, 1);
+      const projectScaleFactor = (maxIncome / maxProjectAbs) * 0.42;
+      const scaledProjectValues = projectCountActual.map((v) => -1 * v * projectScaleFactor);
+      const yMax = maxIncome * 1.15;
+      const yMin = Math.min(...scaledProjectValues, -1) * 1.2;
 
       const centerAvatarPlugin = {
         id: "centerAvatarPlugin",
@@ -122,7 +129,7 @@
           labels,
           datasets: [
             {
-              label: "Income %",
+              label: "Income",
               data: incomeValues,
               backgroundColor: "rgba(59, 130, 246, 0.55)",
               borderColor: "#3b82f6",
@@ -133,8 +140,8 @@
               categoryPercentage: 0.75,
             },
             {
-              label: "Project Count %",
-              data: projectValues,
+              label: "Project Count",
+              data: scaledProjectValues,
               backgroundColor: "rgba(244, 114, 182, 0.52)",
               borderColor: "#fb7185",
               borderWidth: 1.2,
@@ -156,7 +163,11 @@
               callbacks: {
                 label(context) {
                   const val = Number(context.raw || 0);
-                  return `${context.dataset.label}: ${Math.abs(val).toFixed(1)}%`;
+                  const idx = context.dataIndex;
+                  if (String(context.dataset.label || "").toLowerCase().includes("income")) {
+                    return `${context.dataset.label}: Rs ${Math.abs(val).toFixed(2)}`;
+                  }
+                  return `${context.dataset.label}: ${Math.abs(projectCountActual[idx] || 0).toFixed(0)}`;
                 },
               },
             },
@@ -167,11 +178,18 @@
               grid: { color: gridColor },
             },
             y: {
-              min: -100,
-              max: 100,
+              min: yMin,
+              max: yMax,
               ticks: {
                 color: textColor,
-                callback(value) { return `${Math.abs(value)}%`; },
+                callback(value) {
+                  const numeric = Number(value || 0);
+                  if (numeric < 0) {
+                    const actualCount = Math.abs(numeric) / projectScaleFactor;
+                    return `${Math.round(actualCount)}`;
+                  }
+                  return `${Math.round(numeric)}`;
+                },
               },
               grid: { color: gridColor },
             },
