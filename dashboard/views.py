@@ -6,6 +6,7 @@ from django.views.decorators.http import require_http_methods
 from collections import defaultdict
 from decimal import Decimal
 from datetime import date, datetime, timedelta
+from urllib.parse import urlencode
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db.models import Count, Sum, Value, DecimalField, Avg, Min
@@ -17,6 +18,7 @@ from .project_d.listing import generate_project_listing_excel_report, generate_p
 from .team_d.overall import generate_team_csv_report, generate_team_pdf_report
 from .team_d.worker import generate_worker_csv_report, generate_worker_pdf_report
 from .main_d.overall import generate_main_csv_report, generate_main_pdf_report
+from .main_d.fillter import generate_main_filter_csv_report, generate_main_filter_pdf_report
 
 
 
@@ -243,11 +245,7 @@ def _build_overall_time_series(projects_qs, start_date, end_date, range_key):
     return labels, project_counts, incomes
 
 
-def landing_overall(request):
-    if not request.session.get("department_id"):
-        return redirect("login")
-
-    dept = get_department(request)
+def _resolve_overall_filter(request):
     today = date.today()
     range_key = (request.GET.get("range") or "month").strip().lower()
     day_date_raw = (request.GET.get("day_date") or "").strip()
@@ -296,6 +294,43 @@ def landing_overall(request):
         else:
             end_date = date(start_date.year, start_date.month + 1, 1) - timedelta(days=1)
 
+    selected_day = start_date.strftime("%Y-%m-%d") if range_key == "today" else today.strftime("%Y-%m-%d")
+    selected_month = start_date.strftime("%Y-%m") if range_key == "month" else today.strftime("%Y-%m")
+    selected_year = str(start_date.year if range_key == "year" else today.year)
+    report_params = {"range": range_key}
+    if range_key == "today":
+        report_params["day_date"] = selected_day
+    elif range_key == "month":
+        report_params["month_value"] = selected_month
+    elif range_key == "year":
+        report_params["year_value"] = selected_year
+    elif range_key == "custom":
+        report_params["start_date"] = start_date.strftime("%Y-%m-%d")
+        report_params["end_date"] = end_date.strftime("%Y-%m-%d")
+
+    return {
+        "range_key": range_key,
+        "start_date": start_date,
+        "end_date": end_date,
+        "selected_day": selected_day,
+        "selected_month": selected_month,
+        "selected_year": selected_year,
+        "custom_start_raw": custom_start_raw,
+        "custom_end_raw": custom_end_raw,
+        "report_querystring": urlencode(report_params),
+    }
+
+
+def landing_overall(request):
+    if not request.session.get("department_id"):
+        return redirect("login")
+
+    dept = get_department(request)
+    filter_meta = _resolve_overall_filter(request)
+    range_key = filter_meta["range_key"]
+    start_date = filter_meta["start_date"]
+    end_date = filter_meta["end_date"]
+
     filtered_projects = dept.projects.filter(start_date__gte=start_date, start_date__lte=end_date)
     overall_project_count = filtered_projects.count()
     overall_income = (
@@ -317,11 +352,12 @@ def landing_overall(request):
         "overall_project_count": overall_project_count,
         "overall_income": overall_income,
         "selected_range": range_key,
-        "selected_day": start_date.strftime("%Y-%m-%d") if range_key == "today" else today.strftime("%Y-%m-%d"),
-        "selected_month": start_date.strftime("%Y-%m") if range_key == "month" else today.strftime("%Y-%m"),
-        "selected_year": str(start_date.year if range_key == "year" else today.year),
-        "custom_start": custom_start_raw,
-        "custom_end": custom_end_raw,
+        "selected_day": filter_meta["selected_day"],
+        "selected_month": filter_meta["selected_month"],
+        "selected_year": filter_meta["selected_year"],
+        "custom_start": filter_meta["custom_start_raw"],
+        "custom_end": filter_meta["custom_end_raw"],
+        "report_querystring": filter_meta["report_querystring"],
         "chart_labels": chart_labels,
         "chart_project_counts": chart_project_counts,
         "chart_income_values": chart_income_values,
@@ -1143,6 +1179,26 @@ def main_overall_report(request, file_format):
         return generate_main_csv_report(dept)
     if file_format == "pdf":
         return generate_main_pdf_report(dept)
+
+    return JsonResponse({"detail": "Unsupported format"}, status=400)
+
+
+@require_http_methods(["GET"])
+def main_filter_report(request, file_format):
+    if not request.session.get("department_id"):
+        return redirect("login")
+
+    dept = get_department(request)
+    filter_meta = _resolve_overall_filter(request)
+    range_key = filter_meta["range_key"]
+    start_date = filter_meta["start_date"]
+    end_date = filter_meta["end_date"]
+    file_format = (file_format or "").lower()
+
+    if file_format == "csv":
+        return generate_main_filter_csv_report(dept, start_date, end_date, range_key)
+    if file_format == "pdf":
+        return generate_main_filter_pdf_report(dept, start_date, end_date, range_key)
 
     return JsonResponse({"detail": "Unsupported format"}, status=400)
 

@@ -6,7 +6,31 @@
             </span>
             <h3 class="theme-text text-base font-semibold">Overall Projects And Income</h3>
           </div>
-    <div class="flex flex-wrap items-center gap-2">
+    <div class="flex flex-wrap items-center justify-end gap-2">
+      <div class="relative inline-block text-left">
+        <button
+          type="button"
+          id="overallReportDropdownBtn"
+          class="overall-report-btn inline-flex items-center gap-2"
+        >
+          <iconify-icon icon="material-symbols:download-rounded" width="18" height="18"></iconify-icon>
+          <span>Download Report</span>
+          <iconify-icon icon="material-symbols:arrow-drop-down-rounded" width="18" height="18"></iconify-icon>
+        </button>
+        <div
+          id="overallReportDropdownMenu"
+          class="theme-panel absolute right-0 z-20 mt-2 hidden min-w-[160px] rounded-xl border p-1 shadow-lg"
+        >
+          <a href="{% url 'main_filter_report' 'csv' %}?{{ report_querystring }}" class="report-menu-item">
+            <iconify-icon class="report-menu-icon" icon="vscode-icons:file-type-excel" width="20" height="20"></iconify-icon>
+            <span>EXCEL Report</span>
+          </a>
+          <a href="{% url 'main_filter_report' 'pdf' %}?{{ report_querystring }}" class="report-menu-item">
+            <iconify-icon class="report-menu-icon" icon="material-icon-theme:pdf" width="20" height="20"></iconify-icon>
+            <span>PDF Report</span>
+          </a>
+        </div>
+      </div>
       <button
         type="button"
         class="overall-filter-btn {% if selected_range == 'today' %}is-active{% endif %}"
@@ -40,7 +64,6 @@
         class="overall-filter-btn {% if selected_range == 'custom' %}is-active{% endif %}"
       >
         Custom Range
-        
       </button>
     </div>
   </div>
@@ -216,6 +239,35 @@
     border-color: #a5b4fc;
     color: #c7d2fe;
   }
+  .overall-report-btn {
+    border: 1px solid var(--panel-border);
+    border-radius: 0.7rem;
+    padding: 0.42rem 0.68rem;
+    background: var(--panel-bg);
+    color: var(--panel-text);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  .report-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    line-height: 1;
+    border-radius: 0.6rem;
+    padding: 0.45rem 0.65rem;
+    color: var(--panel-text);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color .15s ease;
+  }
+  .report-menu-item:hover { background: var(--panel-soft-bg); }
+  .report-menu-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+    flex-shrink: 0;
+  }
     .section-title {
     display: flex;
     align-items: center;
@@ -254,6 +306,8 @@
     const todayPanel = document.getElementById("overall-today-panel");
     const monthPanel = document.getElementById("overall-month-panel");
     const yearPanel = document.getElementById("overall-year-panel");
+    const overallReportDropdownBtn = document.getElementById("overallReportDropdownBtn");
+    const overallReportDropdownMenu = document.getElementById("overallReportDropdownMenu");
     if (!widget || !labelsNode || !projectCountsNode || !incomeValuesNode || !canvas) return;
 
     const labels = JSON.parse(labelsNode.textContent || "[]");
@@ -267,6 +321,20 @@
         if (monthPanel) monthPanel.classList.add("hidden");
         if (yearPanel) yearPanel.classList.add("hidden");
       });
+    }
+    let overallReportDocHandler = null;
+    if (overallReportDropdownBtn && overallReportDropdownMenu) {
+      overallReportDropdownBtn.addEventListener("click", function (event) {
+        event.stopPropagation();
+        overallReportDropdownMenu.classList.toggle("hidden");
+      });
+      overallReportDocHandler = function (event) {
+        const target = event.target;
+        if (!overallReportDropdownMenu.contains(target) && !overallReportDropdownBtn.contains(target)) {
+          overallReportDropdownMenu.classList.add("hidden");
+        }
+      };
+      document.addEventListener("click", overallReportDocHandler, true);
     }
 
     function loadScript(src) {
@@ -462,6 +530,10 @@
       window.overallChartCleanup = function () {
         window.removeEventListener("themechange", scheduleDraw);
         window.removeEventListener("storage", scheduleDraw);
+        if (overallReportDocHandler) {
+          document.removeEventListener("click", overallReportDocHandler, true);
+          overallReportDocHandler = null;
+        }
         observer.disconnect();
         if (window.overallMixedChartRaf) {
           cancelAnimationFrame(window.overallMixedChartRaf);

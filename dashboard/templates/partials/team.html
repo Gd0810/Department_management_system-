@@ -413,6 +413,17 @@
 
 <script>
   (function () {
+
+    requestAnimationFrame(() => {
+      const content = document.getElementById("content");
+      if (content && typeof content.scrollTo === "function") {
+        content.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }
+      if (typeof window.scrollTo === "function") {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }
+    });
+
     if (window.teamDashboardCleanup) window.teamDashboardCleanup();
 
     const labels = JSON.parse(document.getElementById("worker-labels").textContent || "[]");
