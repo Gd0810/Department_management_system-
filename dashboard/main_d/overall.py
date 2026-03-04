@@ -70,6 +70,7 @@ def build_main_report_data(dept):
             {
                 "project_name": project.title,
                 "start_date": project.start_date.strftime("%Y-%m-%d"),
+                "category": project.get_category_display(),
                 "status": project.get_status_display(),
                 "amount": Decimal(project.amount or Decimal("0.00")),
                 "assigned_workers": assigned_worker_names,
@@ -131,7 +132,8 @@ def generate_main_csv_report(dept):
     ws.column_dimensions["C"].width = 40
     ws.column_dimensions["D"].width = 18
     ws.column_dimensions["E"].width = 16
-    ws.column_dimensions["F"].width = 44
+    ws.column_dimensions["F"].width = 18
+    ws.column_dimensions["G"].width = 44
     header_fill = PatternFill("solid", fgColor="2E5FA3")
     header_font = Font(bold=True, color="FFFFFF")
 
@@ -144,26 +146,26 @@ def generate_main_csv_report(dept):
     ]
 
     row_idx = 1
-    ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+    ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=7)
     dept_key_cell = ws.cell(row=row_idx, column=1, value=summary_rows[0][0])
     dept_key_cell.font = Font(bold=True)
     dept_key_cell.alignment = Alignment(horizontal="left", vertical="center")
     row_idx += 1
-    ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+    ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=7)
     dept_val_cell = ws.cell(row=row_idx, column=1, value=summary_rows[0][1])
     dept_val_cell.alignment = Alignment(horizontal="left", vertical="center")
     row_idx += 2
 
     for label, value in summary_rows[1:]:
         ws.cell(row=row_idx, column=1, value=label).font = Font(bold=True)
-        ws.merge_cells(start_row=row_idx, start_column=2, end_row=row_idx, end_column=6)
+        ws.merge_cells(start_row=row_idx, start_column=2, end_row=row_idx, end_column=7)
         ws.cell(row=row_idx, column=2, value=value).alignment = Alignment(horizontal="left", vertical="center")
         row_idx += 1
 
     row_idx += 1
     ws.cell(row=row_idx, column=1, value="Table 1: Project List").font = Font(bold=True)
     row_idx += 1
-    headers_1 = ["#", "Project Name", "Start Date", "Status", "Amount", "Assigned Workers"]
+    headers_1 = ["#", "Project Name", "Start Date", "Category", "Status", "Amount", "Assigned Workers"]
     for col_idx, header in enumerate(headers_1, start=1):
         cell = ws.cell(row=row_idx, column=col_idx, value=header)
         cell.font = header_font
@@ -175,12 +177,13 @@ def generate_main_csv_report(dept):
         ws.cell(row=row_idx, column=1, value=index)
         ws.cell(row=row_idx, column=2, value=item["project_name"])
         ws.cell(row=row_idx, column=3, value=item["start_date"])
-        ws.cell(row=row_idx, column=4, value=item["status"])
-        ws.cell(row=row_idx, column=5, value=f"Rs {Decimal(item['amount']):,.2f}")
-        ws.cell(row=row_idx, column=6, value=item["assigned_workers"])
-        for col_idx in range(1, 7):
+        ws.cell(row=row_idx, column=4, value=item["category"])
+        ws.cell(row=row_idx, column=5, value=item["status"])
+        ws.cell(row=row_idx, column=6, value=f"Rs {Decimal(item['amount']):,.2f}")
+        ws.cell(row=row_idx, column=7, value=item["assigned_workers"])
+        for col_idx in range(1, 8):
             ws.cell(row=row_idx, column=col_idx).alignment = Alignment(
-                horizontal="left", vertical="center", wrap_text=(col_idx in [2, 6])
+                horizontal="left", vertical="center", wrap_text=(col_idx in [2, 7])
             )
         row_idx += 1
 
@@ -382,6 +385,7 @@ def generate_main_pdf_report(dept):
         Paragraph("#", s_table_header),
         Paragraph("Project Name", s_table_header),
         Paragraph("Start Date", s_table_header),
+        Paragraph("Category", s_table_header),
         Paragraph("Status", s_table_header),
         Paragraph("Amount", s_table_header),
         Paragraph("Assigned Workers", s_table_header),
@@ -391,6 +395,7 @@ def generate_main_pdf_report(dept):
             Paragraph(str(idx), s_table_cell),
             Paragraph(item["project_name"], s_table_cell_bold),
             Paragraph(item["start_date"], s_table_cell),
+            Paragraph(item["category"], s_table_cell),
             Paragraph(item["status"], s_table_cell),
             Paragraph(f"Rs {Decimal(item['amount']):,.2f}", s_table_cell),
             Paragraph(item["assigned_workers"], s_table_cell),
@@ -403,11 +408,12 @@ def generate_main_pdf_report(dept):
     project_table = Table(
         project_table_rows,
         colWidths=[
-            page_w * 0.06,
-            page_w * 0.24,
-            page_w * 0.13,
-            page_w * 0.12,
-            page_w * 0.14,
+            page_w * 0.05,
+            page_w * 0.20,
+            page_w * 0.11,
+            page_w * 0.11,
+            page_w * 0.11,
+            page_w * 0.11,
             page_w * 0.31,
         ],
         repeatRows=1,
