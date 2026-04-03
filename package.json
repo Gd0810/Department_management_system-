@@ -1,0 +1,11 @@
+{
+  "name": "department-dashboard-tailwind-build",
+  "private": true,
+  "scripts": {
+    "build:tailwind:dashboard": "tailwindcss -c tailwind.config.js -i ./src/tailwind-dashboard.css -o ./static/css/tailwind-dashboard.css --minify",
+    "watch:tailwind:dashboard": "tailwindcss -c tailwind.config.js -i ./src/tailwind-dashboard.css -o ./static/css/tailwind-dashboard.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}
